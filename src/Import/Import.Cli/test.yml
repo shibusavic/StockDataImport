@@ -1,0 +1,10 @@
+﻿Max Token Usage: 20000
+Cancel On Exception: true
+
+Any Day:
+- Priority: 1
+  Scope: Full
+  Exchanges:
+  - NYSE
+  Data Types:
+  - Options

@@ -1,0 +1,165 @@
+﻿Max Token Usage: 990
+API Key: TEST
+Purge Data:
+- Logs
+- Actions
+- Imports
+Log Retention:
+  Critical: 1 year
+  Debug: 2 weeks
+  Error: 1 year
+  Information: 3 months
+  Trace: 1 week
+  Warning: 6 months
+On Empty Database:
+- Priority: 1
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Symbols
+  - Prices
+  - Options
+  - Dividends
+  - Splits
+- Priority: 2
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Fundamentals
+Any Day:
+- Priority: 1
+  Scope: Bulk
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Symbols
+  - Prices
+  - Options
+  - Dividends
+  - Splits
+- Priority: 2
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Fundamentals
+Sunday:
+- Skip: true
+Monday:
+- Skip: true
+Tuesday:
+- Priority: 1
+  Scope: Bulk
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Symbols
+  - Prices
+  - Options
+  - Dividends
+  - Splits
+- Priority: 2
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Fundamentals
+Wednesday:
+- Priority: 1
+  Scope: Bulk
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Symbols
+  - Prices
+  - Options
+  - Dividends
+  - Splits
+- Priority: 2
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Fundamentals
+Thursday:
+- Priority: 1
+  Scope: Bulk
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Symbols
+  - Prices
+  - Options
+  - Dividends
+  - Splits
+- Priority: 2
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Fundamentals
+Friday:
+- Priority: 1
+  Skip: false
+  Scope: Bulk
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Symbols
+  - Prices
+  - Options
+  - Dividends
+  - Splits
+- Priority: 2
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Fundamentals
+Saturday:
+- Priority: 1
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Symbols
+  - Prices
+  - Options
+  - Dividends
+  - Splits
+- Priority: 2
+  Scope: Full
+  Exchanges:
+  - NYSE
+  - NASDAQ
+  - AMEX
+  Data Types:
+  - Fundamentals
