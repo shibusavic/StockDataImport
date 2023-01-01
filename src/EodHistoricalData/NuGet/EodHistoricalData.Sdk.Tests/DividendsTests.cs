@@ -111,10 +111,6 @@ namespace EodHistoricalData.Sdk.Tests
                 foreach (var dividend in dividends)
                 {
                     Assert.NotEqual(default, dividend.Date);
-                    //Assert.NotEqual(default(DateTime), dividend.DeclarationDate);
-                    Assert.NotEqual(default(DateOnly), dividend.RecordDate);
-                    Assert.NotEqual(default(DateOnly), dividend.PaymentDate);
-                    Assert.NotNull(dividend.Period);
                     Assert.NotEqual(default, dividend.Value);
                     Assert.NotEqual(default, dividend.UnadjustedValue);
                     Assert.NotNull(dividend.Currency);

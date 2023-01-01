@@ -1,3 +1,6 @@
+DELETE FROM public.calendar_earnings;
+DELETE FROM public.calendar_ipos;
+DELETE FROM public.calendar_trends;
 DELETE FROM public.companies;
 DELETE FROM public.company_addresses;
 DELETE FROM public.company_analyst_ratings;
@@ -35,6 +38,8 @@ DELETE FROM public.etf_world_regions;
 DELETE FROM public.etfs;
 DELETE FROM public.exchanges;
 DELETE FROM public.options;
+DELETE FROM public.option_data;
+DELETE FROM public.option_contracts;
 DELETE FROM public.price_actions;
 DELETE FROM public.splits;
 DELETE FROM public.symbols;

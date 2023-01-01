@@ -1,4 +1,6 @@
 ﻿using EodHistoricalData.Sdk.Models;
+using EodHistoricalData.Sdk.Models.Calendar;
+using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 
 namespace Import.Infrastructure.Abstractions;
 
@@ -35,4 +37,14 @@ internal partial interface IImportsDbContext : IDbContext
     Task<IEnumerable<Symbol>> GetSymbolsWithOptionsAsync(CancellationToken cancellationToken = default);
 
     Task SaveOptionsAsync(EodHistoricalData.Sdk.Models.Options.OptionsCollection options, CancellationToken cancellationToken = default);
+
+    Task SaveCompanyAsync(EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.FundamentalsCollection company, CancellationToken cancellationToken = default);
+
+    Task SaveEtfAsync(EtfFundamentalsCollection etf, CancellationToken cancellationToken = default);
+
+    Task SaveIpos(IpoCollection ipoCollection, CancellationToken cancellationToken = default);
+
+    Task SaveEarnings(EarningsCollection earnings, CancellationToken cancellationToken = default);
+
+    Task SaveTrends(TrendCollection trends, CancellationToken cancellationToken = default);
 }

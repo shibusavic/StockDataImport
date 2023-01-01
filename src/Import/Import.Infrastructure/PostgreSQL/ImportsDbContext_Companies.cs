@@ -4,7 +4,6 @@ namespace Import.Infrastructure.PostgreSQL;
 
 internal partial class ImportsDbContext
 {
-
     public async Task SaveCompanyAsync(EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.FundamentalsCollection company,
         CancellationToken cancellationToken = default)
     {

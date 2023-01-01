@@ -135,6 +135,32 @@ internal class ImportsDbContext : Infrastructure.PostgreSQL.ImportsDbContext
 
     }
 
+    public async Task DeleteAsync(string tableName, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string sql = $@"DELETE FROM {tableName}";
+
+        using var connection = await GetOpenConnectionAsync(cancellationToken);
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            await connection.ExecuteAsync(sql, commandTimeout: 300);
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
     public async Task ClearOptionsAsync()
     {
         string[] sqlStatements = new string[]
@@ -251,6 +277,12 @@ internal class ImportsDbContext : Infrastructure.PostgreSQL.ImportsDbContext
     public async Task<int> CountEtfMorningStarAsync(string columnName, Guid value) => await CountForTable("public.etf_morning_star", columnName, value);
 
     public async Task<int> CountEtfPerformanceAsync(string columnName, Guid value) => await CountForTable("public.etf_performance", columnName, value);
+
+    public async Task<int> CountIposAsync() => await CountForTable("public.calendar_ipos");
+
+    public async Task<int> CountTrendsAsync() => await CountForTable("public.calendar_trends");
+
+    public async Task<int> CountEarningsAsync() => await CountForTable("public.calendar_earnings");
 
     private async Task<int> CountForTable(string tableName)
     {

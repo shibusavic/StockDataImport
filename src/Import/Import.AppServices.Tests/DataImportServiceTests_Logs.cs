@@ -50,7 +50,6 @@
 //        importsDbMock.Verify(m => m.ExecuteAsync(It.Is<string>(s => s.Contains("public.price_actions")),
 //            It.IsAny<object?>(), It.IsAny<int?>(), CancellationToken.None));
 
-//        //TODO: Missing some tables here.
 //    }
 
 //    [Fact]

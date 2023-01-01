@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS public.dividends
   symbol TEXT NOT NULL,
   exchange TEXT NOT NULL,
   "date" DATE NOT NULL,
-  value NUMERIC(16,3) NOT NULL,
-  unadjusted_value NUMERIC(16,3) NOT NULL,
+  value NUMERIC(18,5) NOT NULL,
+  unadjusted_value NUMERIC(18,5) NOT NULL,
   currency TEXT NOT NULL,
   declaration_date DATE NULL,
   record_date DATE NULL,
@@ -789,4 +789,68 @@ CREATE TABLE IF NOT EXISTS public.option_contracts
   updated_at DATE NOT NULL,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (symbol, exchange, expiration_date, option_type)
+);
+
+CREATE TABLE IF NOT EXISTS public.calendar_ipos
+(
+  symbol TEXT NOT NULL,
+  exchange TEXT NOT NULL,
+  name TEXT NOT NULL,
+  currency TEXT NULL,
+  start_date DATE NULL,
+  filing_date DATE NULL,
+  amended_date DATE NULL,
+  price_from NUMERIC(18,2) NOT NULL,
+  price_to NUMERIC(18,2) NOT NULL,
+  offer_price NUMERIC(18,2) NOT NULL,
+  shares BIGINT NOT NULL,
+  deal_type TEXT NOT NULL,
+  utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (symbol, exchange)
+);
+
+CREATE TABLE IF NOT EXISTS public.calendar_earnings
+(
+  symbol TEXT NOT NULL,
+  exchange TEXT NOT NULL,
+  report_date DATE NOT NULL,
+  ending_date DATE NOT NULL,
+  before_after_market TEXT NULL,
+  currency TEXT NULL,
+  actual NUMERIC(18,2) NULL,
+  estimate NUMERIC(18,2) NULL,
+  difference NUMERIC(18,2) NULL,
+  percent DOUBLE PRECISION NULL,
+  utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (symbol, exchange, ending_date)
+);
+
+
+CREATE TABLE IF NOT EXISTS public.calendar_trends
+(
+  symbol TEXT NOT NULL,
+  "date" DATE NOT NULL,
+  period TEXT NOT NULL,
+  growth DOUBLE PRECISION NULL,
+  earnings_estimate_avg NUMERIC(18,2) NULL,
+  earnings_estimate_low NUMERIC(18,2) NULL,
+  earnings_estimate_high NUMERIC(18,2) NULL,
+  earnings_estimate_number_analysts INT NULL,
+  earnings_estimate_growth DOUBLE PRECISION NULL,
+  revenue_estimate_avg NUMERIC(18,2) NULL,
+  revenue_estimate_low NUMERIC(18,2) NULL,
+  revenue_estimate_high NUMERIC(18,2) NULL,
+  revenue_estimate_year_ago_eps  NUMERIC(18,2) NULL,
+  revenue_estimate_number_analysts INT NULL,
+  revenue_estimate_growth DOUBLE PRECISION NULL,
+  eps_trend_current NUMERIC(18,2) NULL,
+  eps_trend_7days_ago NUMERIC(18,2) NULL,
+  eps_trend_30days_ago NUMERIC(18,2) NULL,
+  eps_trend_60days_ago NUMERIC(18,2) NULL,
+  eps_trend_90days_ago NUMERIC(18,2) NULL,
+  eps_revisions_up_last7_days NUMERIC(18,2) NULL,
+  eps_revisions_up_last30_days NUMERIC(18,2) NULL,
+  eps_revisions_down_last30_days NUMERIC(18,2) NULL,
+  utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (symbol, "date")
 );

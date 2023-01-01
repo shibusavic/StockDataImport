@@ -2,7 +2,6 @@
 using EodHistoricalData.Sdk.Models;
 using Import.Infrastructure.Abstractions;
 using Microsoft.Extensions.Logging;
-using System.Xml.Linq;
 using static Import.Infrastructure.Configuration.Constants;
 
 namespace Import.AppServices

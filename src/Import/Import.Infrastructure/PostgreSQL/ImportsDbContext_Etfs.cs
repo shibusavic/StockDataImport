@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 
 namespace Import.Infrastructure.PostgreSQL;
 

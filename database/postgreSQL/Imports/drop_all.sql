@@ -1,3 +1,6 @@
+DROP TABLE public.calendar_earnings;
+DROP TABLE public.calendar_ipos;
+DROP TABLE public.calendar_trends;
 DROP TABLE public.companies;
 DROP TABLE public.company_addresses;
 DROP TABLE public.company_analyst_ratings;

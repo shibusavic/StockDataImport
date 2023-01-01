@@ -1,11 +1,7 @@
 ﻿using Import.Infrastructure.Abstractions;
 using Microsoft.Extensions.Logging;
 using Shibusa.Data.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Shibusa.Extensions;
 
 namespace Import.Infrastructure;
 
@@ -21,7 +17,8 @@ internal static class DbContextFactory
     /// <param name="database">The <see cref="Database"/>.</param>
     /// <param name="connectionString">The connection string for the database.</param>
     /// <param name="logger">An instance of <see cref="ILogger"/>.</param>
-    /// <returns>An instance of <see cref="IDbContext"/>.</returns>
+    /// <returns>An instance of <see cref="IDbContext"/> that corresponds to the specified
+    /// <paramref name="database"/>.</returns>
     public static IDbContext? Create(DatabaseEngine databaseEngine, Database database, string connectionString, ILogger? logger = null)
     {
         if (databaseEngine == DatabaseEngine.None || string.IsNullOrWhiteSpace(connectionString)) { return null; }
@@ -29,11 +26,11 @@ internal static class DbContextFactory
         return databaseEngine switch
         {
             DatabaseEngine.Postgres => database.Equals(Database.Imports)
-                ? new PostgreSQL.ImportsDbContext(connectionString)
+                ? new PostgreSQL.ImportsDbContext(connectionString, logger)
                     : database.Equals(Database.Logs)
                         ? new PostgreSQL.LogsDbContext(connectionString)
-                        : throw new ArgumentException($"Unknown database: {database}"),
-            _ => throw new ArgumentException($"Unknown database engine: {databaseEngine}")
+                        : throw new ArgumentException($"Unknown database: {database.GetDescription()}"),
+            _ => throw new ArgumentException($"Unknown database engine: {databaseEngine.GetDescription()}")
         };
     }
 }

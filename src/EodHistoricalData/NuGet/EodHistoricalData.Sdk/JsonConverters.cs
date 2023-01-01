@@ -32,6 +32,9 @@ public static class JsonSerializerOptionsFactory
                 options.Converters.Add(new DecimalJsonConverter());
                 options.Converters.Add(new NullableDecimalJsonConverter());
 
+                options.Converters.Add(new LongJsonConverter());
+                options.Converters.Add(new NullableLongJsonConverter());
+
                 options.Converters.Add(new BooleanJsonConverter());
                 options.Converters.Add(new NullableBooleanJsonConverter());
             }
@@ -149,6 +152,71 @@ public class NullableDateTimeJsonConverter : JsonConverter<DateTime?>
         if (value.HasValue)
         {
             writer.WriteStringValue(value.Value.ToString(Format, CultureInfo.InvariantCulture));
+        }
+        else
+        {
+            writer.WriteNullValue();
+        }
+    }
+}
+
+public class LongJsonConverter : JsonConverter<long>
+{
+    public override long Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var val = reader.GetString();
+
+            if (string.IsNullOrWhiteSpace(val)) { return 0L; }
+
+            if (long.TryParse(val, out long l))
+            {
+                return l;
+            }
+        }
+        else if (reader.TokenType == JsonTokenType.Number)
+        {
+            return reader.GetInt64();
+        }
+
+        throw new JsonException();
+    }
+
+    public override void Write(Utf8JsonWriter writer, long value, JsonSerializerOptions options)
+    {
+        writer.WriteNumberValue(value);
+    }
+}
+
+public class NullableLongJsonConverter : JsonConverter<long?>
+{
+    public override long? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var val = reader.GetString();
+
+            if (string.IsNullOrWhiteSpace(val)) { return null; }
+
+            if (long.TryParse(val, out long l))
+            {
+                return l;
+            }
+        }
+        else if (reader.TokenType == JsonTokenType.Number)
+        {
+            return reader.GetInt64();
+        }
+
+        throw new JsonException();
+    }
+
+    public override void Write(Utf8JsonWriter writer, long? value, JsonSerializerOptions options)
+    {
+        if (value.HasValue)
+        {
+            writer.WriteNumberValue(value.Value);
         }
         else
         {

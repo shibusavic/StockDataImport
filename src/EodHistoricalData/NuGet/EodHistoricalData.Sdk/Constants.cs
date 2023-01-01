@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("EodHistoricalData.Sdk.Tests")]
+[assembly: InternalsVisibleTo("EodHistoricalData.Sdk.Tests"),
+    InternalsVisibleTo("Import.Infrastructure.Tests")]
 namespace EodHistoricalData.Sdk;
 
 public static class Constants

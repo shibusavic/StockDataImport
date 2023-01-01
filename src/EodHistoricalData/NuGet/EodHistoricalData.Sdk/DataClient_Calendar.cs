@@ -91,7 +91,7 @@ public sealed partial class DataClient
     /// Represents a collection of <see cref="Trend"/> as returned by the API.
     /// <seealso href="https://eodhistoricaldata.com/financial-apis/calendar-upcoming-earnings-ipos-and-splits/"/>
     /// </summary>
-    struct TrendCollectionDao
+    internal struct TrendCollectionDao
     {
         public string Type;
         public string Description;

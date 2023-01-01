@@ -23,11 +23,11 @@ public struct Trend
     public double? RevenueEstimateNumberOfAnalysts;
     public double? RevenueEstimateGrowth;
     public decimal? EpsTrendCurrent;
-    public decimal? EpsTrend7daysAgo;
-    public decimal? EpsTrend30daysAgo;
-    public decimal? EpsTrend60daysAgo;
-    public decimal? EpsTrend90daysAgo;
-    public decimal? EpsRevisionsUpLast7days;
-    public decimal? EpsRevisionsUpLast30days;
-    public decimal? EpsRevisionsDownLast30days;
+    public decimal? EpsTrend7DaysAgo;
+    public decimal? EpsTrend30DaysAgo;
+    public decimal? EpsTrend60DaysAgo;
+    public decimal? EpsTrend90DaysAgo;
+    public decimal? EpsRevisionsUpLast7Days;
+    public decimal? EpsRevisionsUpLast30Days;
+    public decimal? EpsRevisionsDownLast30Days;
 }

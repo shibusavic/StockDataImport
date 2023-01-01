@@ -21,12 +21,21 @@ public class TestBase : IClassFixture<DbFixture>
         };
 
         serializerOptions.Converters.Add(new DateOnlyJsonConverter());
-        serializerOptions.Converters.Add(new DateTimeJsonConverter());
         serializerOptions.Converters.Add(new NullableDateOnlyJsonConverter());
+
+        serializerOptions.Converters.Add(new DateTimeJsonConverter());
         serializerOptions.Converters.Add(new NullableDateTimeJsonConverter());
+
+        serializerOptions.Converters.Add(new DoubleJsonConverter());
         serializerOptions.Converters.Add(new NullableDoubleJsonConverter());
+
+        serializerOptions.Converters.Add(new DecimalJsonConverter());
         serializerOptions.Converters.Add(new NullableDecimalJsonConverter());
+
         serializerOptions.Converters.Add(new BooleanJsonConverter());
         serializerOptions.Converters.Add(new NullableBooleanJsonConverter());
+
+        serializerOptions.Converters.Add(new LongJsonConverter());
+        serializerOptions.Converters.Add(new NullableLongJsonConverter());
     }
 }

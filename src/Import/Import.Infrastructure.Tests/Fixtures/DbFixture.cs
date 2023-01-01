@@ -5,7 +5,6 @@ using Import.Infrastructure.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using System.Threading;
 
 namespace Import.Infrastructure.IntegrationTests.Fixtures;
 
@@ -75,9 +74,9 @@ WHERE log_id = @LogId";
 
         List<string> tables = new();
 
-        foreach (var t in tableNames)
+        foreach (var (Schema, Name) in tableNames)
         {
-            string name = $"{t.Schema}.{t.Name}";
+            string name = $"{Schema}.{Name}";
             string sql = $"SELECT COUNT(*) FROM {name}";
             int count = (await ImportDbContext.QueryAsync<int>(sql)).FirstOrDefault();
             if (count > 0) { tables.Add(name); }

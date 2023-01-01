@@ -1,5 +1,4 @@
 using EodHistoricalData.Sdk.Models;
-using Shibusa.Extensions;
 
 namespace EodHistoricalData.Sdk.Tests
 {
@@ -140,7 +139,8 @@ namespace EodHistoricalData.Sdk.Tests
         public async Task GetHistoryForSymbolAsync_From_FirstDateEqualsFrom()
         {
             DateOnly from = DateOnly.FromDateTime(DateTime.Now.AddDays(-5));
-            while (from.DayOfWeek == DayOfWeek.Saturday || from.DayOfWeek == DayOfWeek.Sunday)
+
+            while (from.DayOfWeek is not DayOfWeek.Tuesday and not DayOfWeek.Wednesday)
             {
                 from = from.AddDays(-1);
             }
@@ -161,7 +161,7 @@ namespace EodHistoricalData.Sdk.Tests
         public async Task GetHistoryForSymbolAsync_To_LastDateEqualsTo()
         {
             DateOnly to = DateOnly.FromDateTime(DateTime.Now.AddDays(-5));
-            while (to.DayOfWeek == DayOfWeek.Saturday || to.DayOfWeek == DayOfWeek.Sunday)
+            while (to.DayOfWeek is not DayOfWeek.Tuesday and not DayOfWeek.Wednesday)
             {
                 to = to.AddDays(-1);
             }
