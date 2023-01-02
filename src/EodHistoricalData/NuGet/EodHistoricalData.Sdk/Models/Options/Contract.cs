@@ -15,10 +15,10 @@ public struct Contract
     public DateTime LastTradeDateTime;
     public DateOnly ExpirationDate;
     public decimal Strike;
-    public decimal LastPrice;
-    public decimal Bid;
-    public decimal Ask;
-    public decimal Change;
+    public decimal? LastPrice;
+    public decimal? Bid;
+    public decimal? Ask;
+    public decimal? Change;
     public double? ChangePercent;
     public int? Volume;
     public int? OpenInterest;

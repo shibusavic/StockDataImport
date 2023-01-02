@@ -23,6 +23,8 @@ internal static class SymbolMetaDataRepository
     {
         if (metaData.ContainsKey(symbolMetaData.Code))
         {
+            metaData[symbolMetaData.Code].LastUpdatedIncomeStatement = symbolMetaData.LastUpdatedIncomeStatement;
+            metaData[symbolMetaData.Code].LastUpdatedOptions = symbolMetaData.LastUpdatedOptions;
             metaData[symbolMetaData.Code].LastUpdated = DateTime.UtcNow;
         }
         else

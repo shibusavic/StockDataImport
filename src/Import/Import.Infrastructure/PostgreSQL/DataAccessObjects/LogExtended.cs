@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Shibusa.Data;
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects
 {
-    [Table(name: "eod_logs_extended", Schema = "public")]
+    [Table(name: "logs_extended", Schema = "public")]
     internal class LogExtended
     {
         public LogExtended(

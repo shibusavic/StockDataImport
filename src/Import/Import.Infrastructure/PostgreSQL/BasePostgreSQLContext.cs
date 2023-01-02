@@ -31,11 +31,20 @@ internal abstract class BasePostgreSQLContext : DbContext
 
             DaoTableNames[t] = (attr.Schema, attr.Name);
         }
-
     }
 
     protected BasePostgreSQLContext(string connectionString, ILogger? logger = null) : base(connectionString, logger)
     {
+        string sanityCheckSql = @"SELECT current_catalog";
+
+        try
+        {
+            var result = QueryAsync<string>(sanityCheckSql).GetAwaiter().GetResult();
+        }
+        catch
+        {
+            throw new Exception($"Unable to reconcile connection string: {connectionString}");
+        }
     }
 
     internal async Task<(string? Schema, string Name)[]> GetTableNames(string schema = "public", CancellationToken cancellationToken = default)

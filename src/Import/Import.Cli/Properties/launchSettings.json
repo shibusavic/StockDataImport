@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Import.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "-c test.yml -v"
+    }
+  }
+}

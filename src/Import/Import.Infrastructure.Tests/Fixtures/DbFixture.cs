@@ -49,7 +49,7 @@ public class DbFixture : IDisposable
 
     internal async Task<int> GetLogCountForScopeAsync(string scope)
     {
-        string sql = @"SELECT COUNT(1) FROM public.eod_logs WHERE log_scope = @Scope";
+        string sql = @"SELECT COUNT(1) FROM public.logs WHERE log_scope = @Scope";
 
         using var connection = new NpgsqlConnection(configuration.GetConnectionString("Logs"));
         connection.Open();
@@ -59,7 +59,7 @@ public class DbFixture : IDisposable
 
     internal async Task<IEnumerable<(string Key, string Value)>> GetDataForLogItemAsync(Guid logId)
     {
-        string sql = @"SELECT log_key AS Key, log_value AS Value from public.eod_logs_extended
+        string sql = @"SELECT log_key AS Key, log_value AS Value from public.logs_extended
 WHERE log_id = @LogId";
 
         using var connection = new NpgsqlConnection(configuration.GetConnectionString("Logs"));

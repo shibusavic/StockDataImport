@@ -40,7 +40,7 @@ public static class ApiService
 
     public static int Available => Math.Max(DailyLimit - Usage, 0);
 
-    public static bool IsLimitReached => Usage >= DailyLimit;
+    public static bool LimitReached => Usage >= DailyLimit;
 
     internal static void AddCall(string uri)
     {
@@ -69,8 +69,17 @@ public static class ApiService
             Uri = uri;
             Cost = cost;
         }
+        
         public string? Uri;
         public int? Cost;
+
+        public int MaxNumberCanCall(int available) =>
+            available < 1 
+            ? 0 
+            : Cost.GetValueOrDefault() == 0 
+                ? int.MaxValue 
+                : available / Cost.GetValueOrDefault();
+        
         public static EndPoint Empty => new(null, null);
     }
 }

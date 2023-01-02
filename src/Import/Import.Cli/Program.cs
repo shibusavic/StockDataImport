@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Reflection;
 using static Import.Infrastructure.Configuration.Constants;
 
-const string DefaultConfigFileName = "test.yml";
+const string DefaultConfigFileName = "config.yml";
 
 ILoggerProvider? loggerProvider = null;
 ServiceFactory serviceFactory;
@@ -17,12 +17,13 @@ ILogger? logger = null;
 IConfiguration configuration;
 Stopwatch timer = Stopwatch.StartNew();
 
-string sourceName = "eod-import";
+string sourceName = "import";
 string? apiKey = null;
 bool showHelp = false;
 bool verbose = false;
 FileInfo configFileInfo = new(DefaultConfigFileName);
 DataImportService? dataImportService = null;
+ImportConfiguration importConfiguration = new();
 
 int exitCode = -1;
 
@@ -39,16 +40,23 @@ try
     }
     else
     {
-        Configure();
-
         Communicate(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
-        ImportConfiguration importConfiguration = ImportConfiguration.Create(
-            File.ReadAllText(configFileInfo.FullName));
 
-        // This is the third check for the key. First one found wins, the selection order is command line first, then JSON config, and finally YAML.
-        apiKey ??= importConfiguration.ApiKey;
+        importConfiguration = ImportConfiguration.Create(File.ReadAllText(configFileInfo.FullName));
+        
+        apiKey ??= importConfiguration.ApiKey; // This is the final check for the key.
 
-        if (apiKey == null) { throw new Exception("Could not find API key."); }
+        Configure();
+        Validate(apiKey);
+
+        if (dataImportService == null)
+        {
+            throw new Exception("Unable to instantiate data import service.");
+        }
+
+        dataImportService.ApiResponseExceptionEventHandler += DataImportService_ApiResponseExceptionEventHandler;
+        dataImportService.CommunicationEventHandler += DataImportService_CommunicationEventHandler;
+        dataImportService.ApiLimitReachedEventHandler += DataImportService_ApiLimitReachedEventHandler;
 
         var actionService = serviceFactory.GetImportActionService();
 
@@ -56,17 +64,20 @@ try
 
         if (actions.Any())
         {
-            dataImportService = serviceFactory.GetDataImportService(apiKey, importConfiguration.MaxTokenUsage ?? 100_000);
+            var t = actionService.SaveActionItemsAsync(actions, cancellationToken);
 
-            dataImportService.ApiResponseExceptionEventHandler += DataImportService_ApiResponseExceptionEventHandler;
-            dataImportService.CommunicationEventHandler += DataImportService_CommunicationEventHandler;
-            dataImportService.ApiLimitReachedEventHandler += DataImportService_ApiLimitReachedEventHandler;
+            Communicate($"{actions.Count()} action(s) identified.");
 
-            WriteUsage();
+            WriteApiUsage();
+
+            await t;
 
             foreach (var action in actions)
             {
                 Stopwatch actionTimer = Stopwatch.StartNew();
+
+                action.Start();
+                await actionService.SaveActionItemsAsync(new ActionItem[] { action }, cancellationToken);
 
                 try
                 {
@@ -74,6 +85,8 @@ try
 
                     if (action.ActionName == ActionNames.Skip)
                     {
+                        action.Complete();
+                        await actionService.SaveActionItemsAsync(new ActionItem[] { action }, cancellationToken);
                         continue;
                     }
 
@@ -99,7 +112,8 @@ try
 
                     if (action.ActionName == ActionNames.Import)
                     {
-                        await dataImportService.ImportDataAsync(action.TargetScope!, action.TargetName!, action.TargetDataType!, cancellationToken);
+                        await dataImportService.ImportDataAsync(action.TargetScope!, action.TargetName!,
+                            action.TargetDataType!, cancellationToken);
                     }
 
                     if (action.ActionName == ActionNames.Truncate)
@@ -119,9 +133,11 @@ try
                         }
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException oce)
                 {
                     Communicate($"Cancelled {action}");
+
+                    action.Error(oce);
                 }
                 catch (Exception exc)
                 {
@@ -129,7 +145,10 @@ try
                     {
                         cts.Cancel();
                     }
+
                     Communicate(exc.Message, true);
+
+                    action.Error(exc);
                 }
                 finally
                 {
@@ -137,13 +156,26 @@ try
                     {
                         CommunicateFinish(action, ref actionTimer);
                     }
-                    if (ApiService.IsLimitReached)
+
+                    if (ApiService.LimitReached)
                     {
                         DataImportService_ApiLimitReachedEventHandler(null, new ApiLimitReachedException(ApiService.Usage));
                     }
+
+                    if (action.Status == Import.Infrastructure.Abstractions.ImportActionStatus.InProgress)
+                    {
+                        action.Complete();
+                    }
+
                     actionTimer.Stop();
                 }
             }
+            
+            t = actionService.SaveActionItemsAsync(actions, CancellationToken.None);
+            
+            Communicate("Updating action logs.");
+
+            await t;
         }
     }
 
@@ -158,13 +190,18 @@ finally
 {
     if (dataImportService != null)
     {
-        dataImportService.ApiResponseExceptionEventHandler -= DataImportService_ApiResponseExceptionEventHandler;
+        dataImportService.ApiLimitReachedEventHandler -= DataImportService_ApiLimitReachedEventHandler;
         dataImportService.CommunicationEventHandler -= DataImportService_CommunicationEventHandler;
+        dataImportService.ApiResponseExceptionEventHandler -= DataImportService_ApiResponseExceptionEventHandler;
     }
 
-    WriteUsage();
+    if (exitCode == 0)
+    {
+        WriteApiUsage();
+        Communicate($"Import completed in {timer.Elapsed.ConvertToText()}.");
+    }
+
     timer.Stop();
-    Communicate($"Import completed in {timer.Elapsed.ConvertToText()}.");
 
     loggerProvider?.Dispose();
 
@@ -182,19 +219,19 @@ void CommunicateFinish(ActionItem action, ref Stopwatch timer)
     Communicate($"Completed {action} in {timer.Elapsed.ConvertToText()}");
 }
 
-void DataImportService_CommunicationEventHandler(object sender, string message)
+void DataImportService_CommunicationEventHandler(object? sender, string message)
 {
     Communicate(message);
 }
 
-void DataImportService_ApiResponseExceptionEventHandler(object sender, ApiResponseException apiResponseException, string[] symbols)
+void DataImportService_ApiResponseExceptionEventHandler(object? sender, ApiResponseException apiResponseException, string[] symbols)
 {
     cts.Cancel(true);
     Communicate(apiResponseException.ToString(), true);
     Communicate(string.Join(',', symbols), true);
 }
 
-void WriteUsage()
+void WriteApiUsage()
 {
     var line = new string('-', 25);
     Communicate("");
@@ -270,7 +307,7 @@ void Configure()
     IConfigurationBuilder builder = new ConfigurationBuilder()
         .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
         .AddJsonFile($"appsettings.json", optional: false, reloadOnChange: true)
-        .AddUserSecrets("260619b6-7b25-459b-8caa-e6d79d0bbb7f");
+        .AddUserSecrets("b0d79919-fd38-486b-b119-b057643058f9");
 
     configuration = builder.Build();
 
@@ -278,6 +315,13 @@ void Configure()
     apiKey ??= configuration["EodHistoricalDataApiKey"];
 
     ConfigureServices();
+}
+
+void Validate(string? apiKey)
+{
+    if (apiKey == null) { throw new Exception("Could not find API key."); }
+
+    dataImportService = serviceFactory.GetDataImportService(apiKey, importConfiguration.MaxTokenUsage ?? 100_000);
 }
 
 void ConfigureServices()

@@ -42,6 +42,7 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects
             Low = priceAction.Low;
             Close = priceAction.Close;
             Volume = Convert.ToInt64(priceAction.Volume);
+            UtcTimestamp = DateTime.UtcNow;
         }
 
         [ColumnWithKey("symbol", Order = 1, TypeName = "text", IsPartOfKey = true)]

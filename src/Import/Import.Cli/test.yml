@@ -1,10 +1,13 @@
-﻿Max Token Usage: 20000
+﻿Max Token Usage: 50000
 Cancel On Exception: true
 
 Any Day:
 - Priority: 1
   Scope: Full
   Exchanges:
-  - NYSE
+  - AMEX
   Data Types:
-  - Options
+  - Symbols
+  - Prices
+  - Dividends
+  - Splits

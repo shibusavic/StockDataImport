@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS public.price_actions
   close NUMERIC(18,2) NOT NULL,
   volume BIGINT NOT NULL,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (symbol, exchange, start, finish)
+  PRIMARY KEY (exchange, symbol, start, finish)
 );
 
 CREATE TABLE IF NOT EXISTS public.companies

@@ -20,10 +20,10 @@ internal class OptionContract
         InTheMoney = contract.InTheMoney.Equals("true", StringComparison.InvariantCultureIgnoreCase);
         LastTradeDate = contract.LastTradeDateTime;
         Strike = contract.Strike;
-        LastPrice = contract.LastPrice;
-        Bid = contract.Bid;
-        Ask = contract.Ask;
-        Change = contract.Change;
+        LastPrice = contract.LastPrice ?? 0M;
+        Bid = contract.Bid ?? 0M;
+        Ask = contract.Ask ?? 0M;
+        Change = contract.Change ?? 0M;
         ChangePercent = contract.ChangePercent.GetValueOrDefault();
         Volume = contract.Volume.GetValueOrDefault();
         OpenInterest = contract.OpenInterest.GetValueOrDefault();

@@ -12,9 +12,11 @@ public sealed partial class DataClient : IDataClient
     {
         string json = await GetSymbolListStringAsync(exchangeCode, cancellationToken);
 
-        return string.IsNullOrWhiteSpace(json) ? Enumerable.Empty<Symbol>()
+        var symbols = string.IsNullOrWhiteSpace(json) ? Enumerable.Empty<Symbol>()
             : JsonSerializer.Deserialize<IEnumerable<Symbol>>(json, SerializerOptions)
                 ?? Enumerable.Empty<Symbol>();
+
+        return symbols.Where(s => s.Exchange.Equals(exchangeCode, StringComparison.InvariantCultureIgnoreCase));
     }
 
     internal async Task<string> GetSymbolListStringAsync(string exchangeCode, CancellationToken cancellationToken = default)

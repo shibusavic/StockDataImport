@@ -3,7 +3,7 @@ using Shibusa.Data;
 
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 
-[Table(name: "eod_logs", Schema = "public")]
+[Table(name: "logs", Schema = "public")]
 internal class Log
 {
     public Log(

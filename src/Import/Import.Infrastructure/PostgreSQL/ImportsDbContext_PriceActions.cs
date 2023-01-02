@@ -23,7 +23,7 @@ internal partial class ImportsDbContext
         if (priceActions.Any())
         {
             string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(PriceAction));
-            var daoPriceActions = priceActions.Select(p => new PriceAction(symbol, exchange, p));
+            var daoPriceActions = priceActions.Select(p => new PriceAction(symbol, exchange, p)).ToArray();
 
             using var connection = await GetOpenConnectionAsync(cancellationToken);
             using var transaction = connection.BeginTransaction();

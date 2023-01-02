@@ -30,7 +30,7 @@ internal class LogsDbContext : BasePostgreSQLContext, ILogsDbContext
         cancellationToken.ThrowIfCancellationRequested();
 
         const string logItemSql = @"
-INSERT INTO public.eod_logs
+INSERT INTO public.logs
 (global_id, utc_timestamp, log_level, message, exception, log_scope, event_id, event_name)
 VALUES
 (@GlobalId, @UtcTimestamp, @LogLevel, @Message, @Exception, @Scope, @EventId, @EventName)
@@ -39,7 +39,7 @@ DO NOTHING
 ";
 
         const string logDataSql = @"
-INSERT INTO public.eod_logs_extended
+INSERT INTO public.logs_extended
 (log_id, log_key, log_value)
 VALUES
 (@LogId, @Key, @Value)
@@ -120,9 +120,27 @@ DO NOTHING
         });
     }
 
-    public Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
+    public async Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionLog));
+
+        using var connection = await GetOpenConnectionAsync(cancellationToken);
+        using NpgsqlTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            await connection.ExecuteAsync(sql, actions.Select(a => new DataAccessObjects.ActionLog(a)).ToArray(), transaction);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
     }
 
     public async Task<ActionItem?> GetActionItemAsync(Guid globalId, CancellationToken cancellationToken = default)
@@ -139,7 +157,6 @@ WHERE global_id = @GlobalId";
         {
             GlobalId = globalId
         });
-
 
         await connection.CloseAsync();
 
@@ -186,9 +203,9 @@ WHERE status = Any(@Statuses)
         cancellationToken.ThrowIfCancellationRequested();
 
         const string logsSql = @"
-DELETE FROM public.eod_logs WHERE log_level = @LogLevel AND utc_timestamp < @Date";
+DELETE FROM public.logs WHERE log_level = @LogLevel AND utc_timestamp < @Date";
         const string extendedLogsSql = @"
-DELETE FROM public.eod_logs_extended WHERE log_id NOT IN (SELECT global_id FROM public.eod_logs)";
+DELETE FROM public.logs_extended WHERE log_id NOT IN (SELECT global_id FROM public.logs)";
 
         await ExecuteAsync(logsSql, new
         {
@@ -204,9 +221,9 @@ DELETE FROM public.eod_logs_extended WHERE log_id NOT IN (SELECT global_id FROM 
         cancellationToken.ThrowIfCancellationRequested();
 
         const string logsSql = @"
-DELETE FROM public.eod_logs";
+DELETE FROM public.logs";
         const string extendedLogsSql = @"
-DELETE FROM public.eod_logs_extended";
+DELETE FROM public.logs_extended";
 
         await ExecuteAsync(logsSql, null, 120, cancellationToken);
 
@@ -217,6 +234,6 @@ DELETE FROM public.eod_logs_extended";
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await ExecuteAsync(@"DELETE FROM public.eod_action_logs", cancellationToken: cancellationToken);
+        await ExecuteAsync(@"DELETE FROM public.action_items", cancellationToken: cancellationToken);
     }
 }

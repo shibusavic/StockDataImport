@@ -102,7 +102,7 @@ public class ActionService
 
     public Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return logsDb.SaveActionItemsAsync(actions, cancellationToken);
     }
 
     private static IEnumerable<ActionItem> ParseActionItems(string parent, ImportActions[]? actions)
@@ -119,7 +119,9 @@ public class ActionService
 
                 if (action.DataTypes?.Contains(DataTypes.Exchanges) ?? false)
                 {
-                    yield return new ActionItem(ActionNames.Import, DataTypes.Exchanges, "Full", DataTypes.Exchanges, action.Priority);
+                    yield return new ActionItem(ActionNames.Import,
+                        DataTypes.Exchanges, DataTypeScopes.Full.ToString(),
+                        DataTypes.Exchanges, action.Priority);
                 }
 
                 if (action.IsValidForImport())
@@ -234,17 +236,6 @@ public class ActionService
         if (ReferenceEquals(item1, item2)) return 0;
 
         int result = item1.Priority.CompareTo(item2.Priority);
-
-        //if (result == 0)
-        //{
-        //    if (item1.TargetName == item2.TargetName && item2.TargetName == null) { result = 0; }
-        //    else if (item1.TargetName == null && item2.TargetName != null) { result = -1; }
-        //    else if (item2.TargetName == null && item1.TargetName != null) { result = 1; }
-        //    else
-        //    {
-        //        result = item1.TargetName!.CompareTo(item2.TargetName!);
-        //    }
-        //}
 
         if (result == 0) { result = item1.TargetScopeValue.GetValueOrDefault().CompareTo(item2.TargetScopeValue.GetValueOrDefault()); }
         if (result == 0) { result = item1.TargetDataTypeValue.GetValueOrDefault().CompareTo(item2.TargetDataTypeValue.GetValueOrDefault()); }

@@ -20,7 +20,15 @@
 
         public string Code => ToString();
 
+        public string? Sector { get; }
+
+        public string? Industry { get; }
+
         public DateTime LastUpdated { get; internal set; }
+
+        public DateTime? LastUpdatedOptions { get; internal set; }
+
+        public DateTime? LastUpdatedIncomeStatement { get; internal set; }
 
         public override string ToString() => Exchange == null ? Symbol : $"{Symbol}.{Exchange}";
 

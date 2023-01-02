@@ -13,7 +13,7 @@ namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Logging
         {
             var connection = await GetOpenConnectionAsync();
 
-            string sql = @"SELECT global_id FROM eod_logs";
+            string sql = @"SELECT global_id FROM logs";
 
             try
             {
@@ -27,7 +27,7 @@ namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Logging
 
         internal async Task<IEnumerable<Guid>> GetAllLogsIdsBeforeDateAsync(DateTime date)
         {
-            const string sql = @"SELECT global_id FROM eod_logs WHERE utc_timestamp < @Date";
+            const string sql = @"SELECT global_id FROM logs WHERE utc_timestamp < @Date";
 
             var connection = await GetOpenConnectionAsync();
 
@@ -46,7 +46,7 @@ namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Logging
 
         internal async Task<int> CountActionLogsAsync()
         {
-            const string sql = @"SELECT COUNT(1) FROM eod_action_logs";
+            const string sql = @"SELECT COUNT(1) FROM action_items";
 
             var connection = await GetOpenConnectionAsync();
 

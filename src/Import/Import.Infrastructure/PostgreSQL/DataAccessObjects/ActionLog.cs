@@ -4,7 +4,7 @@ using Shibusa.Extensions;
 
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 
-[Table(name: "eod_action_logs", Schema = "public")]
+[Table(name: "action_items", Schema = "public")]
 internal class ActionLog
 {
     public ActionLog(
@@ -47,7 +47,8 @@ internal class ActionLog
         UtcCreated = action.UtcCreated;
         UtcStarted = action.UtcStarted;
         UtcCompleted = action.UtcCompleted;
-        Details = action.Details;
+        Details = action.Details ?? action.Exception?.Message;
+        UtcTimestamp = DateTime.UtcNow;
     }
 
     [ColumnWithKey("global_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]

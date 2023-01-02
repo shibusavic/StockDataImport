@@ -16,7 +16,7 @@ internal partial class ImportsDbContext
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // had to deviate from using SqlBuilder because of the COALESCE statement.
+        // had to deviate from using SqlBuilder because of the COALESCE statement for has_options
         const string sql = @"
 INSERT INTO public.symbols
 (code,exchange,name,country,currency,type,has_options)

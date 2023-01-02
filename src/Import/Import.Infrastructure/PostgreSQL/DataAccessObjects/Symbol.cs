@@ -6,7 +6,7 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 [Table("symbols", Schema = "public")]
 internal sealed class Symbol
 {
-    internal Symbol(EodHistoricalData.Sdk.Models.Symbol symbol)
+    public Symbol(EodHistoricalData.Sdk.Models.Symbol symbol)
     {
         Code = symbol.Code ?? throw new ArgumentException($"{nameof(symbol.Code)} cannot be null");
         Name = symbol.Name ?? throw new ArgumentException($"{nameof(symbol.Name)} cannot be null");

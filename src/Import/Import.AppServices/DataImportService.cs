@@ -2,6 +2,7 @@
 using EodHistoricalData.Sdk.Models;
 using Import.Infrastructure.Abstractions;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using static Import.Infrastructure.Configuration.Constants;
 
 namespace Import.AppServices
@@ -14,17 +15,17 @@ namespace Import.AppServices
         private readonly ILogger? logger;
         private readonly HashSet<Symbol> allSymbols;
 
-        public delegate void ApiLimitReachedHandler(object sender, ApiLimitReachedException apiLimitReachedException);
+        public delegate void ApiLimitReachedHandler(object? sender, ApiLimitReachedException apiLimitReachedException);
 
         public event ApiLimitReachedHandler? ApiLimitReachedEventHandler;
 
-        public delegate void ApiResponseExceptionHandler(object sender,
+        public delegate void ApiResponseExceptionHandler(object? sender,
             ApiResponseException apiResponseException,
             string[] symbols);
 
         public event ApiResponseExceptionHandler? ApiResponseExceptionEventHandler;
 
-        public delegate void CommunicationHandler(object sender, string message);
+        public delegate void CommunicationHandler(object? sender, string message);
 
         public event CommunicationHandler? CommunicationEventHandler;
 
@@ -139,7 +140,7 @@ namespace Import.AppServices
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (exchange == dataType && dataType == DataTypes.Exchanges) // body Exchange and DateType are "Exchanges"
+            if (exchange == dataType && dataType == DataTypes.Exchanges) // both Exchange and DateType are "Exchanges"
             {
                 int estimatedCost = ApiService.GetCost(ApiService.ExchangesUri);
                 if (estimatedCost > ApiService.Available)
@@ -212,7 +213,7 @@ namespace Import.AppServices
 
                 if (symbolsWithOptions.Any())
                 {
-                    int estimatedCost = ApiService.GetCost(ApiService.EodUri, symbolsForExchange.Length);
+                    int estimatedCost = ApiService.GetCost(ApiService.OptionsUri, symbolsForExchange.Length);
                     if (estimatedCost > ApiService.Available)
                     {
                         ApiLimitReachedEventHandler?.Invoke(this, new ApiLimitReachedException(
@@ -265,11 +266,28 @@ namespace Import.AppServices
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            foreach (var symbol in symbols)
+            await Parallel.ForEachAsync(symbols, new ParallelOptions()
             {
-                var prices = await dataClient.GetPricesForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
-                await importsDbContext.SavePriceActionsAsync(symbol.Code, symbol.Exchange, prices, cancellationToken);
-            }
+                MaxDegreeOfParallelism = 5,
+                CancellationToken = cancellationToken
+            }, async (symbol, t) =>
+            {
+                try
+                {
+                    var prices = await dataClient.GetPricesForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
+                    await importsDbContext.SavePriceActionsAsync(symbol.Code, symbol.Exchange, prices, cancellationToken);
+                }
+                catch (JsonException jsonExc)
+                {
+                    logger?.LogError(jsonExc, "Could not parse price actions for '{SYMBOL}'", symbol);
+                }
+            });
+
+            //foreach (var symbol in symbols)
+            //{
+            //    var prices = await dataClient.GetPricesForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
+            //    await importsDbContext.SavePriceActionsAsync(symbol.Code, symbol.Exchange, prices, cancellationToken);
+            //}
         }
 
         private async Task SaveOptionsAsync(Symbol[] symbols, CancellationToken cancellationToken)
@@ -296,11 +314,6 @@ namespace Import.AppServices
             }
 
             return Task.CompletedTask;
-        }
-
-        private void HandleApiResponseException(ApiResponseException exc, string[] symbols)
-        {
-            ApiResponseExceptionEventHandler?.Invoke(this, exc, symbols);
         }
 
         private void Communicate(string message)
