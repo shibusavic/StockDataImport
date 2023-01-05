@@ -73,6 +73,64 @@ UPDATE public.symbols SET has_options = @HasOptions WHERE code = Any(@Codes)";
         }
     }
 
+    public async Task<IEnumerable<SymbolMetaData>> GetSymbolMetaDataAsync(CancellationToken cancellationToken = default)
+    {
+        const string initialSql =
+@"SELECT S.code as Symbol, S.exchange, S.utc_timestamp as LastUpdated,
+COALESCE(has_options, false) as HasOptions FROM public.symbols S
+WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = code AND exchange = S.exchange)";
+
+        const string optionsSql =
+@"SELECT O.symbol, O.utc_timestamp AS LastUpdated FROM public.options O
+WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = O.symbol AND exchange = O.exchange)";
+
+        const string incomeStatementSql =
+@"SELECT C.symbol, C.exchange, I.date FROM public.company_income_statements I
+JOIN public.companies C ON I.company_id = C.global_id
+WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = C.symbol AND exchange = C.exchange)";
+
+        const string companiesSql =
+@"SELECT C.symbol, C.exchange, C.utc_timestamp AS LastUpdated FROM public.companies C
+WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = C.symbol AND exchange = C.exchange)";
+
+        const string priceSql =
+@"SELECT P.symbol, P.exchange, P.close, O.start
+FROM public.price_actions P
+INNER JOIN 
+(SELECT symbol, exchange, MAX(start) AS start
+FROM public.price_actions
+GROUP BY symbol, exchange) O ON O.symbol = P.symbol
+AND O.exchange = P.exchange
+AND O.start = P.start";
+
+        using var connection = await GetOpenConnectionAsync(cancellationToken);
+
+        var metaData = (await connection.QueryAsync<SymbolMetaData>(initialSql)).ToArray();
+        var optionsData = (await connection.QueryAsync<(string? Symbol, DateTime? LastUpdated)>(optionsSql)).ToArray();
+        var companyData = (await connection.QueryAsync<(string? Symbol, string? Exchange, DateTime? LastUpdated)>(companiesSql)).ToArray();
+        var incomeData = (await connection.QueryAsync<(string? Symbol, string? Exchange, DateTime? LastDate)>(incomeStatementSql)).ToArray();
+        var priceData = (await connection.QueryAsync<(string Symbol, string Exchange, decimal Close, DateTime Start)>(priceSql)).ToArray();
+
+        if (metaData.Length > 0)
+        {
+            for (int i = 0; i < metaData.Length; i++)
+            {
+                metaData[i].LastUpdatedCompany = companyData.FirstOrDefault(o => o.Symbol == metaData[i].Symbol && o.Exchange == metaData[i].Exchange).LastUpdated;
+
+                var lastPrice = priceData.FirstOrDefault(p => p.Symbol == metaData[i].Symbol && p.Exchange == metaData[i].Exchange);
+                if (lastPrice.Close > 0)
+                {
+                    metaData[i].LastTrade = (lastPrice.Start, lastPrice.Close);
+                }
+
+                metaData[i].LastUpdatedIncomeStatement = incomeData.FirstOrDefault(a => a.Symbol == metaData[i].Symbol &&
+                    a.Exchange == metaData[i].Exchange).LastDate;
+            }
+        }
+
+        return metaData;
+    }
+
     /// <summary>
     /// Get the <see cref="EodHistoricalData.Sdk.Models.Symbol"/>s for an exchange.
     /// </summary>
@@ -142,4 +200,42 @@ WHERE code = @Code
             Exchange = exchange
         });
     }
+
+    public Task SaveSymbolsToIgnore(IEnumerable<IgnoredSymbol> symbols, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(SymbolToIgnore));
+
+        if (!string.IsNullOrWhiteSpace(sql))
+        {
+            return ExecuteAsync(sql, symbols.Select(s => new SymbolToIgnore(s.Symbol, s.Exchange, s.Reason)));
+        }
+
+        throw new Exception($"Could not create upsert for {nameof(SymbolToIgnore)}");
+    }
+
+    public Task SaveSymbolToIgnore(IgnoredSymbol symbol, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(SymbolToIgnore));
+
+        if (!string.IsNullOrWhiteSpace(sql))
+        {
+            return ExecuteAsync(sql, new SymbolToIgnore(symbol.Symbol, symbol.Exchange, symbol.Reason));
+        }
+
+        throw new Exception($"Could not create upsert for {nameof(SymbolToIgnore)}");
+    }
+
+    public async Task<IEnumerable<IgnoredSymbol>> GetSymbolsToIgnoreAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        const string sql = @"SELECT DISTINCT symbol, exchange, reason FROM public.symbols_to_ignore";
+
+        return (await QueryAsync<SymbolToIgnore>(sql)).Select(s => new IgnoredSymbol(s.Symbol, s.Exchange, s.Reason));
+    }
+
 }

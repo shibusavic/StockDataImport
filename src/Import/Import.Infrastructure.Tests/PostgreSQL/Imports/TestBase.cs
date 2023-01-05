@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Imports;
 
-public class TestBase : IClassFixture<DbFixture>
+public abstract class TestBase : IClassFixture<DbFixture>
 {
     protected readonly DbFixture fixture;
     protected readonly JsonSerializerOptions serializerOptions;
@@ -37,5 +37,55 @@ public class TestBase : IClassFixture<DbFixture>
 
         serializerOptions.Converters.Add(new LongJsonConverter());
         serializerOptions.Converters.Add(new NullableLongJsonConverter());
+    }
+
+    internal async Task LoadImportsNyseExchangesAndSymbolsAsync(ImportsDbContext dbContext)
+    {
+        string json = File.ReadAllText(@"MockData/exchanges.json");
+        var exchanges = JsonSerializer.Deserialize<EodHistoricalData.Sdk.Models.Exchange[]>(json, serializerOptions);
+
+        Assert.NotNull(exchanges);
+        Assert.NotEmpty(exchanges);
+
+        await dbContext.SaveExchangesAsync(exchanges);
+
+        json = File.ReadAllText(@"MockData/nyse-symbols.json");
+
+        var symbols = JsonSerializer.Deserialize<EodHistoricalData.Sdk.Models.Symbol[]>(json, serializerOptions);
+
+        Assert.NotNull(symbols);
+        Assert.NotEmpty(symbols);
+
+        await dbContext.SaveSymbolsAsync(symbols);
+    }
+
+    internal async Task LoadImportsNasdaqExchangesAndSymbolsAsync(ImportsDbContext dbContext)
+    {
+        string json = File.ReadAllText(@"MockData/exchanges.json");
+        var exchanges = JsonSerializer.Deserialize<EodHistoricalData.Sdk.Models.Exchange[]>(json, serializerOptions);
+
+        Assert.NotNull(exchanges);
+        Assert.NotEmpty(exchanges);
+
+        await dbContext.SaveExchangesAsync(exchanges);
+
+        json = File.ReadAllText(@"MockData/nasdaq-symbols.json");
+
+        var symbols = JsonSerializer.Deserialize<EodHistoricalData.Sdk.Models.Symbol[]>(json, serializerOptions);
+
+        Assert.NotNull(symbols);
+        Assert.NotEmpty(symbols);
+
+        await dbContext.SaveSymbolsAsync(symbols);
+    }
+
+    internal async Task LoadImportsAaplCompanyAsync(ImportsDbContext dbContext)
+    {
+        string json = File.ReadAllText(@"MockData/aapl-fundamentals.json");
+        var companies = JsonSerializer.Deserialize<EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.FundamentalsCollection>(json, serializerOptions);
+
+        Assert.NotNull(companies.General.Name);
+
+        await dbContext.SaveCompanyAsync(companies);
     }
 }

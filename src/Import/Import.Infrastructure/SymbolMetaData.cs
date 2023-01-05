@@ -7,11 +7,12 @@
         {
         }
 
-        internal SymbolMetaData(string symbol, string? exchange, DateTime lastUpdated)
+        internal SymbolMetaData(string symbol, string? exchange, DateTime lastUpdated, bool hasOptions = false)
         {
             Symbol = symbol;
             Exchange = exchange;
             LastUpdated = lastUpdated;
+            HasOptions = hasOptions;
         }
 
         public string Symbol { get; }
@@ -20,15 +21,26 @@
 
         public string Code => ToString();
 
-        public string? Sector { get; }
+        public string? Type { get; internal set; }
 
-        public string? Industry { get; }
+        public bool HasOptions { get; internal set; }
+
+        public string? Sector { get; internal set; }
+
+        public string? Industry { get; internal set; }
+
+        public (DateTime? Start, decimal? Close) LastTrade { get; internal set; }
 
         public DateTime LastUpdated { get; internal set; }
 
         public DateTime? LastUpdatedOptions { get; internal set; }
 
+        public DateTime? LastUpdatedCompany { get; internal set; }
+
         public DateTime? LastUpdatedIncomeStatement { get; internal set; }
+
+        //public bool ReadyForFundamentalsUpdate => 
+
 
         public override string ToString() => Exchange == null ? Symbol : $"{Symbol}.{Exchange}";
 

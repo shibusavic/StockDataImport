@@ -7,10 +7,10 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
 /// </summary>
 public struct Address
 {
-    public string Street;
-    public string City;
-    public string State;
-    public string Country;
+    public string? Street;
+    public string? City;
+    public string? State;
+    public string? Country;
     [JsonPropertyName("Zip")]
-    public string PostalCode;
+    public string? PostalCode;
 }

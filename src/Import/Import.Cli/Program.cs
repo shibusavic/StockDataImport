@@ -350,6 +350,11 @@ void ConfigureServices()
 
 void Communicate(string? message, bool force = false)
 {
+    if (!string.IsNullOrWhiteSpace(message))
+    {
+        logger?.LogInformation(message);
+    }
+
     if (verbose || force)
     {
         Console.WriteLine(message ?? string.Empty);

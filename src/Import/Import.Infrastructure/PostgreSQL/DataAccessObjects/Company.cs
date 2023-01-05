@@ -56,26 +56,26 @@ internal class Company
         string currencySymbol,
         string countryName,
         string countryIso,
-        string isin,
-        string lei,
-        string cusip,
-        string cik,
-        string employerIdNumber,
-        string fiscalYearEnd,
+        string? isin,
+        string? lei,
+        string? cusip,
+        string? cik,
+        string? employerIdNumber,
+        string? fiscalYearEnd,
         DateTime ipoDate,
-        string internationalDomestic,
-        string sector,
-        string industry,
-        string gicSector,
-        string gicGroup,
-        string gicIndustry,
-        string homeCategory,
-        bool isDelisted,
-        string description,
-        string phone,
-        string webUrl,
-        string logoUrl,
-        int fullTimeEmployees,
+        string? internationalDomestic,
+        string? sector,
+        string? industry,
+        string? gicSector,
+        string? gicGroup,
+        string? gicIndustry,
+        string? homeCategory,
+        bool? isDelisted,
+        string? description,
+        string? phone,
+        string? webUrl,
+        string? logoUrl,
+        int? fullTimeEmployees,
         DateTime updateAt,
         DateTime utcTimestamp)
     {
@@ -114,7 +114,6 @@ internal class Company
         UtcTimestamp = utcTimestamp;
     }
 
-
     [ColumnWithKey("global_id", Order = 1, TypeName = "uuid", IsPartOfKey = false)]
     public Guid GlobalId { get; }
 
@@ -149,64 +148,64 @@ internal class Company
     public string CountryIso { get; }
 
     [ColumnWithKey("isin", Order = 12, TypeName = "text", IsPartOfKey = false)]
-    public string Isin { get; }
+    public string? Isin { get; }
 
     [ColumnWithKey("lei", Order = 13, TypeName = "text", IsPartOfKey = false)]
-    public string Lei { get; }
+    public string? Lei { get; }
 
     [ColumnWithKey("cusip", Order = 14, TypeName = "text", IsPartOfKey = false)]
-    public string Cusip { get; }
+    public string? Cusip { get; }
 
     [ColumnWithKey("cik", Order = 15, TypeName = "text", IsPartOfKey = false)]
-    public string Cik { get; }
+    public string? Cik { get; }
 
     [ColumnWithKey("employer_id_number", Order = 16, TypeName = "text", IsPartOfKey = false)]
-    public string EmployerIdNumber { get; }
+    public string? EmployerIdNumber { get; }
 
     [ColumnWithKey("fiscal_year_end", Order = 17, TypeName = "text", IsPartOfKey = false)]
-    public string FiscalYearEnd { get; }
+    public string? FiscalYearEnd { get; }
 
     [ColumnWithKey("ipo_date", Order = 18, TypeName = "date", IsPartOfKey = false)]
     public DateTime IpoDate { get; }
 
     [ColumnWithKey("international_domestic", Order = 19, TypeName = "text", IsPartOfKey = false)]
-    public string InternationalDomestic { get; }
+    public string? InternationalDomestic { get; }
 
     [ColumnWithKey("sector", Order = 20, TypeName = "text", IsPartOfKey = false)]
-    public string Sector { get; }
+    public string? Sector { get; }
 
     [ColumnWithKey("industry", Order = 21, TypeName = "text", IsPartOfKey = false)]
-    public string Industry { get; }
+    public string? Industry { get; }
 
     [ColumnWithKey("gic_sector", Order = 22, TypeName = "text", IsPartOfKey = false)]
-    public string GicSector { get; }
+    public string? GicSector { get; }
 
     [ColumnWithKey("gic_group", Order = 23, TypeName = "text", IsPartOfKey = false)]
-    public string GicGroup { get; }
+    public string? GicGroup { get; }
 
     [ColumnWithKey("gic_industry", Order = 24, TypeName = "text", IsPartOfKey = false)]
-    public string GicIndustry { get; }
+    public string? GicIndustry { get; }
 
     [ColumnWithKey("home_category", Order = 25, TypeName = "text", IsPartOfKey = false)]
-    public string HomeCategory { get; }
+    public string? HomeCategory { get; }
 
     [ColumnWithKey("is_delisted", Order = 26, TypeName = "boolean", IsPartOfKey = false)]
-    public bool IsDelisted { get; }
+    public bool? IsDelisted { get; }
 
     [ColumnWithKey("description", Order = 27, TypeName = "text", IsPartOfKey = false)]
-    public string Description { get; }
+    public string? Description { get; }
 
     [ColumnWithKey("phone", Order = 28, TypeName = "text", IsPartOfKey = false)]
-    public string Phone { get; }
+    public string? Phone { get; }
 
     [ColumnWithKey("web_url", Order = 29, TypeName = "text", IsPartOfKey = false)]
-    public string WebUrl { get; }
+    public string? WebUrl { get; }
 
     [ColumnWithKey("logo_url", Order = 30, TypeName = "text", IsPartOfKey = false)]
-    public string LogoUrl { get; }
+    public string? LogoUrl { get; }
 
     [ColumnWithKey("full_time_employees", Order = 31, TypeName = "integer", IsPartOfKey = false)]
-    public int FullTimeEmployees { get; }
+    public int? FullTimeEmployees { get; }
 
     [ColumnWithKey("update_at", Order = 32, TypeName = "date", IsPartOfKey = false)]
     public DateTime UpdateAt { get; }

@@ -13,74 +13,106 @@ internal partial class ImportsDbContext
             company.General.Exchange, company.General.Type, company.General.Name);
 
         var companyGeneral = new DataAccessObjects.Company(company, companyId);
-        var address = new DataAccessObjects.CompanyAddress(companyId, company.General.AddressData);
-        var listings = company.General.Listings.Values
-            .Select(v => new DataAccessObjects.CompanyListing(companyId, v)).ToArray();
-        var officers = company.General.Officers.Values
+
+        if (string.IsNullOrWhiteSpace(companyGeneral.Symbol))
+        {
+            string x = "";
+        }
+        var address = company.General.AddressData == null ? null :
+            new DataAccessObjects.CompanyAddress(companyId, company.General.AddressData.GetValueOrDefault());
+
+        var listings = company.General.Listings == null ? null
+            : company.General.Listings.Values.Select(v => new DataAccessObjects.CompanyListing(companyId, v)).ToArray();
+
+        var officers = company.General.Officers == null ? null : company.General.Officers.Values
             .Select(v => new DataAccessObjects.CompanyOfficer(companyId, v)).ToArray();
+
         var highlights = new DataAccessObjects.CompanyHighlights(companyId, company.Highlights);
         var valuation = new DataAccessObjects.CompanyValuation(companyId, company.Valuation);
         var shareStats = new DataAccessObjects.CompanySharesStat(companyId, company.SharesStats);
         var technicals = new DataAccessObjects.CompanyTechnicals(companyId, company.Technicals);
         var dividend = new DataAccessObjects.CompanyDividend(companyId, company.SplitsDividends);
-        var dividendsByYear = company.SplitsDividends.NumberDividendsByYear.Values
-            .Select(v => new DataAccessObjects.CompanyDividendsByYear(companyId, v)).ToArray();
+        var dividendsByYear = company.SplitsDividends.NumberDividendsByYear == null ? null
+            : company.SplitsDividends.NumberDividendsByYear.Values
+                .Select(v => new DataAccessObjects.CompanyDividendsByYear(companyId, v)).ToArray();
         var analystRatings = new DataAccessObjects.CompanyAnalystRating(companyId, company.AnalystRatings);
 
-        var institutionHolders = company.Holders.Institutions.Values
+        var institutionHolders = company.Holders.Institutions == null ? null
+            : company.Holders.Institutions.Values
             .Select(h => new DataAccessObjects.CompanyHolder(companyId, "Institution", h));
-        var fundHolders = company.Holders.Funds.Values
-            .Select(h => new DataAccessObjects.CompanyHolder(companyId, "Fund", h));
-        var holders = institutionHolders.Union(fundHolders).ToArray();
 
-        var insiderTransactions = company.InsiderTransactions.Values
-            .Select(t => new DataAccessObjects.CompanyInsiderTransaction(companyId, t)).ToArray();
+        var fundHolders = company.Holders.Funds == null ? null 
+            : company.Holders.Funds.Values
+                .Select(h => new DataAccessObjects.CompanyHolder(companyId, "Fund", h));
+
+        var holders = (institutionHolders ?? Array.Empty<DataAccessObjects.CompanyHolder>()).Union(
+            (fundHolders ?? Array.Empty<DataAccessObjects.CompanyHolder>())).ToArray();
+
+        var insiderTransactions = company.InsiderTransactions == null ? null
+            : company.InsiderTransactions.Values
+                .Select(t => new DataAccessObjects.CompanyInsiderTransaction(companyId, t)).ToArray();
 
         var esgScore = new DataAccessObjects.CompanyEsgScore(companyId, company.EsgScores);
 
-        var activitiesInvolvement = company.EsgScores.ActivitiesInvolvement.Values
-            .Select(a => new DataAccessObjects.CompanyEsgActivity(companyId, a)).ToArray();
+        var activitiesInvolvement = company.EsgScores.ActivitiesInvolvement == null ? null
+            : company.EsgScores.ActivitiesInvolvement.Values
+                .Select(a => new DataAccessObjects.CompanyEsgActivity(companyId, a)).ToArray();
 
-        var outstandingSharesAnnual = company.OutstandingShares.Annual.Values
-            .Select(s => new DataAccessObjects.CompanyOutstandingShares(companyId, s));
+        var outstandingSharesAnnual = company.OutstandingShares.Annual == null ? null
+            : company.OutstandingShares.Annual.Values
+                .Select(s => new DataAccessObjects.CompanyOutstandingShares(companyId, s));
 
-        var outstandingSharesQuarterly = company.OutstandingShares.Quarterly.Values
-            .Select(s => new DataAccessObjects.CompanyOutstandingShares(companyId, s));
+        var outstandingSharesQuarterly = company.OutstandingShares.Quarterly == null ? null
+            : company.OutstandingShares.Quarterly.Values
+                .Select(s => new DataAccessObjects.CompanyOutstandingShares(companyId, s));
 
-        var outstandingShares = outstandingSharesAnnual.Union(outstandingSharesQuarterly).ToArray();
+        var outstandingShares = (outstandingSharesAnnual ?? Array.Empty<DataAccessObjects.CompanyOutstandingShares>())
+            .Union(outstandingSharesQuarterly ?? Array.Empty<DataAccessObjects.CompanyOutstandingShares>()).ToArray();
 
-        var earningsHistory = company.Earnings.History.Values
-            .Select(h => new DataAccessObjects.CompanyEarningsHistory(companyId, h)).ToArray();
+        var earningsHistory = company.Earnings.History == null ? null 
+            : company.Earnings.History.Values
+                .Select(h => new DataAccessObjects.CompanyEarningsHistory(companyId, h)).ToArray();
 
-        var earningsTrends = company.Earnings.Trend.Values
-            .Select(t => new DataAccessObjects.CompanyEarningsTrend(companyId, t)).ToArray();
+        var earningsTrends = company.Earnings.Trend == null ? null
+            : company.Earnings.Trend.Values
+                .Select(t => new DataAccessObjects.CompanyEarningsTrend(companyId, t)).ToArray();
 
-        var earningsAnnual = company.Earnings.Annual.Values
-            .Select(a => new DataAccessObjects.CompanyEarningsAnnual(companyId, a)).ToArray();
+        var earningsAnnual = company.Earnings.Annual == null ? null
+            : company.Earnings.Annual.Values
+                .Select(a => new DataAccessObjects.CompanyEarningsAnnual(companyId, a)).ToArray();
 
-        var balanceSheetQuarterly = company.Financials.BalanceSheet.Quarterly.Values
-            .Select(b => new DataAccessObjects.CompanyBalanceSheet(companyId, "Quarterly", b));
+        var balanceSheetQuarterly = company.Financials.BalanceSheet.Quarterly == null ? null
+            : company.Financials.BalanceSheet.Quarterly.Values
+                .Select(b => new DataAccessObjects.CompanyBalanceSheet(companyId, "Quarterly", b));
 
-        var balanceSheetAnnual = company.Financials.BalanceSheet.Yearly.Values
-            .Select(b => new DataAccessObjects.CompanyBalanceSheet(companyId, "Annual", b));
+        var balanceSheetAnnual = company.Financials.BalanceSheet.Yearly == null ? null
+            : company.Financials.BalanceSheet.Yearly.Values
+                .Select(b => new DataAccessObjects.CompanyBalanceSheet(companyId, "Annual", b));
 
-        var balanceSheets = balanceSheetQuarterly.Union(balanceSheetAnnual).ToArray();
+        var balanceSheets = (balanceSheetQuarterly ?? Array.Empty<DataAccessObjects.CompanyBalanceSheet>())
+            .Union(balanceSheetAnnual ?? Array.Empty<DataAccessObjects.CompanyBalanceSheet>()).ToArray();
 
-        var cashFlowQuarterly = company.Financials.CashFlow.Quarterly.Values
-            .Select(c => new DataAccessObjects.CompanyCashFlow(companyId, "Quarterly", c));
+        var cashFlowQuarterly = company.Financials.CashFlow.Quarterly == null ? null
+            : company.Financials.CashFlow.Quarterly.Values
+                .Select(c => new DataAccessObjects.CompanyCashFlow(companyId, "Quarterly", c));
 
-        var cashFlowAnnual = company.Financials.CashFlow.Yearly.Values
-            .Select(c => new DataAccessObjects.CompanyCashFlow(companyId, "Annual", c));
+        var cashFlowAnnual = company.Financials.CashFlow.Yearly == null ? null
+            : company.Financials.CashFlow.Yearly.Values
+                .Select(c => new DataAccessObjects.CompanyCashFlow(companyId, "Annual", c));
 
-        var cashFlows = cashFlowQuarterly.Union(cashFlowAnnual).ToArray();
+        var cashFlows = (cashFlowQuarterly ?? Array.Empty<DataAccessObjects.CompanyCashFlow>())
+            .Union(cashFlowAnnual ?? Array.Empty<DataAccessObjects.CompanyCashFlow>()).ToArray();
 
-        var incomeStatementQuarterly = company.Financials.IncomeStatement.Quarterly.Values
-            .Select(i => new DataAccessObjects.CompanyIncomeStatement(companyId, "Quarterly", i));
+        var incomeStatementQuarterly = company.Financials.IncomeStatement.Quarterly == null? null
+            : company.Financials.IncomeStatement.Quarterly.Values
+                .Select(i => new DataAccessObjects.CompanyIncomeStatement(companyId, "Quarterly", i));
 
-        var incomeStatementAnnual = company.Financials.IncomeStatement.Yearly.Values
-            .Select(i => new DataAccessObjects.CompanyIncomeStatement(companyId, "Annual", i));
+        var incomeStatementAnnual = company.Financials.IncomeStatement.Yearly == null ? null
+            : company.Financials.IncomeStatement.Yearly.Values
+                .Select(i => new DataAccessObjects.CompanyIncomeStatement(companyId, "Annual", i));
 
-        var incomeStatements = incomeStatementQuarterly.Union(incomeStatementAnnual).ToArray();
+        var incomeStatements = (incomeStatementQuarterly ?? Array.Empty<DataAccessObjects.CompanyIncomeStatement>())
+            .Union(incomeStatementAnnual ?? Array.Empty<DataAccessObjects.CompanyIncomeStatement>()).ToArray();
 
         List<Task> taskList = new()
         {
@@ -166,7 +198,7 @@ WHERE symbol = @Symbol AND exchange = @Exchange AND type = @Type AND name = @Nam
         }
     }
 
-    private async Task SaveFundamentalDataAsync<T>(T[] obj, CancellationToken cancellationToken = default)
+    private async Task SaveFundamentalDataAsync<T>(T[]? obj, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

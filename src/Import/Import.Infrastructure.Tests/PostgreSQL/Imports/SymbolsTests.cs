@@ -4,13 +4,10 @@ using Import.Infrastructure.IntegrationTests.Fixtures;
 namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Imports;
 
 [Collection("Integration Tests")]
-public class SymbolsTests : IClassFixture<DbFixture>
+public class SymbolsTests : TestBase
 {
-    private readonly DbFixture fixture;
-
-    public SymbolsTests(DbFixture fixture)
+    public SymbolsTests(DbFixture fixture) : base(fixture)
     {
-        this.fixture = fixture;
     }
 
     [Fact]
@@ -27,6 +24,111 @@ public class SymbolsTests : IClassFixture<DbFixture>
         var afterCount = await sut.CountSymbolsAsync();
 
         Assert.Equal(beforeCount + num, afterCount);
+    }
+
+    [Fact]
+    public async Task MetaData_Hydrated()
+    {
+        var sut = fixture.ImportDbContext;
+
+        await LoadImportsNyseExchangesAndSymbolsAsync(sut);
+
+        var metaData = (await sut.GetSymbolMetaDataAsync()).ToArray();
+
+        Assert.NotNull(metaData);
+        Assert.NotEmpty(metaData);
+
+        await sut.SavePriceActionsAsync(metaData[0].Symbol, metaData[0].Exchange ?? "None", new PriceAction[] {
+            new PriceAction()
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(-1)),
+                Close = 6M,
+                Open = 9M,
+                High = 11M,
+                Low = 6M,
+                AdjustedClose = 6M,
+                Volume = 200_000
+            },
+            new PriceAction()
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now),
+                Close = 10M,
+                Open = 9M,
+                High = 11M,
+                Low = 8M,
+                AdjustedClose = 10M,
+                Volume = 100_000
+            }
+        });
+
+        metaData = (await sut.GetSymbolMetaDataAsync()).ToArray();
+
+        Assert.Null(metaData[0].LastUpdatedCompany); // no company check in this test.
+        Assert.Equal(10M, metaData[0].LastTrade.Close);
+        Assert.NotNull(metaData[0].LastTrade.Start);
+    }
+
+    [Fact]
+    public async Task MetaData_CompanyExists_LastUpdatesNotNull()
+    {
+        var sut = fixture.ImportDbContext;
+
+        await LoadImportsNasdaqExchangesAndSymbolsAsync(sut);
+
+        await LoadImportsAaplCompanyAsync(sut);
+
+        var metaData = (await sut.GetSymbolMetaDataAsync()).ToArray();
+
+        Assert.NotNull(metaData);
+        Assert.NotEmpty(metaData);
+
+        var item = metaData.FirstOrDefault(d => d.Symbol == "AAPL");
+
+        Assert.NotNull(item);
+
+        Assert.NotNull(item.LastUpdatedCompany);
+        Assert.NotNull(item.LastUpdatedIncomeStatement);
+    }
+
+    [Fact]
+    public async Task SaveAndGet_SymbolToIgnore()
+    {
+        var sut = fixture.ImportDbContext;
+
+        var beforeCount = await sut.CountSymbolsToIgnoreAsync();
+
+        await sut.SaveSymbolToIgnore(CreateSymbolToIgnore());
+
+        var afterCount = await sut.CountSymbolsToIgnoreAsync();
+
+        Assert.Equal(beforeCount + 1, afterCount);
+    }
+
+    [Fact]
+    public async Task SaveAndGet_SymbolsToIgnore()
+    {
+        var sut = fixture.ImportDbContext;
+
+        var beforeCount = await sut.CountSymbolsToIgnoreAsync();
+
+        await sut.SaveSymbolsToIgnore(CreateSymbolsToIgnore(5));
+
+        var afterCount = await sut.CountSymbolsToIgnoreAsync();
+
+        Assert.Equal(beforeCount + 5, afterCount);
+    }
+
+    private IgnoredSymbol CreateSymbolToIgnore()
+    {
+        return new IgnoredSymbol(Guid.NewGuid().ToString()[0..4], "TEST", "REASON");
+    }
+
+    private IEnumerable<IgnoredSymbol> CreateSymbolsToIgnore(int number = 5)
+    {
+        for (int i = 0; i < number; i++)
+        {
+            yield return CreateSymbolToIgnore();
+        }
     }
 
     private IEnumerable<Symbol> CreateSymbols(int numberToCreate = 1)

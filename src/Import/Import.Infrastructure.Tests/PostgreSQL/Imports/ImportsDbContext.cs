@@ -196,6 +196,8 @@ internal class ImportsDbContext : Infrastructure.PostgreSQL.ImportsDbContext
 
     public async Task<int> CountSymbolsAsync() => await CountForTable("public.symbols");
 
+    public async Task<int> CountSymbolsToIgnoreAsync() => await CountForTable("public.symbols_to_ignore");
+
     public async Task<int> CountSplitsAsync() => await CountForTable("public.splits");
 
     public async Task<int> CountDividendsAsync() => await CountForTable("public.dividends");

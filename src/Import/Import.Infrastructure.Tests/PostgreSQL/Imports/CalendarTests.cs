@@ -1,5 +1,4 @@
-﻿using EodHistoricalData.Sdk.Models.Calendar;
-using Import.Infrastructure.IntegrationTests.Fixtures;
+﻿using Import.Infrastructure.IntegrationTests.Fixtures;
 using System.Text.Json;
 
 namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Imports;
@@ -70,7 +69,7 @@ public class CalendarTests : TestBase
 
         Assert.Equal(0, count);
 
-        var trends = new TrendCollection()
+        var trends = new EodHistoricalData.Sdk.Models.Calendar.TrendCollection()
         {
             Type = dao.Type,
             Description = dao.Description,

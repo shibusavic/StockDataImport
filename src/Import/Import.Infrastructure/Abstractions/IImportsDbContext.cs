@@ -47,4 +47,12 @@ internal partial interface IImportsDbContext : IDbContext
     Task SaveEarnings(EarningsCollection earnings, CancellationToken cancellationToken = default);
 
     Task SaveTrends(TrendCollection trends, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<SymbolMetaData>> GetSymbolMetaDataAsync(CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<IgnoredSymbol>> GetSymbolsToIgnoreAsync(CancellationToken cancellationToken = default);
+
+    Task SaveSymbolsToIgnore(IEnumerable<IgnoredSymbol> symbols, CancellationToken cancellationToken = default);
+
+    Task SaveSymbolToIgnore(IgnoredSymbol symbol, CancellationToken cancellationToken = default);
 }

@@ -6,7 +6,7 @@ namespace EodHistoricalData.Sdk;
 
 public sealed partial class DataClient : IDataClient
 {
-    private const string SymbolListSourceName = "Symbol List";
+    private const string SymbolListSourceName = "Symbols";
 
     public async Task<IEnumerable<Symbol>> GetSymbolListAsync(string exchangeCode, CancellationToken cancellationToken = default)
     {
@@ -38,5 +38,5 @@ public sealed partial class DataClient : IDataClient
     }
 
     private string BuildSymbolListUri(string exchangeCode) =>
-            $"{ApiService.ExchangeSymbolListUri}{exchangeCode}?{GetTokenAndFormat()}";
+        $"{ApiService.ExchangeSymbolListUri}{exchangeCode}?{GetTokenAndFormat()}";
 }

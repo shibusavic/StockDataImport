@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.Metrics;
+using System.IO;
 using Shibusa.Data;
 
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
@@ -8,9 +10,16 @@ internal class CompanyAddress
 {
     public CompanyAddress(Guid companyId,
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.Address address)
-        : this(companyId, DateTime.UtcNow, address.Street, address.City,
-              address.Street, address.Country, address.PostalCode, DateTime.UtcNow)
     {
+        if (address.Equals(default)) { throw new ArgumentNullException(nameof(address)); }
+        CompanyId = companyId;
+        DateCaptured = DateTime.UtcNow;
+        Street = address.Street ?? "";
+        City = address.City ?? "";
+        State = address.State ?? "";
+        Country = address.Country ?? "";
+        PostalCode = address.PostalCode ?? "";
+        UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyAddress(
@@ -35,26 +44,26 @@ internal class CompanyAddress
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid CompanyId { get;  }
+    public Guid CompanyId { get; }
 
     [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DateCaptured { get;  }
+    public DateTime DateCaptured { get; }
 
     [ColumnWithKey("street", Order = 3, TypeName = "text", IsPartOfKey = true)]
-    public string Street { get;  }
+    public string Street { get; }
 
     [ColumnWithKey("city", Order = 4, TypeName = "text", IsPartOfKey = false)]
-    public string City { get;  }
+    public string City { get; }
 
     [ColumnWithKey("state", Order = 5, TypeName = "text", IsPartOfKey = false)]
-    public string State { get;  }
+    public string State { get; }
 
     [ColumnWithKey("country", Order = 6, TypeName = "text", IsPartOfKey = false)]
-    public string Country { get;  }
+    public string Country { get; }
 
     [ColumnWithKey("postal_code", Order = 7, TypeName = "text", IsPartOfKey = true)]
-    public string PostalCode { get;  }
+    public string PostalCode { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }
