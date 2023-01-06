@@ -1,7 +1,7 @@
 ﻿using EodHistoricalData.Sdk.Models;
-using Import.Infrastructure.IntegrationTests.Fixtures;
+using Import.Infrastructure.Tests.Fixtures;
 
-namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Imports;
+namespace Import.Infrastructure.Tests.PostgreSQL;
 
 [Collection("Integration Tests")]
 public class SymbolsTests : TestBase

@@ -1,8 +1,8 @@
-using Import.Infrastructure.IntegrationTests.Fixtures;
+using Import.Infrastructure.Tests.Fixtures;
 using Import.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
 
-namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Logging;
+namespace Import.Infrastructure.Tests.PostgreSQL;
 
 public class LoggingTests : IClassFixture<DbFixture>
 {

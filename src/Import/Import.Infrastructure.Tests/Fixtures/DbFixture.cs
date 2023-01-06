@@ -1,12 +1,11 @@
 ﻿using Dapper;
-using Import.Infrastructure.IntegrationTests.PostgreSQL.Imports;
-using Import.Infrastructure.IntegrationTests.PostgreSQL.Logging;
+using Import.Infrastructure.Tests.PostgreSQL;
 using Import.Infrastructure.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace Import.Infrastructure.IntegrationTests.Fixtures;
+namespace Import.Infrastructure.Tests.Fixtures;
 
 public class DbFixture : IDisposable
 {

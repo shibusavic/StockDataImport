@@ -1,63 +1,62 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Logging;
 
-namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Logging
+namespace Import.Infrastructure.Tests.PostgreSQL;
+
+internal class LogsDbContext : Infrastructure.PostgreSQL.LogsDbContext
 {
-    internal class LogsDbContext : Infrastructure.PostgreSQL.LogsDbContext
+    public LogsDbContext(string connectionString, ILogger? logger = null) : base(connectionString, logger)
     {
-        public LogsDbContext(string connectionString, ILogger? logger = null) : base(connectionString, logger)
+    }
+
+    internal async Task<IEnumerable<Guid>> GetAllLogIdsAsync()
+    {
+        var connection = await GetOpenConnectionAsync();
+
+        string sql = @"SELECT global_id FROM logs";
+
+        try
         {
+            return await connection.QueryAsync<Guid>(sql);
         }
-
-        internal async Task<IEnumerable<Guid>> GetAllLogIdsAsync()
+        finally
         {
-            var connection = await GetOpenConnectionAsync();
-
-            string sql = @"SELECT global_id FROM logs";
-
-            try
-            {
-                return await connection.QueryAsync<Guid>(sql);
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
+            await connection.CloseAsync();
         }
+    }
 
-        internal async Task<IEnumerable<Guid>> GetAllLogsIdsBeforeDateAsync(DateTime date)
+    internal async Task<IEnumerable<Guid>> GetAllLogsIdsBeforeDateAsync(DateTime date)
+    {
+        const string sql = @"SELECT global_id FROM logs WHERE utc_timestamp < @Date";
+
+        var connection = await GetOpenConnectionAsync();
+
+        try
         {
-            const string sql = @"SELECT global_id FROM logs WHERE utc_timestamp < @Date";
-
-            var connection = await GetOpenConnectionAsync();
-
-            try
+            return await connection.QueryAsync<Guid>(sql, new
             {
-                return await connection.QueryAsync<Guid>(sql, new
-                {
-                    Date = date
-                });
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
+                Date = date
+            });
         }
-
-        internal async Task<int> CountActionLogsAsync()
+        finally
         {
-            const string sql = @"SELECT COUNT(1) FROM action_items";
+            await connection.CloseAsync();
+        }
+    }
 
-            var connection = await GetOpenConnectionAsync();
+    internal async Task<int> CountActionLogsAsync()
+    {
+        const string sql = @"SELECT COUNT(1) FROM action_items";
 
-            try
-            {
-                return await connection.QuerySingleAsync<int>(sql);
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
+        var connection = await GetOpenConnectionAsync();
+
+        try
+        {
+            return await connection.QuerySingleAsync<int>(sql);
+        }
+        finally
+        {
+            await connection.CloseAsync();
         }
     }
 }

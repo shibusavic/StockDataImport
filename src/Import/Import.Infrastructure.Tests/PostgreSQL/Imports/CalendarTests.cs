@@ -1,7 +1,7 @@
-﻿using Import.Infrastructure.IntegrationTests.Fixtures;
+﻿using Import.Infrastructure.Tests.Fixtures;
 using System.Text.Json;
 
-namespace Import.Infrastructure.IntegrationTests.PostgreSQL.Imports;
+namespace Import.Infrastructure.Tests.PostgreSQL;
 
 [Collection("Integration Tests")]
 public class CalendarTests : TestBase

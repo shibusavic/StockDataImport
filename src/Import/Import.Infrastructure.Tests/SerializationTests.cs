@@ -1,7 +1,7 @@
 ﻿using EodHistoricalData.Sdk;
 using System.Text.Json;
 
-namespace Import.Infrastructure.IntegrationTests
+namespace Import.Infrastructure.Tests
 {
     public class SerializationTests
     {

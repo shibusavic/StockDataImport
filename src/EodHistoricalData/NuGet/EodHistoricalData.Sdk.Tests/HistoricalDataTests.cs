@@ -181,7 +181,7 @@ namespace EodHistoricalData.Sdk.Tests
         public async Task GetHistoryForSymbolAsync_FromTo_InclusiveRange()
         {
             DateOnly from = DateOnly.FromDateTime(DateTime.Now.AddDays(-10));
-            while (from.DayOfWeek != DayOfWeek.Monday) { from = from.AddDays(-1); }
+            while (from.DayOfWeek != DayOfWeek.Tuesday) { from = from.AddDays(-1); }
             DateOnly to = from.AddDays(3);
             var dataClient = new DataClient("OeAFFmMliFG5orCUuwAKQ8l4WWFQ67YX");
             var history = await dataClient.GetPricesForSymbolAsync("MCD",

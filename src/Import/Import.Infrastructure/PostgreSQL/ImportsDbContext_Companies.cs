@@ -14,10 +14,6 @@ internal partial class ImportsDbContext
 
         var companyGeneral = new DataAccessObjects.Company(company, companyId);
 
-        if (string.IsNullOrWhiteSpace(companyGeneral.Symbol))
-        {
-            string x = "";
-        }
         var address = company.General.AddressData == null ? null :
             new DataAccessObjects.CompanyAddress(companyId, company.General.AddressData.GetValueOrDefault());
 
