@@ -1,13 +1,29 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using Shibusa.Data;
 using Shibusa.Extensions;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 
 [Table(name: "action_items", Schema = "public")]
-internal class ActionLog
+internal class ActionItem
 {
-    public ActionLog(
+    public ActionItem(Domain.ActionItem action)
+    {
+        GlobalId = action.GlobalId;
+        ActionName = action.ActionName;
+        TargetName = action.TargetName;
+        TargetScope = action.TargetScope;
+        TargetDataType = action.TargetDataType;
+        Priority = action.Priority;
+        Status = action.Status.GetDescription();
+        UtcCreated = action.UtcCreated;
+        UtcStarted = action.UtcStarted;
+        UtcCompleted = action.UtcCompleted;
+        Details = action.Details ?? action.Exception?.Message;
+        UtcTimestamp = DateTime.UtcNow;
+    }
+
+    public ActionItem(
         Guid globalId,
         string actionName,
         string? targetName,
@@ -35,21 +51,6 @@ internal class ActionLog
         UtcTimestamp = utcTimestamp;
     }
 
-    public ActionLog(Domain.ActionItem action)
-    {
-        GlobalId = action.GlobalId;
-        ActionName = action.ActionName;
-        TargetName = action.TargetName;
-        TargetScope = action.TargetScope;
-        TargetDataType = action.TargetDataType;
-        Priority = action.Priority;
-        Status = action.Status.GetDescription();
-        UtcCreated = action.UtcCreated;
-        UtcStarted = action.UtcStarted;
-        UtcCompleted = action.UtcCompleted;
-        Details = action.Details ?? action.Exception?.Message;
-        UtcTimestamp = DateTime.UtcNow;
-    }
 
     [ColumnWithKey("global_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
     public Guid GlobalId { get; }

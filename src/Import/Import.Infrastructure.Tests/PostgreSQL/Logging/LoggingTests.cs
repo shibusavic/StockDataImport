@@ -37,13 +37,6 @@ public class LoggingTests : IClassFixture<DbFixture>
         var actualCount = await fixture.GetLogCountForScopeAsync(scope);
 
         Assert.Equal(expectedCount, actualCount);
-
-        var data = (await fixture.GetDataForLogItemAsync(logItem.GlobalId)).ToArray();
-        Assert.NotNull(data);
-        Assert.NotEmpty(data);
-        Assert.Single(data);
-        Assert.Equal("Function", data.First().Key);
-        Assert.Equal(nameof(SaveLogItem_SavesAsync), data.First().Value);
     }
 
     [Fact]
@@ -65,19 +58,19 @@ public class LoggingTests : IClassFixture<DbFixture>
     }
 
     [Fact]
-    public async Task PurgeActionLogs_DeletesAll()
+    public async Task PurgeActionItems_DeletesAll()
     {
-        await CreateActionLogsAsync(DateTime.Now.AddYears(-1));
+        await CreateActionItemsAsync(DateTime.Now.AddYears(-1));
 
         var sut = fixture.LogsDbContext;
 
-        var count = await sut.CountActionLogsAsync();
+        var count = await sut.CountActionItemsAsync();
 
         Assert.NotEqual(0, count);
 
-        await sut.PurgeActionLogsAsync();
+        await sut.PurgeActionItemsAsync();
 
-        count = await sut.CountActionLogsAsync();
+        count = await sut.CountActionItemsAsync();
 
         Assert.Equal(0, count);
     }
@@ -127,7 +120,7 @@ public class LoggingTests : IClassFixture<DbFixture>
         }
     }
 
-    private async Task CreateActionLogsAsync(DateTime startDate, DateTime? endDate = null,
+    private async Task CreateActionItemsAsync(DateTime startDate, DateTime? endDate = null,
         int minPerDay = 0, int maxPerDay = 5)
     {
         endDate ??= DateTime.UtcNow.AddDays(-1);

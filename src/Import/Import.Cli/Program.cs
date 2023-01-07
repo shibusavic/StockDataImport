@@ -344,7 +344,7 @@ void Communicate(string? message, bool force = false)
 {
     if (!string.IsNullOrWhiteSpace(message))
     {
-        logger?.LogInformation(message);
+        logger?.LogInformation("{MESSAGE}", message);
     }
 
     if (verbose || force)

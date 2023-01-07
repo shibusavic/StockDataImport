@@ -16,7 +16,7 @@ internal interface ILogsDbContext : IDbContext
 
     Task PurgeLogsAsync(CancellationToken cancellationToken = default);
 
-    Task PurgeActionLogsAsync(CancellationToken cancellationToken = default);
+    Task PurgeActionItemsAsync(CancellationToken cancellationToken = default);
 
     Task TruncateLogsAsync(string logLevel, DateTime date, CancellationToken cancellationToken = default);
 }

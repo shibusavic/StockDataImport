@@ -36,4 +36,14 @@ public struct Symbol : IEquatable<Symbol>
     {
         return HashCode.Combine(Code, Exchange, Type);
     }
+
+    public static bool operator ==(Symbol left, Symbol right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Symbol left, Symbol right)
+    {
+        return !(left == right);
+    }
 }

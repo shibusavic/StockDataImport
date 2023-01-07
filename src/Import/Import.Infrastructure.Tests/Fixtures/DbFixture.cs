@@ -56,17 +56,6 @@ public class DbFixture : IDisposable
         return await connection.ExecuteScalarAsync<int>(sql, new { Scope = scope });
     }
 
-    internal async Task<IEnumerable<(string Key, string Value)>> GetDataForLogItemAsync(Guid logId)
-    {
-        string sql = @"SELECT log_key AS Key, log_value AS Value from public.logs_extended
-WHERE log_id = @LogId";
-
-        using var connection = new NpgsqlConnection(configuration.GetConnectionString("Logs"));
-        connection.Open();
-
-        return await connection.QueryAsync<(string Key, string Value)>(sql, new { LogId = logId });
-    }
-
     internal async Task<string[]> GetImportDbTablesWithRecordsAsync()
     {
         var tableNames = await ImportDbContext.GetTableNames();

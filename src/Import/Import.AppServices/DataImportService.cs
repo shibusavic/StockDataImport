@@ -76,9 +76,9 @@ namespace Import.AppServices
                 return logsDbContext.PurgeLogsAsync(cancellationToken);
             }
 
-            if (purgeName == PurgeName.ActionLogs)
+            if (purgeName == PurgeName.ActionItems)
             {
-                return logsDbContext.PurgeActionLogsAsync(cancellationToken);
+                return logsDbContext.PurgeActionItemsAsync(cancellationToken);
             }
 
             if (purgeName == PurgeName.Imports)

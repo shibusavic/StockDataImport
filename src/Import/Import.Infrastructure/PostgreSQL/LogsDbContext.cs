@@ -29,35 +29,9 @@ internal class LogsDbContext : BasePostgreSQLContext, ILogsDbContext
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        const string logItemSql = @"
-INSERT INTO public.logs
-(global_id, utc_timestamp, log_level, message, exception, log_scope, event_id, event_name)
-VALUES
-(@GlobalId, @UtcTimestamp, @LogLevel, @Message, @Exception, @Scope, @EventId, @EventName)
-ON CONFLICT (global_id)
-DO NOTHING
-";
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateInsert(typeof(DataAccessObjects.Log));
 
-        const string logDataSql = @"
-INSERT INTO public.logs_extended
-(log_id, log_key, log_value)
-VALUES
-(@LogId, @Key, @Value)
-ON CONFLICT (log_id, log_key)
-DO NOTHING
-";
-
-        object logParameters = new
-        {
-            logItem.GlobalId,
-            logItem.UtcTimestamp,
-            LogLevel = logItem.LogLevel.GetDescription(),
-            logItem.Message,
-            logItem.Scope,
-            Exception = logItem.Exception?.ToString(),
-            EventId = logItem.EventId.Id,
-            EventName = logItem.EventId.Name
-        };
+        if (string.IsNullOrWhiteSpace(sql)) { throw new Exception($"Unable to create upsert for {nameof(DataAccessObjects.Log)}"); }
 
         await retryPolicy.ExecuteAsync(async () =>
         {
@@ -65,18 +39,17 @@ DO NOTHING
             using NpgsqlTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
             try
             {
-                await connection.ExecuteAsync(logItemSql, logParameters, transaction);
-
-                if (logItem.Data.Any())
+                await connection.ExecuteAsync(sql, new
                 {
-                    await connection.ExecuteAsync(logDataSql, logItem.Data.Select(d => new
-                    {
-                        LogId = logItem.GlobalId,
-                        d.Key,
-                        d.Value
-                    }), transaction);
-                }
-
+                    logItem.GlobalId,
+                    logItem.UtcTimestamp,
+                    LogLevel = logItem.LogLevel.GetDescription(),
+                    logItem.Message,
+                    LogScope = logItem.Scope,
+                    Exception = logItem.Exception?.ToString(),
+                    EventId = logItem.EventId.Id,
+                    EventName = logItem.EventId.Name
+                }, transaction);
                 await transaction.CommitAsync();
             }
             catch
@@ -95,8 +68,8 @@ DO NOTHING
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionLog));
-        var dao = new DataAccessObjects.ActionLog(actionItem);
+        string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
+        var dao = new DataAccessObjects.ActionItem(actionItem);
 
         await retryPolicy.ExecuteAsync(async () =>
         {
@@ -122,14 +95,14 @@ DO NOTHING
 
     public async Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
     {
-        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionLog));
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
 
         using var connection = await GetOpenConnectionAsync(cancellationToken);
         using NpgsqlTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            await connection.ExecuteAsync(sql, actions.Select(a => new DataAccessObjects.ActionLog(a)).ToArray(), transaction);
+            await connection.ExecuteAsync(sql, actions.Select(a => new DataAccessObjects.ActionItem(a)).ToArray(), transaction);
             await transaction.CommitAsync(cancellationToken);
         }
         catch
@@ -148,12 +121,12 @@ DO NOTHING
         cancellationToken.ThrowIfCancellationRequested();
 
         string sql = $@"
-{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.ActionLog))}
+{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.ActionItem))}
 WHERE global_id = @GlobalId";
 
         using var connection = await GetOpenConnectionAsync(cancellationToken);
 
-        var fromDb = await connection.QueryFirstOrDefaultAsync<DataAccessObjects.ActionLog>(sql, new
+        var fromDb = await connection.QueryFirstOrDefaultAsync<DataAccessObjects.ActionItem>(sql, new
         {
             GlobalId = globalId
         });
@@ -168,7 +141,7 @@ WHERE global_id = @GlobalId";
         cancellationToken.ThrowIfCancellationRequested();
 
         string sql = $@"
-{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.ActionLog))}
+{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.ActionItem))}
 WHERE status = Any(@Statuses)
 ";
         List<string> statuses = new();
@@ -188,10 +161,10 @@ WHERE status = Any(@Statuses)
 
         using var connection = await GetOpenConnectionAsync(cancellationToken);
 
-        DataAccessObjects.ActionLog[] daos = ((await connection.QueryAsync<DataAccessObjects.ActionLog>(sql, new
+        DataAccessObjects.ActionItem[] daos = ((await connection.QueryAsync<DataAccessObjects.ActionItem>(sql, new
         {
             Statuses = statuses
-        })) ?? Enumerable.Empty<DataAccessObjects.ActionLog>()).ToArray();
+        })) ?? Enumerable.Empty<DataAccessObjects.ActionItem>()).ToArray();
 
         await connection.CloseAsync();
 
@@ -204,16 +177,12 @@ WHERE status = Any(@Statuses)
 
         const string logsSql = @"
 DELETE FROM public.logs WHERE log_level = @LogLevel AND utc_timestamp < @Date";
-        const string extendedLogsSql = @"
-DELETE FROM public.logs_extended WHERE log_id NOT IN (SELECT global_id FROM public.logs)";
 
         await ExecuteAsync(logsSql, new
         {
             LogLevel = logLevel,
             Date = date
         }, 120, cancellationToken);
-
-        await ExecuteAsync(extendedLogsSql, null, 120, cancellationToken);
     }
 
     public async Task PurgeLogsAsync(CancellationToken cancellationToken = default)
@@ -222,15 +191,11 @@ DELETE FROM public.logs_extended WHERE log_id NOT IN (SELECT global_id FROM publ
 
         const string logsSql = @"
 DELETE FROM public.logs";
-        const string extendedLogsSql = @"
-DELETE FROM public.logs_extended";
 
         await ExecuteAsync(logsSql, null, 120, cancellationToken);
-
-        await ExecuteAsync(extendedLogsSql, null, 120, cancellationToken);
     }
 
-    public async Task PurgeActionLogsAsync(CancellationToken cancellationToken = default)
+    public async Task PurgeActionItemsAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

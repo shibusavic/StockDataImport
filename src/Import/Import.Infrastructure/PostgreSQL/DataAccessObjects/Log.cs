@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using Shibusa.Data;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 
@@ -25,7 +25,6 @@ internal class Log
         EventId = eventId;
         EventName = eventName;
     }
-
 
     [ColumnWithKey("global_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
     public Guid GlobalId { get; }

@@ -825,7 +825,6 @@ CREATE TABLE IF NOT EXISTS public.calendar_earnings
   PRIMARY KEY (symbol, exchange, ending_date)
 );
 
-
 CREATE TABLE IF NOT EXISTS public.calendar_trends
 (
   symbol TEXT NOT NULL,

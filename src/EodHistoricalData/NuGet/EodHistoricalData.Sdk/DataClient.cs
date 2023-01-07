@@ -97,7 +97,7 @@ public sealed partial class DataClient
 
     private string GetToken() => $"api_token={apiKey}";
 
-    private string GetFormat(string format = "json") => $"fmt={format}";
+    private static string GetFormat(string format = "json") => $"fmt={format}";
 
     //private void HandleApiResponseException(ApiResponseException exc, string[] symbols)
     //{

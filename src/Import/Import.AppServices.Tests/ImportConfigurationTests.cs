@@ -418,7 +418,7 @@ public class ImportConfigurationTests
             ApiKey = "TEST",
             Purges = new string[] {
                 Constants.PurgeName.Logs,
-                Constants.PurgeName.ActionLogs,
+                Constants.PurgeName.ActionItems,
                 Constants.PurgeName.Imports
             },
             LogRetention = new Dictionary<string, string>()

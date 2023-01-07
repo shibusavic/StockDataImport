@@ -50,7 +50,7 @@ public static class Constants
     public static class PurgeName
     {
         public const string Logs = "Logs";
-        public const string ActionLogs = "Actions";
+        public const string ActionItems = "Actions";
         public const string Imports = "Imports";
     }
 }
