@@ -9,7 +9,7 @@ public sealed partial class DataClient
 {
     private const string OptionsDataSourceName = "Options";
 
-    internal async Task<string> GetOptionsForSymbolStringAsync(string symbol,
+    internal async Task<string?> GetOptionsForSymbolStringAsync(string symbol,
         string? contractName = null,
         DateOnly? from = null,
         DateOnly? to = null,
@@ -17,21 +17,10 @@ public sealed partial class DataClient
         DateOnly? tradeDateTo = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await GetStringResponseAsync(BuildOptionsUri(symbol, contractName, from, to, tradeDateFrom, tradeDateTo),
-                OptionsDataSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, new string[] { symbol });
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return string.Empty;
+        return await GetStringResponseAsync(BuildOptionsUri(symbol, contractName, from, to, tradeDateFrom, tradeDateTo),
+            OptionsDataSourceName, cancellationToken);
     }
 
     public async Task<OptionsCollection> GetOptionsForSymbolAsync(string symbol,
@@ -42,7 +31,9 @@ public sealed partial class DataClient
         DateOnly? tradeDateTo = null,
         CancellationToken cancellationToken = default)
     {
-        string json = await GetOptionsForSymbolStringAsync(symbol, contractName, from, to, tradeDateFrom, tradeDateTo, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string? json = await GetOptionsForSymbolStringAsync(symbol, contractName, from, to, tradeDateFrom, tradeDateTo, cancellationToken);
 
         return string.IsNullOrWhiteSpace(json) ? OptionsCollection.Empty
             : JsonSerializer.Deserialize<OptionsCollection>(json, SerializerOptions);

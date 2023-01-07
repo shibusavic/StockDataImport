@@ -1,3 +1,4 @@
+using EodHistoricalData.Sdk.Events;
 using EodHistoricalData.Sdk.Models;
 
 namespace EodHistoricalData.Sdk.Tests
@@ -11,13 +12,14 @@ namespace EodHistoricalData.Sdk.Tests
 
             List<ApiResponseException> excs = new();
 
-            dataClient.ApiResponseExceptionEventHandler += (sender, apiResponseException, symbols) =>
+            DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
             {
-                excs.Add(apiResponseException);
+                Assert.NotNull(e.ApiResponseException);
+                excs.Add(e.ApiResponseException);
             };
 
             Assert.Empty(await dataClient.GetSymbolListAsync("NYSE"));
-            Assert.Single(excs);
+            Assert.True(excs.Count > 0);
         }
 
         [Fact] //[Fact(Skip = "Expensive")]
@@ -41,6 +43,8 @@ namespace EodHistoricalData.Sdk.Tests
         {
             var dataClient = new DataClient(apiKey);
             var exchangesString = await dataClient.GetSymbolListStringAsync("NYSE");
+
+            Assert.NotNull(exchangesString);
 
             var symbols = System.Text.Json.JsonSerializer.Deserialize<IEnumerable<Symbol>>(exchangesString, serializerOptions);
 

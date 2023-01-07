@@ -1,3 +1,4 @@
+using EodHistoricalData.Sdk.Events;
 using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 
 namespace EodHistoricalData.Sdk.Tests;
@@ -11,13 +12,14 @@ public class EtfFundamentalsTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        dataClient.ApiResponseExceptionEventHandler += (sender, apiResponseException, symbols) =>
+        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
-            excs.Add(apiResponseException);
+            Assert.NotNull(e.ApiResponseException);
+            excs.Add(e.ApiResponseException);
         };
 
         Assert.Equal(default, await dataClient.GetFundamentalsForSymbolAsync<EtfFundamentalsCollection>("VTI"));
-        Assert.Single(excs);
+        Assert.True(excs.Count > 0);
     }
 
     [Theory] // [Theory(Skip = "Expensive")]

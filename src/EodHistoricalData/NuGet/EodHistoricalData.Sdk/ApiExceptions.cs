@@ -36,9 +36,18 @@ public class ApiLimitReachedException : Exception
     public ApiLimitReachedException(string source, int usage, int projectedFinal)
         : base($"API call limit will reach {projectedFinal} if {source} task executes. Current usage is {usage}")
     {
+        Usage = usage;
+        ProjectedFinalUsage = projectedFinal;
     }
+
     public ApiLimitReachedException(int usage)
         : base($"API call limit reached; usage is {usage}.")
     {
+        Usage = usage;
+        ProjectedFinalUsage = usage;
     }
+
+    public int Usage { get; }
+
+    public int ProjectedFinalUsage { get; }
 }

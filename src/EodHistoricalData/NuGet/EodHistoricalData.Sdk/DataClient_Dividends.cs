@@ -13,32 +13,23 @@ public sealed partial class DataClient
         DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
-        string json = await GetDividendsForSymbolStringAsync(symbol, from, to, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string? json = await GetDividendsForSymbolStringAsync(symbol, from, to, cancellationToken);
 
         return string.IsNullOrWhiteSpace(json) ? Enumerable.Empty<Dividend>()
             : JsonSerializer.Deserialize<IEnumerable<Dividend>>(json, SerializerOptions)
                 ?? Enumerable.Empty<Dividend>();
     }
 
-    internal async Task<string> GetDividendsForSymbolStringAsync(string symbol,
+    internal async Task<string?> GetDividendsForSymbolStringAsync(string symbol,
         DateOnly? from = null,
         DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await GetStringResponseAsync(BuildDividendUri(symbol, from, to), DividendSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, new string[] { symbol });
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return string.Empty;
+        return await GetStringResponseAsync(BuildDividendUri(symbol, from, to), DividendSourceName, cancellationToken);
     }
 
     private string BuildDividendUri(string symbol,

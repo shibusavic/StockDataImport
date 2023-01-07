@@ -102,6 +102,8 @@ public class ActionService
 
     public Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         return logsDb.SaveActionItemsAsync(actions, cancellationToken);
     }
 

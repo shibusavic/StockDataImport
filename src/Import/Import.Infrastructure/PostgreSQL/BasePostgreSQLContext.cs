@@ -49,6 +49,8 @@ internal abstract class BasePostgreSQLContext : DbContext
 
     internal async Task<(string? Schema, string Name)[]> GetTableNames(string schema = "public", CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         string tableSql = @"SELECT table_schema AS Schema, 
 table_name AS Name
 FROM information_schema.tables WHERE table_schema = @Schema"
@@ -159,9 +161,9 @@ FROM information_schema.tables WHERE table_schema = @Schema"
         int? commandTimeout = null,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(sql)) { throw new ArgumentNullException(nameof(sql)); }
-
         cancellationToken.ThrowIfCancellationRequested();
+
+        if (string.IsNullOrWhiteSpace(sql)) { throw new ArgumentNullException(nameof(sql)); }
 
         using var connection = await GetOpenConnectionAsync(cancellationToken);
 

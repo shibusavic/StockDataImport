@@ -55,8 +55,6 @@ try
         }
 
         dataImportService.ApiResponseExceptionEventHandler += DataImportService_ApiResponseExceptionEventHandler;
-        dataImportService.CommunicationEventHandler += DataImportService_CommunicationEventHandler;
-        dataImportService.ApiLimitReachedEventHandler += DataImportService_ApiLimitReachedEventHandler;
 
         var actionService = serviceFactory.GetImportActionService();
 
@@ -191,7 +189,6 @@ finally
     if (dataImportService != null)
     {
         dataImportService.ApiLimitReachedEventHandler -= DataImportService_ApiLimitReachedEventHandler;
-        dataImportService.CommunicationEventHandler -= DataImportService_CommunicationEventHandler;
         dataImportService.ApiResponseExceptionEventHandler -= DataImportService_ApiResponseExceptionEventHandler;
     }
 
@@ -217,11 +214,6 @@ void DataImportService_ApiLimitReachedEventHandler(object? sender, ApiLimitReach
 void CommunicateFinish(ActionItem action, ref Stopwatch timer)
 {
     Communicate($"Completed {action} in {timer.Elapsed.ConvertToText()}");
-}
-
-void DataImportService_CommunicationEventHandler(object? sender, string message)
-{
-    Communicate(message);
 }
 
 void DataImportService_ApiResponseExceptionEventHandler(object? sender, ApiResponseException apiResponseException, string[] symbols)

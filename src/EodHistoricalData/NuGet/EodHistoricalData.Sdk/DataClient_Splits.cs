@@ -15,34 +15,21 @@ public sealed partial class DataClient
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string json = await GetSplitsForSymbolStringAsync(symbol, from, to, cancellationToken);
+        string? json = await GetSplitsForSymbolStringAsync(symbol, from, to, cancellationToken);
 
         return string.IsNullOrWhiteSpace(json) ? Enumerable.Empty<Split>()
             : JsonSerializer.Deserialize<IEnumerable<Split>>(json, SerializerOptions)
                 ?? Enumerable.Empty<Split>();
     }
 
-    internal async Task<string> GetSplitsForSymbolStringAsync(string symbol,
+    internal async Task<string?> GetSplitsForSymbolStringAsync(string symbol,
         DateOnly? from = null,
         DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        try
-        {
-            return await GetStringResponseAsync(BuildSplitsUri(symbol, from, to), SplitSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, new string[] { symbol });
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
-
-        return string.Empty;
+        return await GetStringResponseAsync(BuildSplitsUri(symbol, from, to), SplitSourceName, cancellationToken);
     }
 
     private string BuildSplitsUri(string symbol,

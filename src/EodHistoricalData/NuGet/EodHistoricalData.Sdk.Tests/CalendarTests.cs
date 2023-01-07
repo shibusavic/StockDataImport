@@ -1,3 +1,4 @@
+using EodHistoricalData.Sdk.Events;
 using EodHistoricalData.Sdk.Models.Calendar;
 
 namespace EodHistoricalData.Sdk.Tests
@@ -11,9 +12,10 @@ namespace EodHistoricalData.Sdk.Tests
 
             List<ApiResponseException> excs = new();
 
-            dataClient.ApiResponseExceptionEventHandler += (sender, apiResponseException, symbols) =>
+            DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
             {
-                excs.Add(apiResponseException);
+                Assert.NotNull(e.ApiResponseException);
+                excs.Add(e.ApiResponseException);
             };
 
             Assert.Equal(EarningsCollection.Empty, await dataClient.GetEarningsForSymbolsAsync("AAPL", DateOnly.MinValue));
@@ -46,13 +48,14 @@ namespace EodHistoricalData.Sdk.Tests
 
             List<ApiResponseException> excs = new();
 
-            dataClient.ApiResponseExceptionEventHandler += (sender, apiResponseException, symbols) =>
+            DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
             {
-                excs.Add(apiResponseException);
+                Assert.NotNull(e.ApiResponseException);
+                excs.Add(e.ApiResponseException);
             };
 
             Assert.Equal(TrendCollection.Empty, await dataClient.GetTrendsForSymbolsAsync("AAPL"));
-            Assert.Single(excs);
+            Assert.True(excs.Count > 0);
         }
 
         [Fact] //[Fact(Skip = "Expensive")]
@@ -81,9 +84,10 @@ namespace EodHistoricalData.Sdk.Tests
 
             List<ApiResponseException> excs = new();
 
-            dataClient.ApiResponseExceptionEventHandler += (sender, apiResponseException, symbols) =>
+            DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
             {
-                excs.Add(apiResponseException);
+                Assert.NotNull(e.ApiResponseException);
+                excs.Add(e.ApiResponseException);
             };
 
             Assert.Equal(IpoCollection.Empty, await dataClient.GetIposAsync());

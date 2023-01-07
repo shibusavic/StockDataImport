@@ -12,11 +12,6 @@ namespace EodHistoricalData.Sdk
     /// to cut down on API call costs during automated testing.</remarks>
     public interface IDataClient
     {
-        event DataClient.ApiResponseExceptionHandler? ApiResponseExceptionEventHandler;
-
-        event DataClient.CommunicationHandler? CommunicationEventHandler;
-
-        event DataClient.ApiLimitReachedHandler? ApiLimitReachedEventHandler;
         Task<IEnumerable<BulkDividend>> GetBulkDividendsForExchangeAsync(string exchangeCode, DateOnly? date = null, CancellationToken cancellationToken = default);
 
         Task<IEnumerable<BulkPriceAction>> GetBulkHistoricalDataForExchangeAsync(string exchangeCode, IEnumerable<string>? symbols = null, DateOnly? date = null, CancellationToken cancellationToken = default);
@@ -33,7 +28,7 @@ namespace EodHistoricalData.Sdk
 
         Task<IEnumerable<BulkExtendedPriceAction>> GetExtendedBulkHistoricalDataForExchangeAsync(string exchangeCode, IEnumerable<string>? symbols = null, DateOnly? date = null, CancellationToken cancellationToken = default);
 
-        Task<object> GetFundamentalsForSymbolAsync(string symbol, CancellationToken cancellationToken = default);
+        Task<object?> GetFundamentalsForSymbolAsync(string symbol, CancellationToken cancellationToken = default);
 
         Task<T> GetFundamentalsForSymbolAsync<T>(string symbol, CancellationToken cancellationToken = default) where T : struct;
 

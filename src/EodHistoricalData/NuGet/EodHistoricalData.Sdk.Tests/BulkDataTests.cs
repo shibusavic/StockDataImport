@@ -1,36 +1,10 @@
+using EodHistoricalData.Sdk.Events;
 using EodHistoricalData.Sdk.Models.Bulk;
 
 namespace EodHistoricalData.Sdk.Tests
 {
     public class BulkDataTests : BaseTest
     {
-        //public async Task SampleAll()
-        //{
-        //    var eod = new DataClient("your api key");
-
-        //    List<ApiResponseException> excs = new();
-
-        //    // The `ApiResponseExceptionEventHandler` captures errors originating from calls to the eodhistoricaldata.com API.
-
-        //    eod.ApiResponseExceptionEventHandler += (sender, apiResponseException, symbols) =>
-        //    {
-        //        // do something useful here.
-        //        excs.Add(apiResponseException);
-        //    };
-
-        //    var exchangeList = await eod.GetExchangeListAsync();
-        //    var tickerList = await eod.GetTickerListAsync("NYSE");
-        //    var bulkPriceDataNyse = await eod.GetBulkHistoricalDataForExchangeAsync("NYSE");
-        //    var bulkSplitsNyse = await eod.GetBulkSplitsForExchangeAsync("NYSE");
-        //    var bulkDividendsNyse = await eod.GetBulkDividendsForExchangeAsync("NYSE");
-
-        //    var msftDividends = await eod.GetDividendsForSymbolAsync("MSFT");
-        //    var msftSplits = await eod.GetSplitsForSymbolAsync("MSFT");
-        //    var msftPriceData = await eod.GetHistoryForSymbolAsync("MSFT");
-
-
-        //}
-
         [Fact]
         public async Task GetBulkHistoricalDataForExchangeAsync_BadApiKey_ThrowsUnauthorizedAccessException()
         {
@@ -38,13 +12,14 @@ namespace EodHistoricalData.Sdk.Tests
 
             List<ApiResponseException> excs = new();
 
-            dataClient.ApiResponseExceptionEventHandler += (sender, apiResponseException, symbols) =>
+            DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
             {
-                excs.Add(apiResponseException);
+                Assert.NotNull(e.ApiResponseException);
+                excs.Add(e.ApiResponseException);
             };
 
             Assert.Empty(await dataClient.GetBulkHistoricalDataForExchangeAsync("NYSE"));
-            Assert.Single(excs);
+            Assert.True(excs.Count > 0);
         }
 
         [Fact] //[Fact(Skip = "Expensive")]
@@ -132,6 +107,8 @@ namespace EodHistoricalData.Sdk.Tests
 
             var bulkLastDayString = await dataClient.GetBulkHistoricalDataForExchangeStringAsync("NYSE");
 
+            Assert.NotNull(bulkLastDayString);
+
             var bulk = System.Text.Json.JsonSerializer.Deserialize<IEnumerable<BulkPriceAction>>(bulkLastDayString, serializerOptions);
 
             Assert.NotNull(bulk);
@@ -144,6 +121,8 @@ namespace EodHistoricalData.Sdk.Tests
             var dataClient = new DataClient(apiKey);
 
             var extendedBulkLastDayString = await dataClient.GetExtendedBulkHistoricalDataForExchangeStringAsync("NYSE");
+
+            Assert.NotNull(extendedBulkLastDayString);
 
             var bulk = System.Text.Json.JsonSerializer.Deserialize<IEnumerable<BulkExtendedPriceAction>>(extendedBulkLastDayString, serializerOptions);
 
@@ -214,6 +193,8 @@ namespace EodHistoricalData.Sdk.Tests
 
             var bulkDividendsString = await dataClient.GetBulkDividendsForExchangeStringAsync("NASDAQ", date: new(2021, 12, 31));
 
+            Assert.NotNull(bulkDividendsString);
+
             var bulk = System.Text.Json.JsonSerializer.Deserialize<IEnumerable<BulkDividend>>(bulkDividendsString, serializerOptions);
 
             Assert.NotNull(bulk);
@@ -226,6 +207,8 @@ namespace EodHistoricalData.Sdk.Tests
             var dataClient = new DataClient(apiKey);
 
             var bulkSplitsString = await dataClient.GetBulkSplitsForExchangeStringAsync("NYSE", date: new(2021, 11, 18));
+
+            Assert.NotNull(bulkSplitsString);
 
             var bulk = System.Text.Json.JsonSerializer.Deserialize<IEnumerable<BulkSplit>>(bulkSplitsString, serializerOptions);
 

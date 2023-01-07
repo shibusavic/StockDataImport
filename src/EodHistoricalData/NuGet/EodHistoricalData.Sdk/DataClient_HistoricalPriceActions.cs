@@ -16,34 +16,25 @@ public sealed partial class DataClient
         DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
-        string json = await GetHistoryForSymbolStringAsync(symbol, period, order, from, to, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string? json = await GetHistoryForSymbolStringAsync(symbol, period, order, from, to, cancellationToken);
 
         return string.IsNullOrWhiteSpace(json) ? Enumerable.Empty<PriceAction>()
             : JsonSerializer.Deserialize<IEnumerable<PriceAction>>(json, SerializerOptions)
                 ?? Enumerable.Empty<PriceAction>();
     }
 
-    internal async Task<string> GetHistoryForSymbolStringAsync(string symbol,
+    internal async Task<string?> GetHistoryForSymbolStringAsync(string symbol,
         string period = Constants.Period.Daily,
         string order = Constants.Order.Ascending,
         DateOnly? from = null,
         DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await GetStringResponseAsync(BuildEodUri(symbol, period, order, from, to), HistoricalDataSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, new string[] { symbol });
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return string.Empty;
+        return await GetStringResponseAsync(BuildEodUri(symbol, period, order, from, to), HistoricalDataSourceName, cancellationToken);
     }
 
     private string BuildEodUri(string symbol,

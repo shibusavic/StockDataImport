@@ -10,23 +10,12 @@ public sealed partial class DataClient
 {
     private const string FundamentalsSourceName = "Fundamentals";
 
-    internal async Task<string> GetFundamentalsForSymbolStringAsync(string symbol,
+    internal async Task<string?> GetFundamentalsForSymbolStringAsync(string symbol,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await GetStringResponseAsync(BuildFundamentalsUri(symbol), FundamentalsSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, symbol.Split(','));
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return string.Empty;
+        return await GetStringResponseAsync(BuildFundamentalsUri(symbol), FundamentalsSourceName, cancellationToken);
     }
 
     internal static (string? StringValue, SymbolType EnumValue) DetermineSymbolTypeForFundamentalsOutput(string json)
@@ -49,20 +38,22 @@ public sealed partial class DataClient
     public async Task<T> GetFundamentalsForSymbolAsync<T>(string symbol,
         CancellationToken cancellationToken = default) where T : struct
     {
-        if (string.IsNullOrWhiteSpace(symbol) || cancellationToken.IsCancellationRequested) { return default; }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        string json = await GetFundamentalsForSymbolStringAsync(symbol, cancellationToken);
+        string? json = await GetFundamentalsForSymbolStringAsync(symbol, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(json)) { return default; }
 
         return JsonSerializer.Deserialize<T>(json, SerializerOptions);
     }
 
-    public async Task<object> GetFundamentalsForSymbolAsync(string symbol, CancellationToken cancellationToken = default)
+    public async Task<object?> GetFundamentalsForSymbolAsync(string symbol, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(symbol) || cancellationToken.IsCancellationRequested) { return FundamentalsCollection.Empty; }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        string json = await GetFundamentalsForSymbolStringAsync(symbol, cancellationToken);
+        string? json = await GetFundamentalsForSymbolStringAsync(symbol, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(json)) { return null; }
 
         var (StringValue, EnumValue) = DetermineSymbolTypeForFundamentalsOutput(json);
 
@@ -77,7 +68,7 @@ public sealed partial class DataClient
 
         logger?.LogInformation("Unknown type in {FUNCTION}: {TYPE}", nameof(GetFundamentalsForSymbolAsync), StringValue);
 
-        return FundamentalsCollection.Empty;
+        return null;
     }
 
     private string BuildFundamentalsUri(string symbol) => $"{ApiService.FundamentalsUri}{symbol}?{GetTokenAndFormat()}";

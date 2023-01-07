@@ -10,29 +10,20 @@ public sealed partial class DataClient
 
     public async Task<IEnumerable<Exchange>> GetExchangeListAsync(CancellationToken cancellationToken = default)
     {
-        string json = await GetExchangeListStringAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string? json = await GetExchangeListStringAsync(cancellationToken);
 
         return string.IsNullOrWhiteSpace(json) ? Enumerable.Empty<Exchange>()
             : JsonSerializer.Deserialize<IEnumerable<Exchange>>(json, SerializerOptions)
                 ?? Enumerable.Empty<Exchange>();
     }
 
-    internal async Task<string> GetExchangeListStringAsync(CancellationToken cancellationToken = default)
+    internal async Task<string?> GetExchangeListStringAsync(CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await GetStringResponseAsync(BuildExchangesUri(), ExchangeListSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, Array.Empty<string>());
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return string.Empty;
+        return await GetStringResponseAsync(BuildExchangesUri(), ExchangeListSourceName, cancellationToken);
     }
 
     private string BuildExchangesUri() => $"{ApiService.ExchangesUri}?{GetTokenAndFormat()}";

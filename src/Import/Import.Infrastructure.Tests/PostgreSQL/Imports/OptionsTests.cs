@@ -40,13 +40,4 @@ public class OptionsTests : TestBase
         Assert.True(optionsDataCount> 0);
         Assert.True(optionsContractCount> 0);
     }
-
-    private EodHistoricalData.Sdk.Models.Options.OptionsCollection CreateOptions()
-    {
-
-        string json = File.ReadAllText(@"MockData/aapl-options.json");
-        Assert.NotNull(json);
-
-        return JsonSerializer.Deserialize<EodHistoricalData.Sdk.Models.Options.OptionsCollection>(json, serializerOptions);
-    }
 }

@@ -7,33 +7,22 @@ public sealed partial class DataClient
 {
     private const string CalendarSourceName = "Calendar";
 
-    internal async Task<string> GetEarningsForSymbolsStringAsync(string symbols,
+    internal async Task<string?> GetEarningsForSymbolsStringAsync(string symbols,
         DateOnly? from = null, DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await GetStringResponseAsync(BuildEarningsUri(symbols, from, to), CalendarSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, symbols.Split(','));
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return string.Empty;
+        return await GetStringResponseAsync(BuildEarningsUri(symbols, from, to), CalendarSourceName, cancellationToken);
     }
 
     public async Task<EarningsCollection> GetEarningsForSymbolsAsync(string symbols,
         DateOnly? from = null, DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(symbols) || cancellationToken.IsCancellationRequested) { return EarningsCollection.Empty; }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        string json = await GetEarningsForSymbolsStringAsync(symbols, from, to, cancellationToken);
+        string? json = await GetEarningsForSymbolsStringAsync(symbols, from, to, cancellationToken);
 
         return string.IsNullOrWhiteSpace(json) ? EarningsCollection.Empty
             : JsonSerializer.Deserialize<EarningsCollection>(json, SerializerOptions);
@@ -49,9 +38,9 @@ public sealed partial class DataClient
     public async Task<TrendCollection> GetTrendsForSymbolsAsync(string symbols,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(symbols) || cancellationToken.IsCancellationRequested) { return TrendCollection.Empty; }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        string json = await GetTrendsForSymbolsStringAsync(symbols, cancellationToken);
+        string? json = await GetTrendsForSymbolsStringAsync(symbols, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(json)) { return TrendCollection.Empty; }
 
@@ -66,25 +55,12 @@ public sealed partial class DataClient
         };
     }
 
-    internal async Task<string> GetTrendsForSymbolsStringAsync(string symbols,
+    internal async Task<string?> GetTrendsForSymbolsStringAsync(string symbols,
         CancellationToken cancellationToken = default)
     {
-        if (cancellationToken.IsCancellationRequested) { return string.Empty; }
-        try
-        {
-            string uri = BuildTrendsUri(symbols);
-            return await GetStringResponseAsync(BuildTrendsUri(symbols), CalendarSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, symbols.Split(','));
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return string.Empty;
+        return await GetStringResponseAsync(BuildTrendsUri(symbols), CalendarSourceName, cancellationToken);
     }
 
     /// <summary>
@@ -107,33 +83,22 @@ public sealed partial class DataClient
         }
     }
 
-    internal async Task<string> GetIposStringAsync(
+    internal async Task<string?> GetIposStringAsync(
         DateOnly? from = null, DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await GetStringResponseAsync(BuildIposUri(from, to), CalendarSourceName, cancellationToken);
-        }
-        catch (ApiResponseException apiExc)
-        {
-            HandleApiResponseException(apiExc, Array.Empty<string>());
-        }
-        catch (Exception exc)
-        {
-            logger?.LogError(exc, "{MESSAGE}", exc.Message);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return string.Empty;
+        return await GetStringResponseAsync(BuildIposUri(from, to), CalendarSourceName, cancellationToken);
     }
 
     public async Task<IpoCollection> GetIposAsync(
         DateOnly? from = null, DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
-        if (cancellationToken.IsCancellationRequested) { return IpoCollection.Empty; }
+        cancellationToken.ThrowIfCancellationRequested();
 
-        string json = await GetIposStringAsync(from, to, cancellationToken);
+        string? json = await GetIposStringAsync(from, to, cancellationToken);
 
         return string.IsNullOrWhiteSpace(json) ? IpoCollection.Empty
             : JsonSerializer.Deserialize<IpoCollection>(json, SerializerOptions);

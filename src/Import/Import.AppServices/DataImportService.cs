@@ -4,6 +4,7 @@ using EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
 using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 using Import.Infrastructure;
 using Import.Infrastructure.Abstractions;
+using EodHistoricalData.Sdk.Events;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using static Import.Infrastructure.Configuration.Constants;
@@ -28,10 +29,6 @@ namespace Import.AppServices
 
         public event ApiResponseExceptionHandler? ApiResponseExceptionEventHandler;
 
-        public delegate void CommunicationHandler(object? sender, string message);
-
-        public event CommunicationHandler? CommunicationEventHandler;
-
         internal DataImportService(ILogsDbContext logsDbContext,
             IImportsDbContext importsDbContext,
             string apiKey,
@@ -52,10 +49,6 @@ namespace Import.AppServices
             this.logger = logger;
 
             this.dataClient = dataClient;
-
-            this.dataClient.ApiResponseExceptionEventHandler += DataClient_ApiResponseExceptionEventHandler;
-            this.dataClient.CommunicationEventHandler += DataClient_CommunicationEventHandler;
-            this.dataClient.ApiLimitReachedEventHandler += DataClient_ApiLimitReachedEventHandler;
 
             _ = dataClient.ResetUsageAsync(maxUsage).GetAwaiter().GetResult();
 
@@ -109,7 +102,7 @@ namespace Import.AppServices
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            Communicate($"Importing\t{scope} {exchange} {dataType}");
+            DomainEventPublisher.RaiseMessageEvent(this, $"Importing\t{scope} {exchange} {dataType}", nameof(ImportDataAsync));
 
             if (dataType == DataTypes.Symbols)
             {
@@ -317,12 +310,6 @@ namespace Import.AppServices
                     logger?.LogError(jsonExc, "Could not parse price actions for '{SYMBOL}'", symbol);
                 }
             });
-
-            //foreach (var symbol in symbols)
-            //{
-            //    var prices = await dataClient.GetPricesForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
-            //    await importsDbContext.SavePriceActionsAsync(symbol.Code, symbol.Exchange, prices, cancellationToken);
-            //}
         }
 
         private async Task ImportOptionsAsync(Symbol[] symbols, CancellationToken cancellationToken)
@@ -369,16 +356,6 @@ namespace Import.AppServices
             }
 
             throw new Exception($"Could not import fundamentals for {symbol}");
-        }
-
-        private void Communicate(string message)
-        {
-            CommunicationEventHandler?.Invoke(this, message);
-        }
-
-        private void DataClient_CommunicationEventHandler(object sender, string message)
-        {
-            CommunicationEventHandler?.Invoke(sender, message);
         }
 
         private void DataClient_ApiResponseExceptionEventHandler(object sender, ApiResponseException apiResponseException, string[] symbols)

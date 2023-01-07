@@ -1,4 +1,5 @@
-﻿using EodHistoricalData.Sdk.Models;
+﻿using EodHistoricalData.Sdk.Events;
+using EodHistoricalData.Sdk.Models;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -16,20 +17,6 @@ public sealed partial class DataClient
     private static readonly DateOnly DateOnlyMinValue = new(1900, 1, 1);
 
     private static readonly JsonSerializerOptions SerializerOptions = JsonSerializerOptionsFactory.Default;
-
-    public delegate void ApiLimitReachedHandler(object sender, ApiLimitReachedException apiLimitReachedException);
-
-    public event ApiLimitReachedHandler? ApiLimitReachedEventHandler;
-
-    public delegate void ApiResponseExceptionHandler(object sender,
-        ApiResponseException apiResponseException,
-        string[] symbols);
-
-    public event ApiResponseExceptionHandler? ApiResponseExceptionEventHandler;
-
-    public delegate void CommunicationHandler(object sender, string message);
-
-    public event CommunicationHandler? CommunicationEventHandler;
 
     static DataClient()
     {
@@ -57,7 +44,7 @@ public sealed partial class DataClient
 
     public async Task<(int Requests, int Limit)> GetUsageAsync()
     {
-        string json = await GetStringResponseAsync(BuildUserUri(), nameof(GetUsageAsync));
+        string? json = await GetStringResponseAsync(BuildUserUri(), nameof(GetUsageAsync));
 
         if (string.IsNullOrWhiteSpace(json)) { return (0, 0); }
 
@@ -66,11 +53,13 @@ public sealed partial class DataClient
         return (user.ApiRequests, user.DailyRateLimit);
     }
 
-    private async Task<string> GetStringResponseAsync(string uri,
+    private async Task<string?> GetStringResponseAsync(string uri,
         string? source = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        source ??= nameof(GetStringResponseAsync);
 
         if (string.IsNullOrWhiteSpace(uri)) { throw new ArgumentNullException(nameof(uri)); }
 
@@ -82,7 +71,10 @@ public sealed partial class DataClient
             return await response.Content.ReadAsStringAsync(cancellationToken);
         }
 
-        throw new ApiResponseException(uri, response, source);
+        DomainEventPublisher.RaiseApiResponseEvent(this, (int)response.StatusCode, uri,
+            new ApiResponseException(uri, response, source), source);
+
+        return null;
     }
 
     private static string BuildFromAndTo(DateOnly? from = null, DateOnly? to = null)
@@ -107,15 +99,10 @@ public sealed partial class DataClient
 
     private string GetFormat(string format = "json") => $"fmt={format}";
 
-    private void HandleApiResponseException(ApiResponseException exc, string[] symbols)
-    {
-        ApiResponseExceptionEventHandler?.Invoke(this, exc, symbols);
-    }
-
-    private void Communicate(string message)
-    {
-        CommunicationEventHandler?.Invoke(this, message);
-    }
+    //private void HandleApiResponseException(ApiResponseException exc, string[] symbols)
+    //{
+    //    ApiResponseExceptionEventHandler?.Invoke(this, exc, symbols);
+    //}
 
     private string BuildUserUri() => $"{ApiService.UserUri}?{GetTokenAndFormat()}";
 }

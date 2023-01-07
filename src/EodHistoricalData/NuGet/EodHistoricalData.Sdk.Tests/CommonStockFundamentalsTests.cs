@@ -1,3 +1,4 @@
+using EodHistoricalData.Sdk.Events;
 using EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
 using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 
@@ -20,9 +21,10 @@ public class CommonStockFundamentalsTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        dataClient.ApiResponseExceptionEventHandler += (sender, apiResponseException, symbols) =>
+        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
-            excs.Add(apiResponseException);
+            Assert.NotNull(e.ApiResponseException);
+            excs.Add(e.ApiResponseException);
         };
 
         Assert.Equal(default, await dataClient.GetFundamentalsForSymbolAsync<FundamentalsCollection>("AAPL"));
@@ -34,7 +36,7 @@ public class CommonStockFundamentalsTests : BaseTest
     {
         var dataClient = new DataClient(apiKey);
 
-        Assert.Equal(FundamentalsCollection.Empty, await dataClient.GetFundamentalsForSymbolAsync(Guid.NewGuid().ToString()[..4]));
+        Assert.Null(await dataClient.GetFundamentalsForSymbolAsync(Guid.NewGuid().ToString()[..4]));
     }
 
     [Theory] // [Theory(Skip = "Expensive")]
