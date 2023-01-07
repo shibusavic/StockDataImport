@@ -9,7 +9,7 @@ internal interface ILogsDbContext : IDbContext
     Task SaveActionItemAsync(Domain.ActionItem actionItem, CancellationToken cancellationToken = default);
 
     Task SaveActionItemsAsync(IEnumerable<Domain.ActionItem> actions, CancellationToken cancellationToken = default);
-
+    
     Task<Domain.ActionItem?> GetActionItemAsync(Guid globalId, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Domain.ActionItem>> GetActionItemsByStatusAsync(ImportActionStatus status, CancellationToken cancellationToken = default);
@@ -19,4 +19,6 @@ internal interface ILogsDbContext : IDbContext
     Task PurgeActionItemsAsync(CancellationToken cancellationToken = default);
 
     Task TruncateLogsAsync(string logLevel, DateTime date, CancellationToken cancellationToken = default);
+
+    Task SaveApiResponseAsync(string request, string response, int statusCode, CancellationToken cancellationToken = default);
 }

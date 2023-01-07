@@ -19,16 +19,6 @@ namespace Import.AppServices
         private readonly ILogger? logger;
         private readonly HashSet<Symbol> allSymbols = new();
 
-        public delegate void ApiLimitReachedHandler(object? sender, ApiLimitReachedException apiLimitReachedException);
-
-        public event ApiLimitReachedHandler? ApiLimitReachedEventHandler;
-
-        public delegate void ApiResponseExceptionHandler(object? sender,
-            ApiResponseException apiResponseException,
-            string[] symbols);
-
-        public event ApiResponseExceptionHandler? ApiResponseExceptionEventHandler;
-
         internal DataImportService(ILogsDbContext logsDbContext,
             IImportsDbContext importsDbContext,
             string apiKey,
@@ -56,11 +46,6 @@ namespace Import.AppServices
 
             SymbolMetaDataRepository.SetItems(importsDbContext.GetSymbolMetaDataAsync().GetAwaiter().GetResult().ToArray());
 
-        }
-
-        private void DataClient_ApiLimitReachedEventHandler(object sender, ApiLimitReachedException apiLimitReachedException)
-        {
-            ApiLimitReachedEventHandler?.Invoke(sender, apiLimitReachedException);
         }
 
         public static int Usage => ApiService.Usage;
@@ -126,7 +111,7 @@ namespace Import.AppServices
             return Task.CompletedTask;
         }
 
-        public async Task ApplyFixAsync(string name, CancellationToken cancellationToken)
+        public async Task ApplyFixAsync(string name, CancellationToken cancellationToken = default)
         {
             if (name.Equals("has options", StringComparison.OrdinalIgnoreCase))
             {
@@ -140,6 +125,12 @@ namespace Import.AppServices
             }
         }
 
+        public Task SaveApiResponse(string request, string response, int statusCode,
+            CancellationToken cancellationToken = default)
+        {
+            return logsDbContext.SaveApiResponseAsync(request, response, statusCode, cancellationToken);
+        }
+
         private Task ImportFullAsync(string exchange, string dataType, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -149,8 +140,8 @@ namespace Import.AppServices
                 int estimatedCost = ApiService.GetCost(ApiService.ExchangesUri);
                 if (estimatedCost > ApiService.Available)
                 {
-                    ApiLimitReachedEventHandler?.Invoke(this, new ApiLimitReachedException(
-                        $"exchange list", ApiService.Usage, estimatedCost + ApiService.Usage));
+                    DomainEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                        $"exchange list", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
                 }
                 else
                 {
@@ -174,8 +165,8 @@ namespace Import.AppServices
                 int estimatedCost = ApiService.GetCost(ApiService.SplitsUri, symbolsForExchange.Length);
                 if (estimatedCost > ApiService.Available)
                 {
-                    ApiLimitReachedEventHandler?.Invoke(this, new ApiLimitReachedException(
-                        $"splits for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage));
+                    DomainEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                        $"splits for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
                 }
                 else
                 {
@@ -188,8 +179,8 @@ namespace Import.AppServices
                 int estimatedCost = ApiService.GetCost(ApiService.DividendUri, symbolsForExchange.Length);
                 if (estimatedCost > ApiService.Available)
                 {
-                    ApiLimitReachedEventHandler?.Invoke(this, new ApiLimitReachedException(
-                        $"dividends for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage));
+                    DomainEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                        $"dividends for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
                 }
                 else
                 {
@@ -202,8 +193,8 @@ namespace Import.AppServices
                 int estimatedCost = ApiService.GetCost(ApiService.EodUri, symbolsForExchange.Length);
                 if (estimatedCost > ApiService.Available)
                 {
-                    ApiLimitReachedEventHandler?.Invoke(this, new ApiLimitReachedException(
-                        $"prices for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage));
+                    DomainEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                        $"prices for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
                 }
                 else
                 {
@@ -220,8 +211,8 @@ namespace Import.AppServices
                     int estimatedCost = ApiService.GetCost(ApiService.OptionsUri, symbolsForExchange.Length);
                     if (estimatedCost > ApiService.Available)
                     {
-                        ApiLimitReachedEventHandler?.Invoke(this, new ApiLimitReachedException(
-                            $"options for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage));
+                        DomainEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                            $"options for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
                     }
                     else
                     {
@@ -254,8 +245,8 @@ namespace Import.AppServices
 
                 if (ApiService.Usage >= ApiService.DailyLimit)
                 {
-                    ApiLimitReachedEventHandler?.Invoke(this, new ApiLimitReachedException(
-                        $"fundamentals for {exchange}", ApiService.Usage, ApiService.Usage));
+                    DomainEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                        $"fundamentals for {exchange}", ApiService.Usage, ApiService.Usage), nameof(ImportFullAsync));
                 }
             }
 
@@ -356,11 +347,6 @@ namespace Import.AppServices
             }
 
             throw new Exception($"Could not import fundamentals for {symbol}");
-        }
-
-        private void DataClient_ApiResponseExceptionEventHandler(object sender, ApiResponseException apiResponseException, string[] symbols)
-        {
-            ApiResponseExceptionEventHandler?.Invoke(sender, apiResponseException, symbols);
         }
     }
 }

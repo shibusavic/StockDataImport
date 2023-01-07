@@ -68,7 +68,11 @@ public sealed partial class DataClient
 
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadAsStringAsync(cancellationToken);
+            string stringResponse = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            DomainEventPublisher.RaiseApiResponseEvent(this, (int)response.StatusCode, uri, stringResponse, source);
+
+            return stringResponse;
         }
 
         DomainEventPublisher.RaiseApiResponseEvent(this, (int)response.StatusCode, uri,
@@ -98,11 +102,6 @@ public sealed partial class DataClient
     private string GetToken() => $"api_token={apiKey}";
 
     private static string GetFormat(string format = "json") => $"fmt={format}";
-
-    //private void HandleApiResponseException(ApiResponseException exc, string[] symbols)
-    //{
-    //    ApiResponseExceptionEventHandler?.Invoke(this, exc, symbols);
-    //}
 
     private string BuildUserUri() => $"{ApiService.UserUri}?{GetTokenAndFormat()}";
 }

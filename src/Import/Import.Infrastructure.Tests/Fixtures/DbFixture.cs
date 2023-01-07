@@ -4,6 +4,7 @@ using Import.Infrastructure.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Import.Infrastructure.Tests.Fixtures;
 
@@ -48,12 +49,22 @@ public class DbFixture : IDisposable
 
     internal async Task<int> GetLogCountForScopeAsync(string scope)
     {
-        string sql = @"SELECT COUNT(1) FROM public.logs WHERE log_scope = @Scope";
+        string sql = @"SELECT COUNT(*) FROM public.logs WHERE log_scope = @Scope";
 
         using var connection = new NpgsqlConnection(configuration.GetConnectionString("Logs"));
         connection.Open();
 
         return await connection.ExecuteScalarAsync<int>(sql, new { Scope = scope });
+    }
+
+    internal async Task<int> GetApiResponseCount()
+    {
+        string sql = @"SELECT COUNT(*) FROM public.api_responses";
+
+        using var connection = new NpgsqlConnection(configuration.GetConnectionString("Logs"));
+        connection.Open();
+
+        return await connection.ExecuteScalarAsync<int>(sql);
     }
 
     internal async Task<string[]> GetImportDbTablesWithRecordsAsync()

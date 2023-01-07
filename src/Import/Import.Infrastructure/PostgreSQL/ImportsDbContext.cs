@@ -21,7 +21,7 @@ internal partial class ImportsDbContext : BasePostgreSQLContext, IImportsDbConte
     }
 
     /// <summary>
-    /// Gets the database engine (PostgreSQL).
+    /// Gets the <see cref="DatabaseEngine.Postgres"/> enum value.
     /// </summary>
     public override DatabaseEngine DatabaseEngine => DatabaseEngine.Postgres;
 
@@ -32,7 +32,7 @@ internal partial class ImportsDbContext : BasePostgreSQLContext, IImportsDbConte
     /// whether the public.symbols table is empty.</returns>
     public async Task<bool> IsDatabaseEmptyAsync()
     {
-        const string sql = @"SELECT COUNT(1) FROM symbols";
+        const string sql = @"SELECT COUNT(*) FROM public.symbols";
 
         using var connection = new NpgsqlConnection(ConnectionString);
         await connection.OpenAsync();

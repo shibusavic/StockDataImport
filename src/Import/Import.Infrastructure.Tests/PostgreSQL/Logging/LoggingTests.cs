@@ -94,6 +94,21 @@ public class LoggingTests : IClassFixture<DbFixture>
         Assert.Empty(logIds);
     }
 
+    [Fact]
+    public async Task SaveApiResponse_SavesAsync()
+    {
+        var sut = fixture.LogsDbContext;
+
+        int beforeCount = await fixture.GetApiResponseCount();
+        int expectedCount = beforeCount + 1;
+
+        await sut.SaveApiResponseAsync("request", "response", 200);
+
+        var actualCount = await fixture.GetApiResponseCount();
+
+        Assert.Equal(expectedCount, actualCount);
+    }
+
     private static readonly Random Random = new(Guid.NewGuid().GetHashCode());
 
     private async Task CreateLogsAsync(DateTime startDate, DateTime? endDate = null,

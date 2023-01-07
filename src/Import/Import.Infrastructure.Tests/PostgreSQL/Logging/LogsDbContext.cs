@@ -46,7 +46,7 @@ internal class LogsDbContext : Infrastructure.PostgreSQL.LogsDbContext
 
     internal async Task<int> CountActionItemsAsync()
     {
-        const string sql = @"SELECT COUNT(1) FROM action_items";
+        const string sql = @"SELECT COUNT(*) FROM action_items";
 
         var connection = await GetOpenConnectionAsync();
 

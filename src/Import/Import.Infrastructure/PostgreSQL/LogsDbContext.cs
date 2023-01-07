@@ -116,6 +116,36 @@ internal class LogsDbContext : BasePostgreSQLContext, ILogsDbContext
         }
     }
 
+    public async Task SaveApiResponseAsync(string request, string response, int statusCode, CancellationToken cancellationToken = default)
+    {
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateInsert(typeof(DataAccessObjects.ApiResponse));
+
+        using var connection = await GetOpenConnectionAsync(cancellationToken);
+        using NpgsqlTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            await connection.ExecuteAsync(sql, new
+            {
+                Request = request,
+                Response = response,
+                StatusCode = statusCode,
+                UtcTimestamp = DateTime.UtcNow,
+            }, transaction);
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
     public async Task<ActionItem?> GetActionItemAsync(Guid globalId, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

@@ -1,4 +1,5 @@
 ﻿using EodHistoricalData.Sdk;
+using EodHistoricalData.Sdk.Events;
 using Import.AppServices;
 using Import.AppServices.Configuration;
 using Import.Infrastructure.Domain;
@@ -32,6 +33,10 @@ HandleArguments(args);
 var cts = new CancellationTokenSource();
 var cancellationToken = cts.Token;
 
+DomainEventPublisher.RaiseMessageEventHandler += DomainEventPublisher_RaiseMessageEventHandler;
+DomainEventPublisher.RaiseApiResponseEventHandler += DomainEventPublisher_RaiseApiResponseEventHandler;
+DomainEventPublisher.RaiseApiLimitReachedEventHandler += DomainEventPublisher_RaiseApiLimitReachedEventHandler;
+
 try
 {
     if (showHelp)
@@ -40,10 +45,10 @@ try
     }
     else
     {
-        Communicate(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+        CommunicateAndLog($"Import started at {DateTime.Now.ToString("yyyy-MM-dd HH:mm")}");
 
         importConfiguration = ImportConfiguration.Create(File.ReadAllText(configFileInfo.FullName));
-        
+
         apiKey ??= importConfiguration.ApiKey; // This is the final check for the key.
 
         Configure();
@@ -54,8 +59,6 @@ try
             throw new Exception("Unable to instantiate data import service.");
         }
 
-        dataImportService.ApiResponseExceptionEventHandler += DataImportService_ApiResponseExceptionEventHandler;
-
         var actionService = serviceFactory.GetImportActionService();
 
         var actions = await actionService.GetActionItemsAsync(importConfiguration);
@@ -64,7 +67,7 @@ try
         {
             var t = actionService.SaveActionItemsAsync(actions, cancellationToken);
 
-            Communicate($"{actions.Count()} action(s) identified.");
+            CommunicateAndLog($"{actions.Count()} action(s) identified.");
 
             WriteApiUsage();
 
@@ -79,7 +82,7 @@ try
 
                 try
                 {
-                    Communicate("");
+                    CommunicateAndLog("");
 
                     if (action.ActionName == ActionNames.Skip)
                     {
@@ -133,7 +136,7 @@ try
                 }
                 catch (OperationCanceledException oce)
                 {
-                    Communicate($"Cancelled {action}");
+                    CommunicateAndLog($"Cancelled {action}");
 
                     action.Error(oce);
                 }
@@ -144,7 +147,7 @@ try
                         cts.Cancel();
                     }
 
-                    Communicate(exc.Message, true);
+                    CommunicateAndLog(exc.Message, true);
 
                     action.Error(exc);
                 }
@@ -155,10 +158,10 @@ try
                         CommunicateFinish(action, ref actionTimer);
                     }
 
-                    if (ApiService.LimitReached)
-                    {
-                        DataImportService_ApiLimitReachedEventHandler(null, new ApiLimitReachedException(ApiService.Usage));
-                    }
+                    //if (ApiService.LimitReached)
+                    //{
+                    //    DataImportService_ApiLimitReachedEventHandler(null, new ApiLimitReachedException(ApiService.Usage));
+                    //}
 
                     if (action.Status == Import.Infrastructure.Abstractions.ImportActionStatus.InProgress)
                     {
@@ -168,10 +171,10 @@ try
                     actionTimer.Stop();
                 }
             }
-            
+
             t = actionService.SaveActionItemsAsync(actions, CancellationToken.None);
-            
-            Communicate("Updating action logs.");
+
+            CommunicateAndLog("Updating action logs.");
 
             await t;
         }
@@ -182,45 +185,46 @@ try
 catch (Exception exc)
 {
     exitCode = 1;
-    Communicate(exc.Message, true);
+    CommunicateAndLog(exc.ToString(), true);
 }
 finally
 {
-    if (dataImportService != null)
-    {
-        dataImportService.ApiLimitReachedEventHandler -= DataImportService_ApiLimitReachedEventHandler;
-        dataImportService.ApiResponseExceptionEventHandler -= DataImportService_ApiResponseExceptionEventHandler;
-    }
-
     if (exitCode == 0)
     {
         WriteApiUsage();
-        Communicate($"Import completed in {timer.Elapsed.ConvertToText()}.");
+        CommunicateAndLog($"Import completed in {timer.Elapsed.ConvertToText()}.");
     }
 
     timer.Stop();
+
+    DomainEventPublisher.RaiseMessageEventHandler -= DomainEventPublisher_RaiseMessageEventHandler;
+    DomainEventPublisher.RaiseApiResponseEventHandler -= DomainEventPublisher_RaiseApiResponseEventHandler;
+    DomainEventPublisher.RaiseApiLimitReachedEventHandler -= DomainEventPublisher_RaiseApiLimitReachedEventHandler;
 
     loggerProvider?.Dispose();
 
     Environment.Exit(exitCode);
 }
 
-void DataImportService_ApiLimitReachedEventHandler(object? sender, ApiLimitReachedException exc)
+void DomainEventPublisher_RaiseApiLimitReachedEventHandler(object? sender, ApiLimitReachedEventArgs e)
 {
-    cts.Cancel(false);
-    Communicate($"{exc.Message}");
+    cts.Cancel();
+    CommunicateAndLog($"{e.ApiLimitReachedException.Message}");
+}
+
+void DomainEventPublisher_RaiseApiResponseEventHandler(object? sender, ApiResponseEventArgs e)
+{
+    dataImportService?.SaveApiResponse(e.Request, e.Response ?? "", e.StatusCode).GetAwaiter().GetResult();
+}
+
+void DomainEventPublisher_RaiseMessageEventHandler(object? sender, MessageEventArgs e)
+{
+    CommunicateAndLog(e.Message);
 }
 
 void CommunicateFinish(ActionItem action, ref Stopwatch timer)
 {
-    Communicate($"Completed {action} in {timer.Elapsed.ConvertToText()}");
-}
-
-void DataImportService_ApiResponseExceptionEventHandler(object? sender, ApiResponseException apiResponseException, string[] symbols)
-{
-    cts.Cancel(true);
-    Communicate(apiResponseException.ToString(), true);
-    Communicate(string.Join(',', symbols), true);
+    CommunicateAndLog($"Completed {action} in {timer.Elapsed.ConvertToText()}");
 }
 
 void WriteApiUsage()
@@ -270,7 +274,7 @@ void HandleArguments(string[] args)
         {
             case "--key":
             case "-k":
-                // This is the first check for the key. First one found wins.
+                // This is the first check for the key.
                 if (a == args.Length - 1) { throw new ArgumentException($"Expected an API key after {args[a]}."); }
                 apiKey ??= args[++a];
                 break;
@@ -342,13 +346,24 @@ void ConfigureServices()
 
 void Communicate(string? message, bool force = false)
 {
-    if (!string.IsNullOrWhiteSpace(message))
-    {
-        logger?.LogInformation("{MESSAGE}", message);
-    }
-
     if (verbose || force)
     {
-        Console.WriteLine(message ?? string.Empty);
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            Console.WriteLine(message ?? string.Empty);
+        }
+        else
+        {
+            Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}\t{message}");
+        }
     }
+}
+void CommunicateAndLog(string? message, bool force = false)
+{
+    if (logger != null && !string.IsNullOrWhiteSpace(message))
+    {
+        logger.LogInformation("{MESSAGE}", message);
+    }
+
+    Communicate(message, force);
 }
