@@ -43,3 +43,4 @@ DELETE FROM public.option_contracts;
 DELETE FROM public.price_actions;
 DELETE FROM public.splits;
 DELETE FROM public.symbols;
+DELETE FROM public.symbols_to_ignore;

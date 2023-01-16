@@ -43,3 +43,4 @@ DROP TABLE public.option_contracts;
 DROP TABLE public.price_actions;
 DROP TABLE public.splits;
 DROP TABLE public.symbols;
+DROP TABLE public.symbols_to_ignore;
