@@ -2,15 +2,15 @@
 using EodHistoricalData.Sdk.Events;
 using Import.AppServices;
 using Import.AppServices.Configuration;
-using Import.Infrastructure.Domain;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Reflection;
-using static Import.Infrastructure.Configuration.Constants;
+using System.Text;
 
 const string DefaultConfigFileName = "config.yml";
+string NL = Environment.NewLine;
 
 ILoggerProvider? loggerProvider = null;
 ServiceFactory serviceFactory;
@@ -19,11 +19,12 @@ IConfiguration configuration;
 Stopwatch timer = Stopwatch.StartNew();
 
 string sourceName = "import";
+bool dryRun = false;
 string? apiKey = null;
 bool showHelp = false;
 bool verbose = false;
 FileInfo configFileInfo = new(DefaultConfigFileName);
-DataImportService? dataImportService = null;
+DataImportCycle? dataImportCycle = null;
 ImportConfiguration importConfiguration = new();
 
 int exitCode = -1;
@@ -45,138 +46,29 @@ try
     }
     else
     {
-        CommunicateAndLog($"Import started at {DateTime.Now.ToString("yyyy-MM-dd HH:mm")}");
-
-        importConfiguration = ImportConfiguration.Create(File.ReadAllText(configFileInfo.FullName));
-
-        apiKey ??= importConfiguration.ApiKey; // This is the final check for the key.
-
         Configure();
-        Validate(apiKey);
 
-        if (dataImportService == null)
+        if (dryRun)
         {
-            throw new Exception("Unable to instantiate data import service.");
+            Communicate($"{NL}Dry Run (api credit cost estimation){NL}");
         }
 
-        var actionService = serviceFactory.GetImportActionService();
+        await dataImportCycle!.ExecuteAsync(importConfiguration, dryRun, cancellationToken);
 
-        var actions = await actionService.GetActionItemsAsync(importConfiguration);
-
-        if (actions.Any())
+        if (dryRun)
         {
-            var t = actionService.SaveActionItemsAsync(actions, cancellationToken);
+            Communicate("Note that the following costs are estimates", true);
+            Communicate("based on the information already present in your database.", true);
+            Communicate("If your database is empty or not fully hydrated (especially the symbols table)", true);
+            Communicate("the cost estimates below are meaningless.", true);
+            Communicate("", true);
 
-            CommunicateAndLog($"{actions.Count()} action(s) identified.");
-
-            WriteApiUsage();
-
-            await t;
-
-            foreach (var action in actions)
+            foreach (var action in dataImportCycle.Actions)
             {
-                Stopwatch actionTimer = Stopwatch.StartNew();
-
-                action.Start();
-                await actionService.SaveActionItemsAsync(new ActionItem[] { action }, cancellationToken);
-
-                try
-                {
-                    CommunicateAndLog("");
-
-                    if (action.ActionName == ActionNames.Skip)
-                    {
-                        action.Complete();
-                        await actionService.SaveActionItemsAsync(new ActionItem[] { action }, cancellationToken);
-                        continue;
-                    }
-
-                    if (action.ActionName == ActionNames.Fix)
-                    {
-                        if (string.IsNullOrWhiteSpace(action.TargetName))
-                        {
-                            throw new Exception("No target provided for fixes. Check import configuration.");
-                        }
-
-                        await dataImportService.ApplyFixAsync(action.TargetName, cancellationToken);
-                    }
-
-                    if (action.ActionName == ActionNames.Purge)
-                    {
-                        if (string.IsNullOrWhiteSpace(action.TargetName))
-                        {
-                            throw new Exception("No target provided for purge. Check import configuration.");
-                        }
-
-                        await dataImportService.PurgeDataAsync(action.TargetName!, cancellationToken);
-                    }
-
-                    if (action.ActionName == ActionNames.Import)
-                    {
-                        await dataImportService.ImportDataAsync(action.TargetScope!, action.TargetName!,
-                            action.TargetDataType!, cancellationToken);
-                    }
-
-                    if (action.ActionName == ActionNames.Truncate)
-                    {
-                        if (string.IsNullOrWhiteSpace(action.TargetName))
-                        {
-                            throw new Exception("No target provided for log truncation. Check import configuration.");
-                        }
-
-                        if (DateTime.TryParse(action.TargetScope, out DateTime date))
-                        {
-                            await dataImportService.TruncateLogsAsync(action.TargetName, date, cancellationToken);
-                        }
-                        else
-                        {
-                            throw new Exception($"Could not parse '{action.TargetScope}' as a DateTime.");
-                        }
-                    }
-                }
-                catch (OperationCanceledException oce)
-                {
-                    CommunicateAndLog($"Cancelled {action}");
-
-                    action.Error(oce);
-                }
-                catch (Exception exc)
-                {
-                    if (importConfiguration.CancelOnException.GetValueOrDefault())
-                    {
-                        cts.Cancel();
-                    }
-
-                    CommunicateAndLog(exc.Message, true);
-
-                    action.Error(exc);
-                }
-                finally
-                {
-                    if (!cts.IsCancellationRequested)
-                    {
-                        CommunicateFinish(action, ref actionTimer);
-                    }
-
-                    //if (ApiService.LimitReached)
-                    //{
-                    //    DataImportService_ApiLimitReachedEventHandler(null, new ApiLimitReachedException(ApiService.Usage));
-                    //}
-
-                    if (action.Status == Import.Infrastructure.Abstractions.ImportActionStatus.InProgress)
-                    {
-                        action.Complete();
-                    }
-
-                    actionTimer.Stop();
-                }
+                Communicate(action.ToString(), true);
             }
 
-            t = actionService.SaveActionItemsAsync(actions, CancellationToken.None);
-
-            CommunicateAndLog("Updating action logs.");
-
-            await t;
+            Communicate($"{NL}Total estimated cost:\t{dataImportCycle.Actions.Select(a => a.EstimatedCost).Sum()}{NL}", true);
         }
     }
 
@@ -191,8 +83,11 @@ finally
 {
     if (exitCode == 0)
     {
-        WriteApiUsage();
-        CommunicateAndLog($"Import completed in {timer.Elapsed.ConvertToText()}.");
+        if (!dryRun)
+        {
+            WriteApiUsage();
+            CommunicateAndLog($"Import completed in {timer.Elapsed.ConvertToText()}.");
+        }
     }
 
     timer.Stop();
@@ -214,7 +109,8 @@ void DomainEventPublisher_RaiseApiLimitReachedEventHandler(object? sender, ApiLi
 
 void DomainEventPublisher_RaiseApiResponseEventHandler(object? sender, ApiResponseEventArgs e)
 {
-    dataImportService?.SaveApiResponse(e.Request, e.Response ?? "", e.StatusCode).GetAwaiter().GetResult();
+    // TODO: fix
+    //dataImportService?.SaveApiResponse(e.Request, e.Response ?? "", e.StatusCode).GetAwaiter().GetResult();
 }
 
 void DomainEventPublisher_RaiseMessageEventHandler(object? sender, MessageEventArgs e)
@@ -222,18 +118,15 @@ void DomainEventPublisher_RaiseMessageEventHandler(object? sender, MessageEventA
     CommunicateAndLog(e.Message);
 }
 
-void CommunicateFinish(ActionItem action, ref Stopwatch timer)
-{
-    CommunicateAndLog($"Completed {action} in {timer.Elapsed.ConvertToText()}");
-}
-
 void WriteApiUsage()
 {
     var line = new string('-', 25);
-    Communicate("");
-    Communicate(line);
-    Communicate($"      Usage: {ApiService.Usage}");
-    Communicate($"Daily Limit: {ApiService.DailyLimit}");
+    StringBuilder sb = new(NL);
+    sb.AppendLine(line);
+    sb.AppendLine($"      Usage: {ApiService.Usage}");
+    sb.AppendLine($"Daily Limit: {ApiService.DailyLimit}");
+    sb.AppendLine(line);
+
     Communicate(line);
 }
 
@@ -249,6 +142,7 @@ void ShowHelp(string? message = null)
         { "[-k|--key] <API key>","The API key to use. Optional; the key can come from the json configuration or the YAML configuration."},
         { "[-c <yaml config file>]", "Use the specified configuration file. Optional; will default to 'config.yml'" },
         { "[-v|--verbose]", "Write proces details to console." },
+        { "[--dry-run]","Estimate the cost of the specified YAML config file."},
         { "[-h|-?|?|--help]", "Show this help." }
     };
 
@@ -282,6 +176,9 @@ void HandleArguments(string[] args)
                 if (a == args.Length - 1) { throw new ArgumentException($"Expected a path to a YAML file after {args[a]}."); }
                 configFileInfo = new FileInfo(args[++a]);
                 break;
+            case "--dry-run":
+                dryRun = true;
+                break;
             case "--verbose":
             case "-v":
                 verbose = true;
@@ -313,13 +210,6 @@ void Configure()
     ConfigureServices();
 }
 
-void Validate(string? apiKey)
-{
-    if (apiKey == null) { throw new Exception("Could not find API key."); }
-
-    dataImportService = serviceFactory.GetDataImportService(apiKey, importConfiguration.MaxTokenUsage ?? 100_000);
-}
-
 void ConfigureServices()
 {
     var services = new ServiceCollection();
@@ -340,11 +230,18 @@ void ConfigureServices()
         _ = logger.BeginScope(sourceName);
     }
 
+    importConfiguration = ImportConfiguration.Create(File.ReadAllText(configFileInfo.FullName));
+    apiKey ??= importConfiguration.ApiKey; // This is the final check for the key.
+    importConfiguration.ApiKey = apiKey;
+
+    if (importConfiguration.ApiKey == null) { throw new Exception("Could not determine API key."); }
+
     serviceFactory = new ServiceFactory(configuration, logger);
 
+    dataImportCycle = serviceFactory.CreateDataImportCycle(importConfiguration);
 }
 
-void Communicate(string? message, bool force = false)
+void Communicate(string? message, bool force = false, bool prefixWithTimestamp = false)
 {
     if (verbose || force)
     {
@@ -354,16 +251,19 @@ void Communicate(string? message, bool force = false)
         }
         else
         {
-            Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}\t{message}");
+            Console.WriteLine(prefixWithTimestamp
+                ? $"{DateTime.Now:yyyy-MM-dd HH:mm}\t{message}"
+                : message);
         }
     }
 }
-void CommunicateAndLog(string? message, bool force = false)
+
+void CommunicateAndLog(string? message, bool force = false, bool prefixWithTimestamp = false)
 {
     if (logger != null && !string.IsNullOrWhiteSpace(message))
     {
-        logger.LogInformation("{MESSAGE}", message);
+        logger.LogInformation("{MESSAGE}", message.Trim());
     }
 
-    Communicate(message, force);
+    Communicate(message, force, prefixWithTimestamp);
 }

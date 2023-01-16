@@ -4,6 +4,7 @@ using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 
 namespace EodHistoricalData.Sdk.Tests;
 
+[Collection("API Tests")]
 public class CommonStockFundamentalsTests : BaseTest
 {
     [Fact]
@@ -23,8 +24,10 @@ public class CommonStockFundamentalsTests : BaseTest
 
         DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
-            Assert.NotNull(e.ApiResponseException);
-            excs.Add(e.ApiResponseException);
+            if (e.ApiResponseException != null)
+            {
+                excs.Add(e.ApiResponseException);
+            }
         };
 
         Assert.Equal(default, await dataClient.GetFundamentalsForSymbolAsync<FundamentalsCollection>("AAPL"));

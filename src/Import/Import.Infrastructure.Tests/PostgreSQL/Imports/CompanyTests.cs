@@ -1,7 +1,7 @@
 ﻿using Import.Infrastructure.Tests.Fixtures;
 using System.Text.Json;
 
-namespace Import.Infrastructure.Tests.PostgreSQL;
+namespace Import.Infrastructure.PostgreSQL.Tests;
 
 [Collection("Integration Tests")]
 public class CompanyTests : TestBase

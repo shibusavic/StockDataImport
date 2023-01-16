@@ -2,7 +2,7 @@
 using Import.Infrastructure.Tests.Fixtures;
 using System.Text.Json;
 
-namespace Import.Infrastructure.Tests.PostgreSQL;
+namespace Import.Infrastructure.PostgreSQL.Tests;
 
 public abstract class TestBase : IClassFixture<DbFixture>
 {
@@ -56,7 +56,7 @@ public abstract class TestBase : IClassFixture<DbFixture>
         Assert.NotNull(symbols);
         Assert.NotEmpty(symbols);
 
-        await dbContext.SaveSymbolsAsync(symbols);
+        await dbContext.SaveSymbolsAsync(symbols, "US");
     }
 
     internal async Task LoadImportsNasdaqExchangesAndSymbolsAsync(ImportsDbContext dbContext)
@@ -76,7 +76,7 @@ public abstract class TestBase : IClassFixture<DbFixture>
         Assert.NotNull(symbols);
         Assert.NotEmpty(symbols);
 
-        await dbContext.SaveSymbolsAsync(symbols);
+        await dbContext.SaveSymbolsAsync(symbols, "US");
     }
 
     internal async Task LoadImportsAaplCompanyAsync(ImportsDbContext dbContext)

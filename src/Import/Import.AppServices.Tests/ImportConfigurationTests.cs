@@ -26,7 +26,7 @@ public class ImportConfigurationTests
         Assert.Null(config.MaxTokenUsage);
         Assert.Null(config.ApiKey);
         Assert.Null(config.Purges);
-        Assert.Null(config.LogRetention);
+        Assert.Null(config.DataRetention);
         Assert.Null(config.Sunday);
         Assert.Null(config.Monday);
         Assert.Null(config.Tuesday);
@@ -96,7 +96,7 @@ public class ImportConfigurationTests
     public void LogRetention_Valid_NotNull()
     {
         var text = $@"
-{Constants.ConfigurationKeys.LogRetention}:
+{Constants.ConfigurationKeys.DataRetention}:
   Critical: 1 year
   Debug: 2 weeks
   Error: 1 year
@@ -107,21 +107,26 @@ public class ImportConfigurationTests
 ";
 
         var config = ImportConfiguration.Create(text);
-        Assert.NotNull(config.LogRetention);
-        Assert.Equal("1 year", config.LogRetention["Critical"]);
+        Assert.NotNull(config.DataRetention);
+        Assert.Equal("1 year", config.DataRetention["Critical"]);
     }
 
     [Fact]
     public void OnEmptyDatabase_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.OnEmptyDb}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -130,10 +135,6 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 
@@ -148,13 +149,18 @@ public class ImportConfigurationTests
     public void AnyDay_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.AnyDay}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -163,13 +169,8 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
-
 ...
 ";
 
@@ -181,13 +182,18 @@ public class ImportConfigurationTests
     public void Sunday_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.Sunday}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -196,10 +202,6 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 
@@ -214,13 +216,18 @@ public class ImportConfigurationTests
     public void Monday_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.Monday}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -229,10 +236,6 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 
@@ -247,13 +250,18 @@ public class ImportConfigurationTests
     public void Tuesday_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.Tuesday}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -262,10 +270,6 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 
@@ -280,13 +284,18 @@ public class ImportConfigurationTests
     public void Wednesday_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.Wednesday}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -295,10 +304,6 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 
@@ -313,13 +318,18 @@ public class ImportConfigurationTests
     public void Thursday_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.Thursday}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -328,10 +338,6 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 
@@ -346,13 +352,18 @@ public class ImportConfigurationTests
     public void Friday_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.Friday}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -361,10 +372,6 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 
@@ -379,13 +386,18 @@ public class ImportConfigurationTests
     public void Saturday_Valid_NotNull()
     {
         var text = $@"
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 {Constants.ConfigurationKeys.Saturday}:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -394,10 +406,6 @@ public class ImportConfigurationTests
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 
@@ -421,44 +429,50 @@ public class ImportConfigurationTests
                 Constants.PurgeName.ActionItems,
                 Constants.PurgeName.Imports
             },
-            LogRetention = new Dictionary<string, string>()
+            DataRetention = new Dictionary<string, string>()
             {
-                { "Critical", "1 year"},
-                { "Debug", "2 weeks"},
-                { "Error", "1 year"},
-                { "Information", "3 months"},
-                { "Trace", "1 week"},
-                { "Warning", "6 months"}
+                { "Critical", "1 year" },
+                { "Debug", "2 weeks" },
+                { "Error", "1 year" },
+                { "Information", "3 months" },
+                { "Trace", "1 week" },
+                { "Warning", "6 months" }
+            },
+            Exchanges = new Dictionary<string, Dictionary<string, string[]>>()
+            {
+                { "US", new Dictionary<string, string[]>()
+                    {
+                        { "Exchanges", new string[] { "NYSE", "NASDAQ", "AMEX" } },
+                        { "Symbol Type", new string[] { "Common Stock", "ETF" } }
+                    }
+               }
             },
             OnEmptyDatabase = new ImportActions[] {
                 new ImportActions()
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 1,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
-                    DataTypes = new [] {"Symbols","Prices","Options","Dividends","Splits"}
+                    DataTypes = new[] { "Symbols", "Prices", "Options", "Dividends", "Splits" }
                 },
                 new ImportActions()
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 2,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
-                    DataTypes = new [] {"Fundamentals"}
-                }},
+                    DataTypes = new[] { "Fundamentals" }
+                    },
+            },
             AnyDay = new ImportActions[] {
                 new ImportActions()
                 {
                     Scope = Constants.DataTypeScopes.Bulk,
                     Priority = 1,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
-                    DataTypes = new [] {"Symbols","Prices","Options","Dividends","Splits"}
+                    DataTypes = new[] { "Symbols", "Prices", "Options", "Dividends", "Splits" }
                 },
                 new ImportActions()
-                {
+{
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 2,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
-                    DataTypes = new [] {"Fundamentals"}
+                    DataTypes = new[] { "Fundamentals" }
                 }
             },
             Sunday = new ImportActions[] {
@@ -472,14 +486,12 @@ public class ImportConfigurationTests
                 {
                     Scope = Constants.DataTypeScopes.Bulk,
                     Priority = 1,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Symbols","Prices","Options","Dividends","Splits"}
                 },
                 new ImportActions()
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 2,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Fundamentals"}
                 }
             },
@@ -488,14 +500,12 @@ public class ImportConfigurationTests
                 {
                     Scope = Constants.DataTypeScopes.Bulk,
                     Priority = 1,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Symbols","Prices","Options","Dividends","Splits"}
                 },
                 new ImportActions()
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 2,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Fundamentals"}
                 }
             },
@@ -504,14 +514,12 @@ public class ImportConfigurationTests
                 {
                     Scope = Constants.DataTypeScopes.Bulk,
                     Priority = 1,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Symbols","Prices","Options","Dividends","Splits"}
                 },
                 new ImportActions()
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 2,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Fundamentals"}
                 }
             },
@@ -520,7 +528,6 @@ public class ImportConfigurationTests
                 {
                     Scope = Constants.DataTypeScopes.Bulk,
                     Priority = 1,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     Skip = false,
                     DataTypes = new [] {"Symbols","Prices","Options","Dividends","Splits"}
                 },
@@ -528,7 +535,6 @@ public class ImportConfigurationTests
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 2,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Fundamentals"}
                 }
             },
@@ -537,14 +543,12 @@ public class ImportConfigurationTests
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 1,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Symbols","Prices","Options","Dividends","Splits"}
                 },
                 new ImportActions()
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 2,
-                    Exchanges = new [] {"NYSE","NASDAQ","AMEX"},
                     DataTypes = new [] {"Fundamentals"}
                 }
             }

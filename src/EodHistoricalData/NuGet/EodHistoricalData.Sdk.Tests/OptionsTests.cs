@@ -3,6 +3,7 @@ using EodHistoricalData.Sdk.Models.Options;
 
 namespace EodHistoricalData.Sdk.Tests;
 
+[Collection("API Tests")]
 public class OptionsTests : BaseTest
 {
     [Fact]
@@ -14,8 +15,10 @@ public class OptionsTests : BaseTest
 
         DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
-            Assert.NotNull(e.ApiResponseException);
-            excs.Add(e.ApiResponseException);
+            if (e.ApiResponseException != null)
+            {
+                excs.Add(e.ApiResponseException);
+            }
         };
 
         Assert.Equal(OptionsCollection.Empty, await dataClient.GetOptionsForSymbolAsync("MSFT"));

@@ -1,5 +1,4 @@
 ﻿using EodHistoricalData.Sdk.Models.Bulk;
-using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
 
@@ -60,42 +59,42 @@ public sealed partial class DataClient
             ?? Enumerable.Empty<BulkSplit>();
     }
 
-    internal async Task<string?> GetBulkHistoricalDataForExchangeStringAsync(string exchangeCode,
+    internal Task<string?> GetBulkHistoricalDataForExchangeStringAsync(string exchangeCode,
         IEnumerable<string>? symbols = null,
         DateOnly? date = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        return await GetStringResponseAsync(BuildBulkPriceActionUri(exchangeCode, symbols, date), BulkHistoricalDataSourceName, cancellationToken);
+        return GetStringResponseAsync(BuildBulkPriceActionUri(exchangeCode, symbols, date), BulkHistoricalDataSourceName, cancellationToken);
     }
 
-    internal async Task<string?> GetExtendedBulkHistoricalDataForExchangeStringAsync(string exchangeCode,
+    internal Task<string?> GetExtendedBulkHistoricalDataForExchangeStringAsync(string exchangeCode,
         IEnumerable<string>? symbols = null,
         DateOnly? date = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        return await GetStringResponseAsync(BuildBulkPriceActionExtendedUri(exchangeCode, symbols, date), BulkHistoricalDataSourceName, cancellationToken);
+        return GetStringResponseAsync(BuildBulkPriceActionExtendedUri(exchangeCode, symbols, date), BulkHistoricalDataSourceName, cancellationToken);
     }
 
-    internal async Task<string?> GetBulkDividendsForExchangeStringAsync(string exchangeCode,
+    internal Task<string?> GetBulkDividendsForExchangeStringAsync(string exchangeCode,
         DateOnly? date = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        return await GetStringResponseAsync(BuildBulkDividendsUri(exchangeCode, date), BulkDividendsSourceName, cancellationToken);
+        return GetStringResponseAsync(BuildBulkDividendsUri(exchangeCode, date), BulkDividendsSourceName, cancellationToken);
     }
 
-    internal async Task<string?> GetBulkSplitsForExchangeStringAsync(string exchangeCode,
+    internal Task<string?> GetBulkSplitsForExchangeStringAsync(string exchangeCode,
         DateOnly? date = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        return await GetStringResponseAsync(BuildBulkSplitsUri(exchangeCode, date), BulkSplitsSourceName, cancellationToken);
+        return GetStringResponseAsync(BuildBulkSplitsUri(exchangeCode, date), BulkSplitsSourceName, cancellationToken);
     }
 
     private string BuildBulkPriceActionUri(string exchangeCode,

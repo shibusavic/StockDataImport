@@ -1,11 +1,18 @@
 ﻿Max Token Usage: 75000
 Cancel On Exception: true
 
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
+
 Any Day:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
   Data Types:
   - Exchanges
-  - Symbols

@@ -2,24 +2,25 @@
 {
     internal class SymbolMetaData : IEquatable<SymbolMetaData?>
     {
-        public SymbolMetaData(string symbol, string? exchange = null)
-            : this(symbol, exchange, DateTime.UtcNow)
+        public SymbolMetaData(string code, string symbol, string? exchange = null)
+            : this(code, symbol, exchange, DateTime.UtcNow)
         {
         }
 
-        internal SymbolMetaData(string symbol, string? exchange, DateTime lastUpdated, bool hasOptions = false)
+        internal SymbolMetaData(string code, string symbol, string? exchange, DateTime lastUpdated, bool hasOptions = false)
         {
+            Code = code;
             Symbol = symbol;
             Exchange = exchange;
             LastUpdated = lastUpdated;
             HasOptions = hasOptions;
         }
 
+        public string Code { get; }
+
         public string Symbol { get; }
 
         public string? Exchange { get; }
-
-        public string Code => ToString();
 
         public string? Type { get; internal set; }
 
@@ -39,8 +40,8 @@
 
         public DateTime? LastUpdatedIncomeStatement { get; internal set; }
 
-        //public bool ReadyForFundamentalsUpdate => 
-
+        public bool RequiresFundamentalUpdate =>
+            LastUpdatedIncomeStatement.GetValueOrDefault() < DateTime.Now.AddDays(-90);
 
         public override string ToString() => Exchange == null ? Symbol : $"{Symbol}.{Exchange}";
 

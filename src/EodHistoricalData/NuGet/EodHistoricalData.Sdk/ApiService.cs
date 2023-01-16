@@ -40,25 +40,31 @@ public static class ApiService
 
     public static int Available => Math.Max(DailyLimit - Usage, 0);
 
+    public static string GetAvailableCreditFormula() => $"{DailyLimit} - {Usage} = {Available}";
+
     public static bool LimitReached => Usage >= DailyLimit;
 
-    internal static void AddCall(string uri)
+    internal static void AddCallToUsage(string uri)
     {
         Usage += FindEndPointForUri(uri).Cost.GetValueOrDefault();
     }
 
-    public static int GetCost(string uri, int factor = 1) => FindEndPointForUri(uri).Cost.GetValueOrDefault() * factor;
+    public static int GetCost(string? uri, int factor = 1) => FindEndPointForUri(uri).Cost.GetValueOrDefault() * factor;
 
-    private static EndPoint FindEndPointForUri(string uri)
+    private static EndPoint FindEndPointForUri(string? uri)
     {
-        foreach (var endpoint in EndPoints)
+        if (uri != null)
         {
-            if (!string.IsNullOrWhiteSpace(endpoint.Uri) &&
-                uri.StartsWith(endpoint.Uri, StringComparison.InvariantCultureIgnoreCase))
+            foreach (var endpoint in EndPoints)
             {
-                return endpoint;
+                if (!string.IsNullOrWhiteSpace(endpoint.Uri) &&
+                    uri.StartsWith(endpoint.Uri, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return endpoint;
+                }
             }
         }
+
         return EndPoint.Empty;
     }
 

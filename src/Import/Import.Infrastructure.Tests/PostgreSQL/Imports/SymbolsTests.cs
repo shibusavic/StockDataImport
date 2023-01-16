@@ -1,7 +1,7 @@
 ﻿using EodHistoricalData.Sdk.Models;
 using Import.Infrastructure.Tests.Fixtures;
 
-namespace Import.Infrastructure.Tests.PostgreSQL;
+namespace Import.Infrastructure.PostgreSQL.Tests;
 
 [Collection("Integration Tests")]
 public class SymbolsTests : TestBase
@@ -20,7 +20,7 @@ public class SymbolsTests : TestBase
         var symbols = CreateSymbols(num).ToArray();
 
         var beforeCount = await sut.CountSymbolsAsync();
-        await sut.SaveSymbolsAsync(symbols);
+        await sut.SaveSymbolsAsync(symbols, "US");
         var afterCount = await sut.CountSymbolsAsync();
 
         Assert.Equal(beforeCount + num, afterCount);
@@ -118,12 +118,12 @@ public class SymbolsTests : TestBase
         Assert.Equal(beforeCount + 5, afterCount);
     }
 
-    private IgnoredSymbol CreateSymbolToIgnore()
+    private static IgnoredSymbol CreateSymbolToIgnore()
     {
         return new IgnoredSymbol(Guid.NewGuid().ToString()[0..4], "TEST", "REASON");
     }
 
-    private IEnumerable<IgnoredSymbol> CreateSymbolsToIgnore(int number = 5)
+    private static IEnumerable<IgnoredSymbol> CreateSymbolsToIgnore(int number = 5)
     {
         for (int i = 0; i < number; i++)
         {
@@ -131,7 +131,7 @@ public class SymbolsTests : TestBase
         }
     }
 
-    private IEnumerable<Symbol> CreateSymbols(int numberToCreate = 1)
+    private static IEnumerable<Symbol> CreateSymbols(int numberToCreate = 1)
     {
         for (int i = 0; i < numberToCreate; i++)
         {

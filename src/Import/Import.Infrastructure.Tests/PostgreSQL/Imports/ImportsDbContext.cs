@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Logging;
 
-namespace Import.Infrastructure.Tests.PostgreSQL;
+namespace Import.Infrastructure.PostgreSQL.Tests;
 
 internal class ImportsDbContext : Infrastructure.PostgreSQL.ImportsDbContext
 {

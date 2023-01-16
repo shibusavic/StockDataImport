@@ -45,9 +45,9 @@ public class ActionService
             }
         }
 
-        if (config.LogRetention?.Any() ?? false)
+        if (config.DataRetention?.Any() ?? false)
         {
-            items.AddRange(GetLogRentionActions(config.LogRetention));
+            items.AddRange(GetDataRentionActions(config.DataRetention));
         }
 
         if (await importsDb.IsDatabaseEmptyAsync() && (config.OnEmptyDatabase?.Any() ?? false))
@@ -128,37 +128,37 @@ public class ActionService
 
                 if (action.IsValidForImport())
                 {
-                    foreach (var exchange in action.Exchanges!)
-                    {
-                        foreach (var dataType in action.DataTypes!)
-                        {
-                            if (dataType == DataTypes.Exchanges) continue;
-                            yield return new ActionItem(ActionNames.Import, exchange, action.Scope, dataType, action.Priority);
-                        }
-                    }
+                    //foreach (var exchange in action.Exchanges!)
+                    //{
+                    //    if (exchange.Name != null)
+                    //    {
+                    //        foreach (var dataType in action.DataTypes!)
+                    //        {
+                    //            if (dataType == DataTypes.Exchanges) continue;
+                    //            yield return new ActionItem(ActionNames.Import, exchange.Name, action.Scope, dataType, action.Priority);
+                    //        }
+                    //    }
+                    //}
                 }
             }
         }
     }
 
-    private IEnumerable<ActionItem> GetLogRentionActions(IDictionary<string, string> logRetention)
+    private IEnumerable<ActionItem> GetDataRentionActions(IDictionary<string, string> dataRetention)
     {
-        foreach (var kvp in logRetention)
+        foreach (var kvp in dataRetention)
         {
-            (LogLevel LogLevel, DateTime Earliest) = ConvertRentionToDateTime(kvp);
-
-            yield return new ActionItem(ActionNames.Truncate, LogLevel.GetDescription(), Earliest.ToString(), null, 5);
+            if (Enum.TryParse(kvp.Key, out LogLevel logLevel))
+            {
+                yield return new ActionItem(ActionNames.Truncate, logLevel.GetDescription(),
+                    ConvertTextToDateTime(kvp.Value).ToString(), null, 5);
+            }
+            else if (kvp.Key == PurgeName.ApiResponses)
+            {
+                yield return new ActionItem(ActionNames.Truncate, kvp.Key,
+                    ConvertTextToDateTime(kvp.Value).ToString(), null, 6);
+            }
         }
-    }
-
-    private (LogLevel LogLevel, DateTime Earliest) ConvertRentionToDateTime(KeyValuePair<string, string> logRetention)
-    {
-        if (Enum.TryParse(logRetention.Key, out LogLevel logLevel))
-        {
-            return (logLevel, ConvertTextToDateTime(logRetention.Value));
-        }
-
-        return (LogLevel.None, DateTime.MinValue);
     }
 
     private readonly Regex textToTimeRegex = new(@"(\d+)\s+(year|month|week|day)", RegexOptions.Singleline | RegexOptions.IgnoreCase);
@@ -240,7 +240,7 @@ public class ActionService
         int result = item1.Priority.CompareTo(item2.Priority);
 
         if (result == 0) { result = item1.TargetScopeValue.GetValueOrDefault().CompareTo(item2.TargetScopeValue.GetValueOrDefault()); }
-        if (result == 0) { result = item1.TargetDataTypeValue.GetValueOrDefault().CompareTo(item2.TargetDataTypeValue.GetValueOrDefault()); }
+        if (result == 0) { result = item1.TargetDataTypeSortValue.GetValueOrDefault().CompareTo(item2.TargetDataTypeSortValue.GetValueOrDefault()); }
 
         return result;
     }

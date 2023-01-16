@@ -1,10 +1,9 @@
 ﻿using Dapper;
-using Import.Infrastructure.Tests.PostgreSQL;
+using Import.Infrastructure.PostgreSQL.Tests;
 using Import.Infrastructure.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace Import.Infrastructure.Tests.Fixtures;
 
@@ -73,9 +72,9 @@ public class DbFixture : IDisposable
 
         List<string> tables = new();
 
-        foreach (var (Schema, Name) in tableNames)
+        foreach (var tn in tableNames)
         {
-            string name = $"{Schema}.{Name}";
+            string name = $"public.{tn}";
             string sql = $"SELECT COUNT(*) FROM {name}";
             int count = (await ImportDbContext.QueryAsync<int>(sql)).FirstOrDefault();
             if (count > 0) { tables.Add(name); }

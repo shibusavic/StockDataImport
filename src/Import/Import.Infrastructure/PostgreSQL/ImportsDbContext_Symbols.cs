@@ -12,26 +12,33 @@ internal partial class ImportsDbContext
     /// </summary>
     /// <param name="symbols">Symbols to preserve.</param>
     /// <returns>A task representing the asyncronous operation.</returns>
-    public Task SaveSymbolsAsync(IEnumerable<EodHistoricalData.Sdk.Models.Symbol> symbols, CancellationToken cancellationToken = default)
+    public async Task SaveSymbolsAsync(IEnumerable<EodHistoricalData.Sdk.Models.Symbol> symbols,
+        string exchange,
+        CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         // had to deviate from using SqlBuilder because of the COALESCE statement for has_options
         const string sql = @"
 INSERT INTO public.symbols
-(code,exchange,name,country,currency,type,has_options)
+(code,symbol,exchange,name,country,currency,type,has_options)
 VALUES
-(@Code,@Exchange,@Name,@Country,@Currency,@Type,@HasOptions)
-ON CONFLICT (code,exchange)
+(@Code,@CodeSymbol,@Exchange,@Name,@Country,@Currency,@Type,@HasOptions)
+ON CONFLICT (code)
 DO UPDATE
 SET name = @Name,country = @Country,currency = @Currency,type = @Type,
 has_options = COALESCE(@HasOptions, symbols.has_options),
 utc_timestamp = CURRENT_TIMESTAMP
 ";
 
-        return symbols.Any()
-            ? ExecuteAsync(sql, symbols.Select(s => new Symbol(s)), null, cancellationToken)
-            : Task.CompletedTask;
+        if (symbols.Any())
+        {
+            foreach (var chunk in symbols.Chunk(1000))
+            {
+                var dao = chunk.Select(c => new Symbol(c, exchange)).ToArray();
+                await ExecuteAsync(sql, dao, 120, cancellationToken);
+            }
+        }
     }
 
     /// <summary>
@@ -76,7 +83,7 @@ UPDATE public.symbols SET has_options = @HasOptions WHERE code = Any(@Codes)";
     public async Task<IEnumerable<SymbolMetaData>> GetSymbolMetaDataAsync(CancellationToken cancellationToken = default)
     {
         const string initialSql =
-@"SELECT S.code as Symbol, S.exchange, S.utc_timestamp as LastUpdated,
+@"SELECT S.code, s.symbol, S.exchange, S.utc_timestamp as LastUpdated,
 COALESCE(has_options, false) as HasOptions FROM public.symbols S
 WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = code AND exchange = S.exchange)";
 
@@ -209,7 +216,7 @@ WHERE code = @Code
 
         if (!string.IsNullOrWhiteSpace(sql))
         {
-            return ExecuteAsync(sql, symbols.Select(s => new SymbolToIgnore(s.Symbol, s.Exchange, s.Reason)));
+            return ExecuteAsync(sql, symbols.Select(s => new SymbolToIgnore(s.Symbol, s.Exchange, s.Reason)), cancellationToken: cancellationToken);
         }
 
         throw new Exception($"Could not create upsert for {nameof(SymbolToIgnore)}");
@@ -223,7 +230,7 @@ WHERE code = @Code
 
         if (!string.IsNullOrWhiteSpace(sql))
         {
-            return ExecuteAsync(sql, new SymbolToIgnore(symbol.Symbol, symbol.Exchange, symbol.Reason));
+            return ExecuteAsync(sql, new SymbolToIgnore(symbol.Symbol, symbol.Exchange, symbol.Reason), cancellationToken: cancellationToken);
         }
 
         throw new Exception($"Could not create upsert for {nameof(SymbolToIgnore)}");
@@ -235,7 +242,7 @@ WHERE code = @Code
 
         const string sql = @"SELECT DISTINCT symbol, exchange, reason FROM public.symbols_to_ignore";
 
-        return (await QueryAsync<SymbolToIgnore>(sql)).Select(s => new IgnoredSymbol(s.Symbol, s.Exchange, s.Reason));
+        return (await QueryAsync<SymbolToIgnore>(sql, cancellationToken: cancellationToken)).Select(s => new IgnoredSymbol(s.Symbol, s.Exchange, s.Reason));
     }
 
 }

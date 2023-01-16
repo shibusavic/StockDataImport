@@ -1,7 +1,7 @@
 ﻿using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Tests.Fixtures;
 
-namespace Import.Infrastructure.Tests.PostgreSQL;
+namespace Import.Infrastructure.PostgreSQL.Tests;
 
 public class ActionItemTests : IClassFixture<DbFixture>
 {

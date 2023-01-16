@@ -10,8 +10,6 @@ public class ImportActions
 
     public string? Scope { get; set; }
 
-    public string[]? Exchanges { get; set; }
-
     [YamlMember(Alias = "Data Types")]
     public string[]? DataTypes { get; set; }
 
@@ -19,7 +17,6 @@ public class ImportActions
     {
         return !Skip.GetValueOrDefault() &&
             Scope != null &&
-            (Exchanges?.Any() ?? false) &&
             (DataTypes?.Any() ?? false);
     }
 
@@ -27,12 +24,6 @@ public class ImportActions
     {
         if (Skip.GetValueOrDefault()) { return "Skip"; }
 
-        int numExchanges = Exchanges?.Length ?? 0;
-        int numberDataTypes = DataTypes?.Length ?? 0;
-        int totalActions = numExchanges * numberDataTypes;
-
-        if (totalActions == 0) { return "No Action"; }
-
-        return $"Priority {Priority}, {totalActions} {Scope} actions";
+        return $"Priority {Priority}, {Scope} actions";
     }
 }

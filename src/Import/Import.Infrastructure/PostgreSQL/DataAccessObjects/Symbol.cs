@@ -6,9 +6,10 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 [Table("symbols", Schema = "public")]
 internal sealed class Symbol
 {
-    public Symbol(EodHistoricalData.Sdk.Models.Symbol symbol)
+    public Symbol(EodHistoricalData.Sdk.Models.Symbol symbol, string exchange)
     {
-        Code = symbol.Code ?? throw new ArgumentException($"{nameof(symbol.Code)} cannot be null");
+        Code = $"{symbol.Code}.{exchange}";
+        CodeSymbol = symbol.Code;
         Name = symbol.Name ?? throw new ArgumentException($"{nameof(symbol.Name)} cannot be null");
         Country = symbol.Country ?? throw new ArgumentException($"{nameof(symbol.Country)} cannot be null");
         Exchange = symbol.Exchange ?? "None";
@@ -19,6 +20,7 @@ internal sealed class Symbol
     }
 
     public Symbol(string code,
+        string symbol,
         string exchange,
         string name,
         string country,
@@ -28,6 +30,7 @@ internal sealed class Symbol
         DateTime utcTimestamp)
     {
         Code = code;
+        CodeSymbol = symbol;
         Exchange = exchange;
         Name = name;
         Country = country;
@@ -41,24 +44,27 @@ internal sealed class Symbol
     [ColumnWithKey("code", Order = 1, TypeName = "text", IsPartOfKey = true)]
     public string Code { get; }
 
-    [ColumnWithKey("exchange", Order = 2, TypeName = "text", IsPartOfKey = true)]
+    [ColumnWithKey("symbol", Order = 2, TypeName = "text", IsPartOfKey = true)]
+    public string CodeSymbol { get; }
+
+    [ColumnWithKey("exchange", Order = 3, TypeName = "text", IsPartOfKey = true)]
     public string Exchange { get; }
 
-    [ColumnWithKey("name", Order = 3, TypeName = "text", IsPartOfKey = false)]
+    [ColumnWithKey("name", Order = 4, TypeName = "text", IsPartOfKey = false)]
     public string Name { get; }
 
-    [ColumnWithKey("country", Order = 4, TypeName = "text", IsPartOfKey = false)]
+    [ColumnWithKey("country", Order = 5, TypeName = "text", IsPartOfKey = false)]
     public string Country { get; }
 
-    [ColumnWithKey("currency", Order = 5, TypeName = "text", IsPartOfKey = false)]
+    [ColumnWithKey("currency", Order = 6, TypeName = "text", IsPartOfKey = false)]
     public string Currency { get; }
 
-    [ColumnWithKey("type", Order = 6, TypeName = "text", IsPartOfKey = false)]
+    [ColumnWithKey("type", Order = 7, TypeName = "text", IsPartOfKey = false)]
     public string Type { get; }
 
-    [ColumnWithKey("has_options", Order = 7, TypeName = "boolean", IsPartOfKey = false)]
+    [ColumnWithKey("has_options", Order = 8, TypeName = "boolean", IsPartOfKey = false)]
     public bool? HasOptions { get; }
 
-    [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 9, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

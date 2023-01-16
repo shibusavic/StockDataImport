@@ -15,10 +15,13 @@ public sealed class ServiceFactory
     private readonly ILogger? logger;
     private readonly ILogsDbContext? logsDbContext;
     private readonly IImportsDbContext? importsDbContext;
+    private readonly IDictionary<ImportConfiguration, DataImportService> dataImportServices;
 
     public ServiceFactory(IConfiguration configuration, ILogger? logger = null)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
+        dataImportServices = new Dictionary<ImportConfiguration, DataImportService>();
 
         this.logger = logger;
 
@@ -38,15 +41,37 @@ public sealed class ServiceFactory
 
     public IConfiguration Configuration { get; }
 
-    public ActionService GetImportActionService() =>
-        logsDbContext == null ? throw new Exception($"{nameof(logsDbContext)} is not initialized")
-            : importsDbContext == null ? throw new Exception($"{nameof(importsDbContext)} is not initialized")
+    public ActionService CreateImportActionService() =>
+        logsDbContext == null
+            ? throw new Exception($"{nameof(logsDbContext)} is not initialized")
+            : importsDbContext == null
+            ? throw new Exception($"{nameof(importsDbContext)} is not initialized")
             : new ActionService(logsDbContext, importsDbContext);
 
-    public DataImportService GetDataImportService(string apiKey, int maxUsage = 100_000) =>
+    public DataImportService CreateDataImportService(string apiKey, int maxUsage = 100_000) =>
         logsDbContext == null ? throw new Exception($"{nameof(logsDbContext)} is not initialized")
-            : importsDbContext == null ? throw new Exception($"{nameof(importsDbContext)} is not initialized")
+            : importsDbContext == null
+            ? throw new Exception($"{nameof(importsDbContext)} is not initialized")
             : new DataImportService(logsDbContext, importsDbContext, apiKey, maxUsage, logger);
+
+    internal DataImportService GetOrCreateDataImportService(ImportConfiguration importConfig)
+    {
+        if (!dataImportServices.ContainsKey(importConfig))
+        {
+            if (logsDbContext == null) { throw new Exception($"{nameof(logsDbContext)} is not initialized"); }
+            if (importsDbContext == null) { throw new Exception($"{nameof(importsDbContext)} is not initialized"); }
+            if (string.IsNullOrWhiteSpace(importConfig.ApiKey)) { throw new ArgumentException($"{nameof(importConfig.ApiKey)} is required."); }
+
+            dataImportServices.Add(importConfig,
+                    new DataImportService(logsDbContext, importsDbContext, importConfig.ApiKey!,
+                        importConfig.MaxTokenUsage ?? 100_000, logger));
+        }
+
+        return dataImportServices[importConfig];
+    }
+
+    public DataImportCycle CreateDataImportCycle(ImportConfiguration importConfiguration) =>
+        new(GetOrCreateDataImportService(importConfiguration), logger);
 
     /// <summary>
     /// Create an <see cref="ILoggerProvider"/> instance.
@@ -77,38 +102,69 @@ public sealed class ServiceFactory
 
     private DatabaseConnection[] GetDatabaseConnections()
     {
-        List<DatabaseConnection> databaseConnections = new();
+        // Fetch the connection strings from the configuration and add each one to an array of DatabaseConnection objects.
 
-        IEnumerable<IConfigurationSection> configConnections = Configuration.GetSection("ConnectionStrings").GetChildren();
+        var configConnections = Configuration.GetSection("ConnectionStrings").GetChildren().ToArray();
 
-        foreach (IConfigurationSection section in configConnections)
+        DatabaseConnection[] dbConnections = new DatabaseConnection[configConnections.Length];
+
+        for (int i = 0; i < configConnections.Length; i++)
         {
-            databaseConnections.Add(new DatabaseConnection() { Name = section.Key, ConnectionString = section.Value });
+            dbConnections[i] = new DatabaseConnection() { Name = configConnections[i].Key, ConnectionString = configConnections[i].Value };
         }
 
+        // If we have a db engine section in our configuration,
+        // for each db specified (the engines are keyed by the connection string name):
+        // if we can't find the db connection, throw an exception,
+        // if we find a match, then add the engine to the DatabaseConnection object.
+        // This gives us a complete picture of engine and connection string.
         IConfigurationSection dbEngineSection = Configuration.GetSection(SectionNames.DatabaseEngines);
 
         if (dbEngineSection != null)
         {
             foreach (IConfigurationSection section in dbEngineSection.GetChildren())
             {
-                DatabaseConnection? matchingConnection = databaseConnections.FirstOrDefault(d =>
+                DatabaseConnection? matchingConnection = dbConnections.FirstOrDefault(d =>
                     !string.IsNullOrWhiteSpace(d.Name) && d.Name.Equals(section.Key, StringComparison.OrdinalIgnoreCase));
 
                 if (matchingConnection == null)
                 {
                     throw new Exception("There may be a mismatch in the configuration settings between connection strings and database engines; the keys should match.");
+                    /* 
+                     * If the above error is being thrown, it's because there's a mismatch between keys between
+                     * DatabaseEngines and ConnectionStrings keys in your configuration files.
+                     * 
+                     * The final config should look like:
+                     * 
+                     * {
+                     *   "DatabaseEngines": {
+                     *     "Logs": "PostgreSQL",
+                     *     "Imports":  "PostgreSQL"
+                     *   }
+                     *   "ConnectionStrings": {
+                     *     "Logs": "User ID=postgres;Password=yourPassword;Host=127.0.0.1;Port=5432;Database=eod_logs;",
+                     *     "Imports": "User ID=postgres;Password=yourPassword;Host=127.0.0.1;Port=5432;Database=eod_imports;"
+                     *   },
+                     *   "EodHistoricalDataApiKey": "your key"
+                     * }
+                     * 
+                     * Note the shared keys between DatabaseEngines and ConnectionStrings.
+                     * 
+                     * In practice, these values are distributed between your appsettings.json and your secrets.json file
+                     * (or however you choose manage your secrets).
+                     * 
+                     */
                 }
 
                 DatabaseEngine engine = section.Value?.GetEnum<DatabaseEngine>() ?? DatabaseEngine.None;
 
                 if (!engine.Equals(DatabaseEngine.None))
                 {
-                    databaseConnections[databaseConnections.IndexOf(matchingConnection)].Engine = engine;
+                    matchingConnection.Engine = engine;
                 }
             }
         }
 
-        return databaseConnections.ToArray();
+        return dbConnections;
     }
 }

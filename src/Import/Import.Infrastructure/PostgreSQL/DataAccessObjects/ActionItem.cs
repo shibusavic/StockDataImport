@@ -98,11 +98,11 @@ internal class ActionItem
             GlobalId,
             Priority,
             ActionName,
+            TargetName ?? "All",
             status,
             UtcCreated,
             UtcStarted,
             UtcCompleted,
-            TargetName,
             TargetScope,
             TargetDataType,
             Details);

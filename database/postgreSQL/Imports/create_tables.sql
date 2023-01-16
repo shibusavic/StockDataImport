@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.exchanges
 CREATE TABLE IF NOT EXISTS public.symbols
 (
   code TEXT NOT NULL,
+  symbol TEXT NOT NULL,
   exchange TEXT NOT NULL,
   name TEXT NOT NULL,
   country TEXT NOT NULL,
@@ -23,7 +24,7 @@ CREATE TABLE IF NOT EXISTS public.symbols
   type TEXT NOT NULL,
   has_options BOOLEAN NULL,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (code, exchange)
+  PRIMARY KEY (code)
 );
 
 CREATE TABLE IF NOT EXISTS public.splits

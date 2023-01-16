@@ -1,6 +1,7 @@
 ﻿using EodHistoricalData.Sdk.Events;
 using EodHistoricalData.Sdk.Models;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace EodHistoricalData.Sdk;
@@ -13,9 +14,7 @@ public sealed partial class DataClient
     private readonly ILogger? logger;
     private readonly string apiKey;
     private static readonly HttpClient httpClient;
-
     private static readonly DateOnly DateOnlyMinValue = new(1900, 1, 1);
-
     private static readonly JsonSerializerOptions SerializerOptions = JsonSerializerOptionsFactory.Default;
 
     static DataClient()
@@ -34,15 +33,24 @@ public sealed partial class DataClient
         this.logger = logger;
     }
 
-    public async Task<(int Requests, int Limit)> ResetUsageAsync(int limit = 100_000)
+    /// <summary>
+    /// Makes a call to the API to get current usage stats and resets the values
+    /// in <see cref="ApiService"/>.
+    /// </summary>
+    /// <param name="limit">The lesser value between the one received from the API and this value
+    /// is the valus assigned to <see cref="ApiService.DailyLimit"/>.</param>
+    /// <returns>A task representing the asyncronous object; the task contains a 
+    /// tuple of (int, int) representing the current usage and daily limit.
+    /// </returns>
+    public async Task<(int Usage, int Limit)> ResetUsageAsync(int limit = 100_000)
     {
-        var (Requests, Limit) = await GetUsageAsync();
-        ApiService.Usage = Requests;
+        var (Usage, Limit) = await GetUsageAsync();
+        ApiService.Usage = Usage;
         ApiService.DailyLimit = Math.Min(Limit, limit);
         return (ApiService.Usage, ApiService.DailyLimit);
     }
 
-    public async Task<(int Requests, int Limit)> GetUsageAsync()
+    public async Task<(int Usage, int Limit)> GetUsageAsync()
     {
         string? json = await GetStringResponseAsync(BuildUserUri(), nameof(GetUsageAsync));
 
@@ -59,12 +67,12 @@ public sealed partial class DataClient
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        source ??= nameof(GetStringResponseAsync);
-
         if (string.IsNullOrWhiteSpace(uri)) { throw new ArgumentNullException(nameof(uri)); }
 
+        source ??= nameof(GetStringResponseAsync);
+
         HttpResponseMessage response = await httpClient.GetAsync(uri, cancellationToken);
-        ApiService.AddCall(uri);
+        ApiService.AddCallToUsage(uri);
 
         if (response.IsSuccessStatusCode)
         {

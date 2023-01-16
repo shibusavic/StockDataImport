@@ -6,7 +6,7 @@ public class SymbolMetaDataRepositoryTests
     public void FindFirstOrDefault_Invalid_Found()
     {
         SymbolMetaDataRepository.SetItems(new SymbolMetaData[] {
-            new SymbolMetaData("TEST")
+            new SymbolMetaData("TEST.US", "TEST")
         });
 
         var item = SymbolMetaDataRepository.Find(r => r.Code == "BAD").FirstOrDefault();
@@ -19,10 +19,10 @@ public class SymbolMetaDataRepositoryTests
     public void FindFirstOrDefault_Valid1_Found()
     {
         SymbolMetaDataRepository.SetItems(new SymbolMetaData[] {
-            new SymbolMetaData("TEST")
+            new SymbolMetaData("TEST.US", "TEST")
         });
 
-        var item = SymbolMetaDataRepository.Find(r => r.Code == "TEST").FirstOrDefault();
+        var item = SymbolMetaDataRepository.Find(r => r.Symbol == "TEST").FirstOrDefault();
 
         Assert.NotNull(item);
     }
@@ -31,7 +31,7 @@ public class SymbolMetaDataRepositoryTests
     public void FindFirstOrDefault_Valid2_Found()
     {
         SymbolMetaDataRepository.SetItems(new SymbolMetaData[] {
-            new SymbolMetaData("TEST","EXCHANGE")
+            new SymbolMetaData("TEST.EXCHANGE","TEST","EXCHANGE")
         });
 
         var item = SymbolMetaDataRepository.Find(r => r.Code == "TEST.EXCHANGE").FirstOrDefault();
@@ -43,7 +43,7 @@ public class SymbolMetaDataRepositoryTests
     public void AddOrUpdate_SameObject_Updates()
     {
         SymbolMetaDataRepository.SetItems(new SymbolMetaData[] {
-            new SymbolMetaData("TEST","EXCHANGE")
+            new SymbolMetaData("TEST.EXCHANGE","TEST","EXCHANGE")
         });
 
         var existing = SymbolMetaDataRepository.Find(r => r.Code == "TEST.EXCHANGE").FirstOrDefault();
@@ -64,7 +64,7 @@ public class SymbolMetaDataRepositoryTests
     public void AddOrUpdate_DiffObject_Updates()
     {
         SymbolMetaDataRepository.SetItems(new SymbolMetaData[] {
-            new SymbolMetaData("TEST","EXCHANGE")
+            new SymbolMetaData("TEST.EXCHANGE","TEST","EXCHANGE")
         });
 
         var existing = SymbolMetaDataRepository.Find(r => r.Code == "TEST.EXCHANGE").FirstOrDefault();
@@ -73,7 +73,7 @@ public class SymbolMetaDataRepositoryTests
 
         Thread.Sleep(10);
 
-        SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData("TEST", "EXCHANGE"));
+        SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData("TEST.EXCHANGE", "TEST", "EXCHANGE"));
 
         existing = SymbolMetaDataRepository.Find(r => r.Code == "TEST.EXCHANGE").FirstOrDefault();
         var afterDate = existing?.LastUpdated;

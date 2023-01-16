@@ -7,21 +7,21 @@ public class ActionItem : IEquatable<ActionItem?>
 {
     public ActionItem(string actionName, string targetName) : this(actionName, targetName, null, null, 0) { }
 
-    public ActionItem(string actionName, string? targetName, string? targetScope, string? targetDataType, int priority = 1) 
+    public ActionItem(string actionName, string targetName, string? targetScope, string? targetDataType, int priority = 1)
         : this(
-        Guid.NewGuid(), priority, actionName, ImportActionStatus.NotStarted, DateTime.UtcNow, null, null, targetName, targetScope, targetDataType, null)
+        Guid.NewGuid(), priority, actionName, targetName,
+        ImportActionStatus.NotStarted, DateTime.UtcNow, null, null, targetScope, targetDataType, null)
     {
-
     }
 
     internal ActionItem(Guid globalId,
         int priority,
         string actionName,
+        string targetName,
         ImportActionStatus status,
         DateTime utcCreated,
         DateTime? utcStarted = null,
         DateTime? utcCompleted = null,
-        string? targetName = null,
         string? targetScope = null,
         string? targetDataType = null,
         string? details = null)
@@ -43,7 +43,7 @@ public class ActionItem : IEquatable<ActionItem?>
 
     public string ActionName { get; }
 
-    public string? TargetName { get; }
+    public string TargetName { get; }
 
     public string? TargetScope { get; }
 
@@ -57,7 +57,10 @@ public class ActionItem : IEquatable<ActionItem?>
 
     public string? TargetDataType { get; }
 
-    internal int? TargetDataTypeValue => TargetDataType switch
+    /// <summary>
+    /// This is the order in which the actions will be sorted.
+    /// </summary>
+    internal int? TargetDataTypeSortValue => TargetDataType switch
     {
         Constants.DataTypes.Symbols => 0,
         Constants.DataTypes.Prices => 1,
@@ -80,15 +83,31 @@ public class ActionItem : IEquatable<ActionItem?>
 
     public string? Details { get; internal set; }
 
+    public int EstimatedCost { get; internal set; }
+
     internal Exception? Exception { get; set; }
 
     public override string ToString()
     {
-        List<string> elements = new() { $"Priority {Priority}", ActionName, TargetScope ?? "", TargetName ?? "", TargetDataType ?? "" };
+        string targetScope = TargetScope ?? "";
+        if (DateTime.TryParse(targetScope, out DateTime dt))
+        {
+            targetScope = dt.ToString("yyyy-MM-dd");
+        }
 
-        elements.RemoveAll(e => string.IsNullOrWhiteSpace(e));
+        List<string> elements = new()
+        {
+            $"Cost {EstimatedCost}".PadRight(12),
+            $"Pr {Priority.ToString().PadLeft(3,'0')}",
+            ActionName.PadRight(8),
+            targetScope.PadRight(10), 
+            TargetName.PadRight(11),
+            TargetDataType ?? ""
+        };
 
-        return string.Join(' ', elements);
+        elements.RemoveAll(string.IsNullOrWhiteSpace);
+
+        return string.Join(' ', elements).Trim();
     }
 
     public override bool Equals(object? obj)

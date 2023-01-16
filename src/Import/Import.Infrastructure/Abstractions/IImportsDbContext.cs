@@ -16,7 +16,7 @@ internal partial interface IImportsDbContext : IDbContext
 
     Task PurgeAsync(CancellationToken cancellationToken = default);
 
-    Task SaveSymbolsAsync(IEnumerable<Symbol> symbols, CancellationToken cancellationToken = default);
+    Task SaveSymbolsAsync(IEnumerable<Symbol> symbols, string exchange, CancellationToken cancellationToken = default);
 
     Task SetOptionableOnSymbolsAsync(IEnumerable<string> symbols, CancellationToken cancellationToken = default);
 

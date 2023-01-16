@@ -39,4 +39,10 @@ internal partial class ImportsDbContext : BasePostgreSQLContext, IImportsDbConte
 
         return (await connection.QuerySingleAsync<int>(sql)) == 0;
     }
+
+
+    public Task PurgeAsync(CancellationToken cancellationToken = default)
+    {
+        return PurgeAsync("public", cancellationToken);
+    }
 }

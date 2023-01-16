@@ -1,6 +1,6 @@
 ﻿using Import.Infrastructure.Tests.Fixtures;
 
-namespace Import.Infrastructure.Tests.PostgreSQL;
+namespace Import.Infrastructure.PostgreSQL.Tests;
 
 [Collection("Integration Tests")]
 public class ExchangesTests : TestBase

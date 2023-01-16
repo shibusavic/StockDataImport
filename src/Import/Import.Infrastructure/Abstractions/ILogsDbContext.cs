@@ -18,7 +18,13 @@ internal interface ILogsDbContext : IDbContext
 
     Task PurgeActionItemsAsync(CancellationToken cancellationToken = default);
 
+    Task PurgeApiResponsesAsync(CancellationToken cancellationToken = default);
+
     Task TruncateLogsAsync(string logLevel, DateTime date, CancellationToken cancellationToken = default);
+
+    Task TruncateApiResponsesAsync(DateTime date, CancellationToken cancellationToken = default);
+
+    Task TruncateActionItemsAsync(DateTime date, CancellationToken cancellationToken = default);
 
     Task SaveApiResponseAsync(string request, string response, int statusCode, CancellationToken cancellationToken = default);
 }

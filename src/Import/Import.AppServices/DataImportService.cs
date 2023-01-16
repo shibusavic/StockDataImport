@@ -8,23 +8,21 @@ using EodHistoricalData.Sdk.Events;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using static Import.Infrastructure.Configuration.Constants;
+using Import.AppServices.Configuration;
 
 namespace Import.AppServices
 {
     public sealed class DataImportService
     {
-        private readonly ILogsDbContext logsDbContext;
-        private readonly IImportsDbContext importsDbContext;
-        private readonly IDataClient dataClient;
         private readonly ILogger? logger;
         private readonly HashSet<Symbol> allSymbols = new();
 
         internal DataImportService(ILogsDbContext logsDbContext,
             IImportsDbContext importsDbContext,
             string apiKey,
-            int maxusage = 100_000,
+            int maxUsage = 100_000,
             ILogger? logger = null)
-            : this(logsDbContext, importsDbContext, new DataClient(apiKey, logger), maxusage, logger)
+            : this(logsDbContext, importsDbContext, new DataClient(apiKey, logger), maxUsage, logger)
         { }
 
         internal DataImportService(ILogsDbContext logsDbContext,
@@ -33,20 +31,26 @@ namespace Import.AppServices
             int maxUsage = 100_000,
             ILogger? logger = null)
         {
-            this.logsDbContext = logsDbContext;
-            this.importsDbContext = importsDbContext;
+            LogsDb = logsDbContext;
+            ImportsDb = importsDbContext;
 
             this.logger = logger;
 
-            this.dataClient = dataClient;
+            DataClient = dataClient;
 
-            _ = dataClient.ResetUsageAsync(maxUsage).GetAwaiter().GetResult();
+            _ = DataClient.ResetUsageAsync(maxUsage).GetAwaiter().GetResult();
 
-            SymbolsToIgnore.SetItems(importsDbContext.GetSymbolsToIgnoreAsync().GetAwaiter().GetResult().ToArray());
+            SymbolsToIgnore.SetItems(ImportsDb.GetSymbolsToIgnoreAsync().GetAwaiter().GetResult().ToArray());
 
-            SymbolMetaDataRepository.SetItems(importsDbContext.GetSymbolMetaDataAsync().GetAwaiter().GetResult().ToArray());
+            SymbolMetaDataRepository.SetItems(ImportsDb.GetSymbolMetaDataAsync().GetAwaiter().GetResult().ToArray());
 
         }
+
+        internal IDataClient DataClient { get; }
+
+        internal ILogsDbContext LogsDb { get; }
+
+        internal IImportsDbContext ImportsDb { get; }
 
         public static int Usage => ApiService.Usage;
 
@@ -58,17 +62,22 @@ namespace Import.AppServices
 
             if (purgeName == PurgeName.Logs)
             {
-                return logsDbContext.PurgeLogsAsync(cancellationToken);
+                return LogsDb.PurgeLogsAsync(cancellationToken);
             }
 
             if (purgeName == PurgeName.ActionItems)
             {
-                return logsDbContext.PurgeActionItemsAsync(cancellationToken);
+                return LogsDb.PurgeActionItemsAsync(cancellationToken);
             }
 
             if (purgeName == PurgeName.Imports)
             {
-                return importsDbContext.PurgeAsync(cancellationToken);
+                return ImportsDb.PurgeAsync(cancellationToken);
+            }
+
+            if (purgeName == PurgeName.ApiResponses)
+            {
+                return LogsDb.PurgeApiResponsesAsync(cancellationToken);
             }
 
             return Task.CompletedTask;
@@ -80,24 +89,60 @@ namespace Import.AppServices
 
             if (date > DateTime.UtcNow) { await Task.CompletedTask; }
 
-            await logsDbContext.TruncateLogsAsync(logLevel, date, cancellationToken);
+            await LogsDb.TruncateLogsAsync(logLevel, date, cancellationToken);
         }
 
-        public Task ImportDataAsync(string scope, string exchange, string dataType, CancellationToken cancellationToken = default)
+        public async Task TruncateApiResponsesAsync(DateTime date, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (date > DateTime.UtcNow) { await Task.CompletedTask; }
+
+            await LogsDb.TruncateApiResponsesAsync(date, cancellationToken);
+        }
+
+        public async Task TruncateActionItemsAsync(DateTime date, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (date > DateTime.UtcNow) { await Task.CompletedTask; }
+
+            await LogsDb.TruncateActionItemsAsync(date, cancellationToken);
+        }
+
+        public Task ImportDataAsync(string scope, string exchange, string dataType,
+            //IEnumerable<string>? exchangeIncludeFilters = null,
+            //IEnumerable<string>? symbolTypeIncludeFilters = null,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            //exchangeIncludeFilters ??= Enumerable.Empty<string>();
+            //symbolTypeIncludeFilters ??= Enumerable.Empty<string>();
 
             DomainEventPublisher.RaiseMessageEvent(this, $"Importing\t{scope} {exchange} {dataType}", nameof(ImportDataAsync));
 
             if (dataType == DataTypes.Symbols)
             {
-                var symbols = dataClient.GetSymbolListAsync(exchange, cancellationToken)
+                var symbols = DataClient.GetSymbolListAsync(exchange, cancellationToken)
                     .GetAwaiter().GetResult()
                     .ToArray();
 
-                allSymbols.UnionWith(symbols);
+                HashSet<Symbol> symbolSet = new(symbols);
 
-                return importsDbContext.SaveSymbolsAsync(symbols, cancellationToken);
+                //if (exchangeIncludeFilters.Any())
+                //{
+                //    symbolSet.RemoveWhere(s => !exchangeIncludeFilters.Contains(s.Exchange));
+                //}
+
+                //if (symbolTypeIncludeFilters.Any())
+                //{
+                //    symbolSet.RemoveWhere(s => !symbolTypeIncludeFilters.Contains(s.Type));
+                //}
+                
+                allSymbols.UnionWith(symbolSet);
+
+                return ImportsDb.SaveSymbolsAsync(symbols, exchange, cancellationToken);
             }
             else if (scope == DataTypeScopes.Full)
             {
@@ -120,7 +165,7 @@ namespace Import.AppServices
 
                 foreach (var chunk in symbols.Chunk(500))
                 {
-                    await importsDbContext.SetOptionableOnSymbolsAsync(chunk, cancellationToken);
+                    await ImportsDb.SetOptionableOnSymbolsAsync(chunk, cancellationToken);
                 }
             }
         }
@@ -128,7 +173,7 @@ namespace Import.AppServices
         public Task SaveApiResponse(string request, string response, int statusCode,
             CancellationToken cancellationToken = default)
         {
-            return logsDbContext.SaveApiResponseAsync(request, response, statusCode, cancellationToken);
+            return LogsDb.SaveApiResponseAsync(request, response, statusCode, cancellationToken);
         }
 
         private Task ImportFullAsync(string exchange, string dataType, CancellationToken cancellationToken = default)
@@ -145,7 +190,7 @@ namespace Import.AppServices
                 }
                 else
                 {
-                    return importsDbContext.SaveExchangesAsync(dataClient.GetExchangeListAsync(cancellationToken).GetAwaiter().GetResult(),
+                    return ImportsDb.SaveExchangesAsync(DataClient.GetExchangeListAsync(cancellationToken).GetAwaiter().GetResult(),
                         cancellationToken);
                 }
 
@@ -154,11 +199,11 @@ namespace Import.AppServices
 
             if (!allSymbols.Any())
             {
-                allSymbols.UnionWith(importsDbContext.GetAllSymbolsAsync(cancellationToken).GetAwaiter().GetResult());
+                allSymbols.UnionWith(ImportsDb.GetAllSymbolsAsync(cancellationToken).GetAwaiter().GetResult());
             }
 
             var symbolsForExchange = allSymbols.Where(s => s.Exchange == exchange).Except(allSymbols.Where(s =>
-                SymbolsToIgnore.IsOnList(s.Code, s.Exchange))).ToArray();
+                SymbolsToIgnore.IsOnList(s.Code, s.Exchange ?? "Unknown"))).ToArray();
 
             if (dataType == DataTypes.Splits)
             {
@@ -216,7 +261,7 @@ namespace Import.AppServices
                     }
                     else
                     {
-                        var symbols = importsDbContext.GetSymbolsWithOptionsAsync(cancellationToken)
+                        var symbols = ImportsDb.GetSymbolsWithOptionsAsync(cancellationToken)
                             .GetAwaiter().GetResult().ToArray();
                         return ImportOptionsAsync(symbols, cancellationToken);
                     }
@@ -226,8 +271,7 @@ namespace Import.AppServices
             if (dataType == DataTypes.Fundamentals)
             {
                 // find the symbols due for an update to their fundamentals (i.e., every 3 months).
-                var meta = SymbolMetaDataRepository.Find(m => m.LastUpdatedIncomeStatement.GetValueOrDefault() <
-                    DateTime.Now.AddDays(-90)).ToArray();
+                var meta = SymbolMetaDataRepository.Find(m => m.RequiresFundamentalUpdate).ToArray();
 
                 int baseCost = ApiService.GetCost(ApiService.FundamentalsUri, 1);
 
@@ -259,13 +303,13 @@ namespace Import.AppServices
 
             foreach (var symbol in symbols)
             {
-                var splits = (await dataClient.GetSplitsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken)).ToList();
+                var splits = (await DataClient.GetSplitsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken)).ToList();
 
                 List<Infrastructure.Domain.Split> domainSplits = new();
 
-                splits.ForEach(s => domainSplits.Add(new Infrastructure.Domain.Split(symbol.Code, symbol.Exchange, s)));
+                splits.ForEach(s => domainSplits.Add(new Infrastructure.Domain.Split(symbol.Code, symbol.Exchange ?? "Unknown", s)));
 
-                await importsDbContext.SaveSplitsAsync(domainSplits, cancellationToken);
+                await ImportsDb.SaveSplitsAsync(domainSplits, cancellationToken);
             }
         }
 
@@ -275,9 +319,9 @@ namespace Import.AppServices
 
             foreach (var symbol in symbols)
             {
-                var divs = await dataClient.GetDividendsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
+                var divs = await DataClient.GetDividendsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
 
-                await importsDbContext.SaveDividendsAsync(symbol.Code, symbol.Exchange, divs, cancellationToken);
+                await ImportsDb.SaveDividendsAsync(symbol.Code, symbol.Exchange ?? "Unknown", divs, cancellationToken);
             }
         }
 
@@ -293,8 +337,8 @@ namespace Import.AppServices
             {
                 try
                 {
-                    var prices = await dataClient.GetPricesForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
-                    await importsDbContext.SavePriceActionsAsync(symbol.Code, symbol.Exchange, prices, cancellationToken);
+                    var prices = await DataClient.GetPricesForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
+                    await ImportsDb.SavePriceActionsAsync(symbol.Code, symbol.Exchange ?? "Unknown", prices, cancellationToken);
                 }
                 catch (JsonException jsonExc)
                 {
@@ -309,9 +353,9 @@ namespace Import.AppServices
 
             foreach (var symbol in symbols)
             {
-                var options = await dataClient.GetOptionsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
+                var options = await DataClient.GetOptionsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
 
-                await importsDbContext.SaveOptionsAsync(options, cancellationToken);
+                await ImportsDb.SaveOptionsAsync(options, cancellationToken);
             }
         }
 
@@ -321,9 +365,9 @@ namespace Import.AppServices
 
             if (exchange == dataType && dataType == DataTypes.Exchanges)
             {
-                var modelExchanges = dataClient.GetExchangeListAsync(cancellationToken).GetAwaiter().GetResult();
+                var modelExchanges = DataClient.GetExchangeListAsync(cancellationToken).GetAwaiter().GetResult();
 
-                return importsDbContext.SaveExchangesAsync(modelExchanges, cancellationToken);
+                return ImportsDb.SaveExchangesAsync(modelExchanges, cancellationToken);
             }
 
             return Task.CompletedTask;
@@ -333,17 +377,17 @@ namespace Import.AppServices
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var fundamentals = dataClient.GetFundamentalsForSymbolAsync(symbol, cancellationToken: cancellationToken)
+            var fundamentals = DataClient.GetFundamentalsForSymbolAsync(symbol, cancellationToken: cancellationToken)
                 .GetAwaiter().GetResult();
 
             if (fundamentals is EtfFundamentalsCollection etfCollection)
             {
-                return importsDbContext.SaveEtfAsync(etfCollection, cancellationToken);
+                return ImportsDb.SaveEtfAsync(etfCollection, cancellationToken);
             }
 
             if (fundamentals is FundamentalsCollection collection)
             {
-                return importsDbContext.SaveCompanyAsync(collection, cancellationToken);
+                return ImportsDb.SaveCompanyAsync(collection, cancellationToken);
             }
 
             throw new Exception($"Could not import fundamentals for {symbol}");

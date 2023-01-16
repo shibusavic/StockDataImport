@@ -205,12 +205,38 @@ WHERE status = Any(@Statuses)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        const string logsSql = @"
-DELETE FROM public.logs WHERE log_level = @LogLevel AND utc_timestamp < @Date";
+        string sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.Log)) ?? string.Empty;
+        sql += " WHERE log_level = @LogLevel AND utc_timestamp < @Date";
 
-        await ExecuteAsync(logsSql, new
+        await ExecuteAsync(sql, new
         {
             LogLevel = logLevel,
+            Date = date
+        }, 120, cancellationToken);
+    }
+
+    public async Task TruncateApiResponsesAsync(DateTime date, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ApiResponse)) ?? string.Empty;
+        sql += " WHERE utc_timestamp < @Date";
+
+        await ExecuteAsync(sql, new
+        {
+            Date = date
+        }, 120, cancellationToken);
+    }
+
+    public async Task TruncateActionItemsAsync(DateTime date, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ActionItem)) ?? string.Empty;
+        sql += " WHERE utc_timestamp < @Date";
+
+        await ExecuteAsync(sql, new
+        {
             Date = date
         }, 120, cancellationToken);
     }
@@ -219,16 +245,35 @@ DELETE FROM public.logs WHERE log_level = @LogLevel AND utc_timestamp < @Date";
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        const string logsSql = @"
-DELETE FROM public.logs";
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.Log));
 
-        await ExecuteAsync(logsSql, null, 120, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(sql))
+        {
+            await ExecuteAsync(sql, null, 120, cancellationToken);
+        }
     }
 
     public async Task PurgeActionItemsAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await ExecuteAsync(@"DELETE FROM public.action_items", cancellationToken: cancellationToken);
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ActionItem));
+
+        if (!string.IsNullOrWhiteSpace(sql))
+        {
+            await ExecuteAsync(sql, null, 120, cancellationToken: cancellationToken);
+        }
+    }
+
+    public async Task PurgeApiResponsesAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ApiResponse));
+
+        if (!string.IsNullOrWhiteSpace(sql))
+        {
+            await ExecuteAsync(sql, cancellationToken: cancellationToken);
+        }
     }
 }

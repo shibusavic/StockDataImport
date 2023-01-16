@@ -44,8 +44,8 @@ namespace EodHistoricalData.Sdk
 
         Task<TrendCollection> GetTrendsForSymbolsAsync(string symbols, CancellationToken cancellationToken = default);
 
-        Task<(int Requests, int Limit)> GetUsageAsync();
+        Task<(int Usage, int Limit)> GetUsageAsync();
 
-        Task<(int Requests, int Limit)> ResetUsageAsync(int limit = 100000);
+        Task<(int Usage, int Limit)> ResetUsageAsync(int limit = 100000);
     }
 }

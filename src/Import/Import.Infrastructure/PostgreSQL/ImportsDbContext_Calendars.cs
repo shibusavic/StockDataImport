@@ -13,7 +13,7 @@ internal partial class ImportsDbContext
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(CalendarIpo));
 
         var daoIpos = ipoCollection.Ipos.Select(x => new CalendarIpo(x,
-            SymbolMetaDataRepository.GetExchangeForSymbol(x.Symbol))).ToArray();
+            SymbolMetaDataRepository.GetFirstExchangeForSymbol(x.Symbol))).ToArray();
 
         using var connection = await GetOpenConnectionAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();

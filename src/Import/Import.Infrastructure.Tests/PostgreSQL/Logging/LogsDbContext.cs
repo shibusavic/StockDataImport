@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Logging;
 
-namespace Import.Infrastructure.Tests.PostgreSQL;
+namespace Import.Infrastructure.PostgreSQL.Tests;
 
 internal class LogsDbContext : Infrastructure.PostgreSQL.LogsDbContext
 {
@@ -46,7 +46,23 @@ internal class LogsDbContext : Infrastructure.PostgreSQL.LogsDbContext
 
     internal async Task<int> CountActionItemsAsync()
     {
-        const string sql = @"SELECT COUNT(*) FROM action_items";
+        const string sql = @"SELECT COUNT(*) FROM public.action_items";
+
+        var connection = await GetOpenConnectionAsync();
+
+        try
+        {
+            return await connection.QuerySingleAsync<int>(sql);
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    internal async Task<int> CountApiResponsesAsync()
+    {
+        const string sql = @"SELECT COUNT(*) FROM public.api_responses";
 
         var connection = await GetOpenConnectionAsync();
 

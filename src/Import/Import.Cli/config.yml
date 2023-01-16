@@ -1,10 +1,19 @@
-﻿Max Token Usage: 990
-API Key: TEST
+﻿API Key: TEST
+Max Token Usage: 990
+Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - AMEX
+    Symbol Type:
+    - Common Stock
+    - ETF
 Purge Data:
 - Logs
 - Actions
 - Imports
-Log Retention:
+Data Retention:
   Critical: 1 year
   Debug: 2 weeks
   Error: 1 year
@@ -14,12 +23,7 @@ Log Retention:
 On Empty Database:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
-  - Exchanges
   - Symbols
   - Prices
   - Options
@@ -27,19 +31,11 @@ On Empty Database:
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 Any Day:
 - Priority: 1
   Scope: Bulk
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -48,10 +44,6 @@ Any Day:
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 Sunday:
@@ -61,10 +53,6 @@ Monday:
 Tuesday:
 - Priority: 1
   Scope: Bulk
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -73,19 +61,11 @@ Tuesday:
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 Wednesday:
 - Priority: 1
   Scope: Bulk
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -94,19 +74,11 @@ Wednesday:
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 Thursday:
 - Priority: 1
   Scope: Bulk
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -115,20 +87,12 @@ Thursday:
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 Friday:
 - Priority: 1
   Skip: false
   Scope: Bulk
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -137,19 +101,11 @@ Friday:
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals
 Saturday:
 - Priority: 1
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Symbols
   - Prices
@@ -158,9 +114,5 @@ Saturday:
   - Splits
 - Priority: 2
   Scope: Full
-  Exchanges:
-  - NYSE
-  - NASDAQ
-  - AMEX
   Data Types:
   - Fundamentals

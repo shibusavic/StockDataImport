@@ -6,12 +6,23 @@
 /// </summary>
 public struct Symbol : IEquatable<Symbol>
 {
+
     public string Code;
     public string Name;
     public string Country;
-    public string Exchange;
+    public string? Exchange;
     public string Currency;
     public string Type;
+
+    public Symbol(string code, string name, string country, string? exchange, string currency, string type)
+    {
+        Code = code;
+        Name = name;
+        Country = country;
+        Exchange = exchange ?? "None"; // to accommodate the null exchange values in the API, but require it locally.
+        Currency = currency;
+        Type = type;
+    }
 
     public static Symbol Empty => new();
 
