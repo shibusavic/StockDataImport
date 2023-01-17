@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EodHistoricalData.Sdk.Services;
 using Import.Infrastructure.PostgreSQL.DataAccessObjects;
 using Npgsql;
 using System.Text;
@@ -18,7 +19,7 @@ internal partial class ImportsDbContext
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // had to deviate from using SqlBuilder because of the COALESCE statement for has_options
+        // had to deviate from using PostgeSQLSqlBuilder because of the COALESCE statement for has_options
         const string sql = @"
 INSERT INTO public.symbols
 (code,symbol,exchange,name,country,currency,type,has_options)
@@ -106,13 +107,12 @@ FROM public.price_actions P
 INNER JOIN 
 (SELECT symbol, exchange, MAX(start) AS start
 FROM public.price_actions
-GROUP BY symbol, exchange) O ON O.symbol = P.symbol
-AND O.exchange = P.exchange
-AND O.start = P.start";
+GROUP BY symbol, exchange) O
+ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
 
         using var connection = await GetOpenConnectionAsync(cancellationToken);
 
-        var metaData = (await connection.QueryAsync<SymbolMetaData>(initialSql)).ToArray();
+        var metaData = connection.Query<SymbolMetaData>(initialSql).ToArray();
         var optionsData = (await connection.QueryAsync<(string? Symbol, DateTime? LastUpdated)>(optionsSql)).ToArray();
         var companyData = (await connection.QueryAsync<(string? Symbol, string? Exchange, DateTime? LastUpdated)>(companiesSql)).ToArray();
         var incomeData = (await connection.QueryAsync<(string? Symbol, string? Exchange, DateTime? LastDate)>(incomeStatementSql)).ToArray();
@@ -135,6 +135,8 @@ AND O.start = P.start";
             }
         }
 
+        await connection.CloseAsync();
+
         return metaData;
     }
 
@@ -155,7 +157,14 @@ AND O.start = P.start";
 
         string sql = @$"{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(Symbol))} WHERE exchange = @Exchange";
 
-        return await connection.QueryAsync<EodHistoricalData.Sdk.Models.Symbol>(sql, new { Exchange = exchange });
+        try
+        {
+            return await connection.QueryAsync<EodHistoricalData.Sdk.Models.Symbol>(sql, new { Exchange = exchange });
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
     }
 
     /// <summary>
@@ -171,7 +180,14 @@ AND O.start = P.start";
         using var connection = new NpgsqlConnection(ConnectionString);
         await connection.OpenAsync(cancellationToken);
 
-        return await connection.QueryAsync<EodHistoricalData.Sdk.Models.Symbol>(Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(Symbol)));
+        try
+        {
+            return await connection.QueryAsync<EodHistoricalData.Sdk.Models.Symbol>(Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(Symbol)));
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
     }
 
     /// <summary>
@@ -198,14 +214,20 @@ WHERE code = @Code
             sql.Append(@"AND exchange = @Exchange");
         }
 
-        using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync(cancellationToken);
+        using var connection = await GetOpenConnectionAsync(cancellationToken);
 
-        return await connection.QueryFirstOrDefaultAsync<EodHistoricalData.Sdk.Models.Symbol>(sql.ToString(), new
+        try
         {
-            Code = symbol,
-            Exchange = exchange
-        });
+            return await connection.QueryFirstOrDefaultAsync<EodHistoricalData.Sdk.Models.Symbol>(sql.ToString(), new
+            {
+                Code = symbol,
+                Exchange = exchange
+            });
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
     }
 
     public Task SaveSymbolsToIgnore(IEnumerable<IgnoredSymbol> symbols, CancellationToken cancellationToken = default)

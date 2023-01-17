@@ -447,6 +447,9 @@ Exchange Codes:
                     }
                }
             },
+            ReasonsToIgnore = new string[] {
+                "No Fundamentals"
+            },
             OnEmptyDatabase = new ImportActions[] {
                 new ImportActions()
                 {

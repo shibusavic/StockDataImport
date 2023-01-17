@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Shibusa.Extensions;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Threading;
 using static Import.Infrastructure.Configuration.Constants;
 
 namespace Import.AppServices;
@@ -53,10 +52,11 @@ public class DataImportCycle
 
                 await saveTask;
 
+                // Take care of "purge" actions and then remove them from the Actions collection.
                 if (purgeActions.Any())
                 {
                     Actions = purgeActions;
-                    await ExecuteAsync(cancellationToken);
+                    await ExecuteAsync(importConfiguration, cancellationToken);
                     await dataImportService.LogsDb.SaveActionItemsAsync(Actions, cancellationToken);
                     Actions = otherActions;
                     await dataImportService.DataClient.ResetUsageAsync(importConfiguration.MaxTokenUsage ?? 100000);
@@ -108,13 +108,15 @@ public class DataImportCycle
 
             if (!dryRun)
             {
-                await ExecuteAsync(cancellationToken);
+                await ExecuteAsync(importConfiguration, cancellationToken);
                 await dataImportService.LogsDb.SaveActionItemsAsync(Actions, cancellationToken);
             }
         }
     }
 
-    private async Task ExecuteAsync(CancellationToken cancellationToken = default)
+    private async Task ExecuteAsync(
+        ImportConfiguration importConfiguration,
+        CancellationToken cancellationToken = default)
     {
         foreach (var action in Actions)
         {
@@ -148,6 +150,7 @@ public class DataImportCycle
                 {
                     await dataImportService.ImportDataAsync(action.TargetScope!, action.TargetName!,
                         action.TargetDataType!,
+                        importConfiguration,
                         cancellationToken);
                 }
 

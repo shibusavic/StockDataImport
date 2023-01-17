@@ -11,7 +11,7 @@ internal class CompanyOfficer
     {
         CompanyId = companyId;
         DateCaptured = DateTime.UtcNow;
-        Name = officer.Name ?? "Unknown";
+        Name = officer.Name ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         Title = officer.Title;
         YearBorn = officer.YearBorn;
         UtcTimestamp = DateTime.UtcNow;

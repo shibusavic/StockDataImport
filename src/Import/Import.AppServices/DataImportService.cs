@@ -8,6 +8,7 @@ using EodHistoricalData.Sdk.Events;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using static Import.Infrastructure.Configuration.Constants;
+using EodHistoricalData.Sdk.Services;
 using Import.AppServices.Configuration;
 
 namespace Import.AppServices
@@ -111,14 +112,10 @@ namespace Import.AppServices
         }
 
         public Task ImportDataAsync(string scope, string exchange, string dataType,
-            //IEnumerable<string>? exchangeIncludeFilters = null,
-            //IEnumerable<string>? symbolTypeIncludeFilters = null,
+            ImportConfiguration importConfiguration,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            //exchangeIncludeFilters ??= Enumerable.Empty<string>();
-            //symbolTypeIncludeFilters ??= Enumerable.Empty<string>();
 
             DomainEventPublisher.RaiseMessageEvent(this, $"Importing\t{scope} {exchange} {dataType}", nameof(ImportDataAsync));
 
@@ -128,25 +125,20 @@ namespace Import.AppServices
                     .GetAwaiter().GetResult()
                     .ToArray();
 
-                HashSet<Symbol> symbolSet = new(symbols);
+                HashSet<Symbol> symbolSet = new(symbols.Where(s =>
+                    !SymbolsToIgnore.IsOnList(s.Code, s.Exchange ?? Constants.UnknownValue)));
 
-                //if (exchangeIncludeFilters.Any())
-                //{
-                //    symbolSet.RemoveWhere(s => !exchangeIncludeFilters.Contains(s.Exchange));
-                //}
+                //var newSymbols = symbolSet.Except(allSymbols);
+                //var missingSymbols = allSymbols.Except(symbolSet);
+                // TODO: Do something with missing symbols here.
 
-                //if (symbolTypeIncludeFilters.Any())
-                //{
-                //    symbolSet.RemoveWhere(s => !symbolTypeIncludeFilters.Contains(s.Type));
-                //}
-                
                 allSymbols.UnionWith(symbolSet);
 
-                return ImportsDb.SaveSymbolsAsync(symbols, exchange, cancellationToken);
+                return ImportsDb.SaveSymbolsAsync(symbolSet, exchange, cancellationToken);
             }
             else if (scope == DataTypeScopes.Full)
             {
-                return ImportFullAsync(exchange, dataType, cancellationToken);
+                return ImportFullAsync(exchange, dataType, importConfiguration, cancellationToken);
             }
             else if (scope == DataTypeScopes.Bulk)
             {
@@ -176,7 +168,9 @@ namespace Import.AppServices
             return LogsDb.SaveApiResponseAsync(request, response, statusCode, cancellationToken);
         }
 
-        private Task ImportFullAsync(string exchange, string dataType, CancellationToken cancellationToken = default)
+        private Task ImportFullAsync(string exchange, string dataType, 
+            ImportConfiguration importConfiguration,
+            CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -199,11 +193,12 @@ namespace Import.AppServices
 
             if (!allSymbols.Any())
             {
+                // TODO: not too sure about this line. I don't think we want to union here.
                 allSymbols.UnionWith(ImportsDb.GetAllSymbolsAsync(cancellationToken).GetAwaiter().GetResult());
             }
 
             var symbolsForExchange = allSymbols.Where(s => s.Exchange == exchange).Except(allSymbols.Where(s =>
-                SymbolsToIgnore.IsOnList(s.Code, s.Exchange ?? "Unknown"))).ToArray();
+                SymbolsToIgnore.IsOnList(s.Code, s.Exchange ?? Constants.UnknownValue))).ToArray();
 
             if (dataType == DataTypes.Splits)
             {
@@ -283,7 +278,9 @@ namespace Import.AppServices
                 {
                     for (int i = 0; i < availableCycles; i++)
                     {
-                        ImportFundamentalsAsync(meta[i].Symbol, cancellationToken).GetAwaiter().GetResult();
+                        ImportFundamentalsAsync(meta[i].Symbol, meta[i].Exchange ?? Constants.UnknownValue,
+                            importConfiguration, cancellationToken)
+                            .GetAwaiter().GetResult();
                     }
                 }
 
@@ -307,7 +304,7 @@ namespace Import.AppServices
 
                 List<Infrastructure.Domain.Split> domainSplits = new();
 
-                splits.ForEach(s => domainSplits.Add(new Infrastructure.Domain.Split(symbol.Code, symbol.Exchange ?? "Unknown", s)));
+                splits.ForEach(s => domainSplits.Add(new Infrastructure.Domain.Split(symbol.Code, symbol.Exchange ?? Constants.UnknownValue, s)));
 
                 await ImportsDb.SaveSplitsAsync(domainSplits, cancellationToken);
             }
@@ -321,7 +318,8 @@ namespace Import.AppServices
             {
                 var divs = await DataClient.GetDividendsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
 
-                await ImportsDb.SaveDividendsAsync(symbol.Code, symbol.Exchange ?? "Unknown", divs, cancellationToken);
+                await ImportsDb.SaveDividendsAsync(symbol.Code, symbol.Exchange ?? Constants.UnknownValue,
+                    divs, cancellationToken);
             }
         }
 
@@ -338,7 +336,7 @@ namespace Import.AppServices
                 try
                 {
                     var prices = await DataClient.GetPricesForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
-                    await ImportsDb.SavePriceActionsAsync(symbol.Code, symbol.Exchange ?? "Unknown", prices, cancellationToken);
+                    await ImportsDb.SavePriceActionsAsync(symbol.Code, symbol.Exchange ?? Constants.UnknownValue, prices, cancellationToken);
                 }
                 catch (JsonException jsonExc)
                 {
@@ -373,21 +371,52 @@ namespace Import.AppServices
             return Task.CompletedTask;
         }
 
-        private Task ImportFundamentalsAsync(string symbol, CancellationToken cancellationToken = default)
+        private Task ImportFundamentalsAsync(string symbol,
+            string exchange,
+            ImportConfiguration importConfiguration,
+            CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var fundamentals = DataClient.GetFundamentalsForSymbolAsync(symbol, cancellationToken: cancellationToken)
                 .GetAwaiter().GetResult();
 
+            bool saveFundamentals = true;
+
             if (fundamentals is EtfFundamentalsCollection etfCollection)
             {
-                return ImportsDb.SaveEtfAsync(etfCollection, cancellationToken);
+                if (importConfiguration.ReasonsToIgnore != null &&
+                    importConfiguration.ReasonsToIgnore.Contains(ImportConfiguration.ReasonToIgnoreValues.MissingFundamentals,
+                        StringComparer.InvariantCultureIgnoreCase))
+                {
+                    if (string.IsNullOrWhiteSpace(etfCollection.General.Name))
+                    {
+                        saveFundamentals = false;
+                        SymbolsToIgnore.Add(new IgnoredSymbol(symbol, exchange, ImportConfiguration.ReasonToIgnoreValues.MissingFundamentals));
+                    }
+                }
+                if (saveFundamentals)
+                {
+                    return ImportsDb.SaveEtfAsync(etfCollection, cancellationToken);
+                }
             }
 
             if (fundamentals is FundamentalsCollection collection)
             {
-                return ImportsDb.SaveCompanyAsync(collection, cancellationToken);
+                if (importConfiguration.ReasonsToIgnore != null &&
+                    importConfiguration.ReasonsToIgnore.Contains(ImportConfiguration.ReasonToIgnoreValues.MissingFundamentals,
+                        StringComparer.InvariantCultureIgnoreCase))
+                {
+                    if (string.IsNullOrWhiteSpace(collection.General.Name))
+                    {
+                        saveFundamentals = false;
+                        SymbolsToIgnore.Add(new IgnoredSymbol(symbol, exchange, ImportConfiguration.ReasonToIgnoreValues.MissingFundamentals));
+                    }
+                }
+                if (saveFundamentals)
+                {
+                    return ImportsDb.SaveCompanyAsync(collection, cancellationToken);
+                }
             }
 
             throw new Exception($"Could not import fundamentals for {symbol}");

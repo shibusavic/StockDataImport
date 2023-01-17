@@ -1,5 +1,6 @@
 ﻿using Shibusa.Data;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection.Metadata;
 
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 
@@ -12,7 +13,7 @@ internal sealed class Symbol
         CodeSymbol = symbol.Code;
         Name = symbol.Name ?? throw new ArgumentException($"{nameof(symbol.Name)} cannot be null");
         Country = symbol.Country ?? throw new ArgumentException($"{nameof(symbol.Country)} cannot be null");
-        Exchange = symbol.Exchange ?? "None";
+        Exchange = symbol.Exchange ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         Currency = symbol.Currency ?? throw new ArgumentException($"{nameof(symbol.Currency)} cannot be null");
         Type = symbol.Type ?? throw new ArgumentException($"{nameof(symbol.Type)} cannot be null");
         HasOptions = null;

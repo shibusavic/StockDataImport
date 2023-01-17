@@ -19,7 +19,7 @@ internal class CalendarIpo
         PriceTo = ipo.PriceTo ?? 0M;
         OfferPrice = ipo.OfferPrice ?? 0M;
         Shares = Convert.ToInt64(ipo.Shares);
-        DealType = ipo.DealType ?? "Unknown";
+        DealType = ipo.DealType ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         UtcTimestamp = DateTime.UtcNow;
     }
 

@@ -5,6 +5,11 @@ namespace Import.AppServices.Configuration;
 
 public class ImportConfiguration : IEquatable<ImportConfiguration?>
 {
+    public static class ReasonToIgnoreValues
+    {
+        public const string MissingFundamentals = "No Fundamentals";
+    }
+
     public ImportConfiguration()
     {
         GlobalId = Guid.NewGuid();
@@ -32,6 +37,9 @@ public class ImportConfiguration : IEquatable<ImportConfiguration?>
 
     [YamlMember(Alias = Constants.ConfigurationKeys.Exchanges)]
     public Dictionary<string, Dictionary<string, string[]>>? Exchanges { get; set; }
+
+    [YamlMember(Alias = Constants.ConfigurationKeys.ReasonsToIgnore)]
+    public string[]? ReasonsToIgnore { get; set; }
 
     [YamlMember(Alias = Constants.ConfigurationKeys.Fixes)]
     public string[]? Fixes { get; set; }
@@ -68,7 +76,7 @@ public class ImportConfiguration : IEquatable<ImportConfiguration?>
 
     [YamlMember(Alias = Constants.ConfigurationKeys.Saturday)]
     public ImportActions[]? Saturday { get; set; }
-    
+
     //public int GetExchangeCount()
     //{
     //    List<string> exchanges = new();

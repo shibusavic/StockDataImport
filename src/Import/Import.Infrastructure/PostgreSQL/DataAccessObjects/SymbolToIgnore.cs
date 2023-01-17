@@ -9,7 +9,7 @@ internal class SymbolToIgnore
     public SymbolToIgnore(string symbol, string? exchange, string? reason)
     {
         Symbol = symbol;
-        Exchange = exchange ?? "None";
+        Exchange = exchange ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         Reason = reason;
         DateIgnored = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;

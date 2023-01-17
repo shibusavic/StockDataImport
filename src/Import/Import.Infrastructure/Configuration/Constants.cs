@@ -9,6 +9,7 @@ public static class Constants
         public const string CancelOnException = "Cancel On Exception";
         public const string DatabasePurge = "Purge Data";
         public const string Exchanges = "Exchange Codes";
+        public const string ReasonsToIgnore = "Reasons to Ignore";
         public const string Fixes = "Fixes";
         public const string DataRetention = "Data Retention";
         public const string MaxTokenUsage = "Max Token Usage";

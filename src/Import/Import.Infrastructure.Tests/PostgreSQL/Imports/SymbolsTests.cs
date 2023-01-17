@@ -1,4 +1,5 @@
 ﻿using EodHistoricalData.Sdk.Models;
+using EodHistoricalData.Sdk.Services;
 using Import.Infrastructure.Tests.Fixtures;
 
 namespace Import.Infrastructure.PostgreSQL.Tests;
@@ -38,7 +39,7 @@ public class SymbolsTests : TestBase
         Assert.NotNull(metaData);
         Assert.NotEmpty(metaData);
 
-        await sut.SavePriceActionsAsync(metaData[0].Symbol, metaData[0].Exchange ?? "None", new PriceAction[] {
+        await sut.SavePriceActionsAsync(metaData[0].Symbol, metaData[0].Exchange ?? EodHistoricalData.Sdk.Constants.UnknownValue, new PriceAction[] {
             new PriceAction()
             {
                 Date = DateOnly.FromDateTime(DateTime.Now.AddDays(-1)),

@@ -10,31 +10,6 @@ public sealed partial class DataClient
 {
     private const string FundamentalsSourceName = "Fundamentals";
 
-    internal async Task<string?> GetFundamentalsForSymbolStringAsync(string symbol,
-        CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        return await GetStringResponseAsync(BuildFundamentalsUri(symbol), FundamentalsSourceName, cancellationToken);
-    }
-
-    internal static (string? StringValue, SymbolType EnumValue) DetermineSymbolTypeForFundamentalsOutput(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json)) { return (null, SymbolType.None); }
-
-        var info = JsonSerializer.Deserialize<FundamentalsInfo>(json, SerializerOptions);
-
-        return (info.General.Type, info.General.Type.GetEnum<SymbolType>());
-    }
-
-    internal static async Task<FundamentalsCollection> ConvertToCommonStockFundamentals(string json) =>
-        string.IsNullOrWhiteSpace(json) ? FundamentalsCollection.Empty
-        : await Task.FromResult(JsonSerializer.Deserialize<FundamentalsCollection>(json, SerializerOptions));
-
-    internal static async Task<EtfFundamentalsCollection> ConvertToEtfFundamentals(string json) =>
-        string.IsNullOrWhiteSpace(json) ? EtfFundamentalsCollection.Empty
-        : await Task.FromResult(JsonSerializer.Deserialize<EtfFundamentalsCollection>(json, SerializerOptions));
-
     public async Task<T> GetFundamentalsForSymbolAsync<T>(string symbol,
         CancellationToken cancellationToken = default) where T : struct
     {
@@ -70,6 +45,31 @@ public sealed partial class DataClient
 
         return null;
     }
+
+    internal async Task<string?> GetFundamentalsForSymbolStringAsync(string symbol,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return await GetStringResponseAsync(BuildFundamentalsUri(symbol), FundamentalsSourceName, cancellationToken);
+    }
+
+    internal static (string? StringValue, SymbolType EnumValue) DetermineSymbolTypeForFundamentalsOutput(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) { return (null, SymbolType.None); }
+
+        var info = JsonSerializer.Deserialize<FundamentalsInfo>(json, SerializerOptions);
+
+        return (info.General.Type, info.General.Type.GetEnum<SymbolType>());
+    }
+
+    internal static async Task<FundamentalsCollection> ConvertToCommonStockFundamentals(string json) =>
+        string.IsNullOrWhiteSpace(json) ? FundamentalsCollection.Empty
+        : await Task.FromResult(JsonSerializer.Deserialize<FundamentalsCollection>(json, SerializerOptions));
+
+    internal static async Task<EtfFundamentalsCollection> ConvertToEtfFundamentals(string json) =>
+        string.IsNullOrWhiteSpace(json) ? EtfFundamentalsCollection.Empty
+        : await Task.FromResult(JsonSerializer.Deserialize<EtfFundamentalsCollection>(json, SerializerOptions));
 
     private string BuildFundamentalsUri(string symbol) => $"{ApiService.FundamentalsUri}{symbol}?{GetTokenAndFormat()}";
 }

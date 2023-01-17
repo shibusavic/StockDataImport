@@ -26,7 +26,7 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects
             CompanyUrl = etf.Data.Url; // TODO: not sure about this one.
             EtfUrl = etf.Data.Url;
             Domicile = etf.Data.Domicile;
-            IndexName = etf.Data.IndexName ?? "Unknown";
+            IndexName = etf.Data.IndexName ?? EodHistoricalData.Sdk.Constants.UnknownValue;
             Yield = etf.Data.Yield.GetValueOrDefault();
             DividendPayingFrequency = etf.Data.DividendPayingFrequency;
             InceptionDate = etf.Data.InceptionDate.ToDateTime(TimeOnly.MinValue);

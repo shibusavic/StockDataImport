@@ -19,7 +19,7 @@ public struct Symbol : IEquatable<Symbol>
         Code = code;
         Name = name;
         Country = country;
-        Exchange = exchange ?? "None"; // to accommodate the null exchange values in the API, but require it locally.
+        Exchange = exchange ?? Constants.UnknownValue; // to accommodate the null exchange values in the API, but require it locally.
         Currency = currency;
         Type = type;
     }
