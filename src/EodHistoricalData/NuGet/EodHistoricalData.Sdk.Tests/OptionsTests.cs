@@ -13,7 +13,7 @@ public class OptionsTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
+        ApiEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
             if (e.ApiResponseException != null)
             {
@@ -21,7 +21,7 @@ public class OptionsTests : BaseTest
             }
         };
 
-        Assert.Equal(OptionsCollection.Empty, await dataClient.GetOptionsForSymbolAsync("MSFT"));
+        Assert.Equal(new OptionsCollection(), await dataClient.GetOptionsForSymbolAsync("MSFT"));
         Assert.True(excs.Count > 0);
     }
 
@@ -32,6 +32,7 @@ public class OptionsTests : BaseTest
 
         var actual = await dataClient.GetOptionsForSymbolAsync("MSFT");
 
+        Assert.NotNull(actual.Data);
         Assert.NotEmpty(actual.Data);
     }
 
@@ -44,6 +45,7 @@ public class OptionsTests : BaseTest
             DateOnly.FromDateTime(DateTime.Now),
             DateOnly.FromDateTime(DateTime.Now.AddMonths(1)));
 
+        Assert.NotNull(actual.Data);
         Assert.NotEmpty(actual.Data);
     }
 }

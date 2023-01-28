@@ -51,62 +51,29 @@ WHERE has_options = @HasOptions";
         await Task.CompletedTask;
     }
 
-    private async Task SaveOptionsDataAsync<T>(T obj, CancellationToken cancellationToken = default)
+    private Task SaveOptionsDataAsync<T>(T obj, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (obj == null) { return; }
+        if (obj == null) { return Task.CompletedTask; }
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(T));
 
         if (sql == null) { throw new Exception($"Could not create upsert for {obj!.GetType().Name}"); }
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using var transaction = connection.BeginTransaction();
-
-        try
-        {
-            await connection.ExecuteAsync(sql, obj, transaction);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return ExecuteAsync(sql, obj, null, cancellationToken);
     }
 
-    private async Task SaveOptionsDataAsync<T>(T[] obj, CancellationToken cancellationToken = default)
+    private Task SaveOptionsDataAsync<T>(T[] obj, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if ((obj?.Length ?? 0) == 0) return;
+        if ((obj?.Length ?? 0) == 0) return Task.CompletedTask;
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(T));
 
         if (sql == null) { throw new Exception($"Could not create upsert for {obj!.GetType()?.GetElementType()?.Name}"); }
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using var transaction = connection.BeginTransaction();
-
-        try
-        {
-            await connection.ExecuteAsync(sql, obj, transaction);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return ExecuteAsync(sql, obj, null, cancellationToken);
     }
-
 }

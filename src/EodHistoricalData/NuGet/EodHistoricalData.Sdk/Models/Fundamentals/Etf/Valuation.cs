@@ -8,13 +8,17 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 public struct Valuation
 {
     [JsonPropertyName("price/prospective earnings")]
-    public string PriceProspectiveEarnings;
+    public string? PriceProspectiveEarnings;
+    
     [JsonPropertyName("price/book")]
-    public string PriceBook;
+    public string? PriceBook;
+    
     [JsonPropertyName("price/sales")]
-    public string PriceSales;
+    public string? PriceSales;
+    
     [JsonPropertyName("price/cash flow")]
-    public string PriceCashFlow;
+    public string? PriceCashFlow;
+    
     [JsonPropertyName("dividend-yield factor")]
-    public string DividendYieldFactor;
+    public string? DividendYieldFactor;
 }

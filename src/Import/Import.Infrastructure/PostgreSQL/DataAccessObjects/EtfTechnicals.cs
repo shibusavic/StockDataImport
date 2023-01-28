@@ -10,57 +10,56 @@ internal class EtfTechnicals
         EodHistoricalData.Sdk.Models.Fundamentals.Etf.Technicals technicals)
     {
         EtfId = etfId;
-        DateCaptured = DateTime.UtcNow;
         Beta = technicals.Beta.GetValueOrDefault();
         FiftyTwoWeekHigh = technicals.FiftyTwoWeekHigh;
         FiftyTwoWeekLow = technicals.FiftyTwoWeekLow.GetValueOrDefault();
         FiftyDayMa = technicals.FiftyDayMovingAverage.GetValueOrDefault();
         TwoHundredDayMa = technicals.TwoHundredDayMovingAverage.GetValueOrDefault();
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public EtfTechnicals(
         Guid etfId,
-        DateTime dateCaptured,
-        double beta,
-        decimal fiftyTwoWeekHigh,
-        decimal fiftyTwoWeekLow,
-        decimal fiftyDayMa,
-        decimal twoHundredDayMa,
-        DateTime utcTimestamp)
+        double? beta,
+        decimal? fiftyTwoWeekHigh,
+        decimal? fiftyTwoWeekLow,
+        decimal? fiftyDayMa,
+        decimal? twoHundredDayMa,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
-        DateCaptured = dateCaptured;
         Beta = beta;
         FiftyTwoWeekHigh = fiftyTwoWeekHigh;
         FiftyTwoWeekLow = fiftyTwoWeekLow;
         FiftyDayMa = fiftyDayMa;
         TwoHundredDayMa = twoHundredDayMa;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
-
     [ColumnWithKey("etf_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid EtfId { get;  }
+    public Guid EtfId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = true)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("beta", Order = 2, TypeName = "double precision", IsPartOfKey = false)]
+    public double? Beta { get; }
 
-    [ColumnWithKey("beta", Order = 3, TypeName = "double precision", IsPartOfKey = false)]
-    public double Beta { get;  }
+    [ColumnWithKey("fifty_two_week_high", Order = 3, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? FiftyTwoWeekHigh { get; }
 
-    [ColumnWithKey("fifty_two_week_high", Order = 4, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal FiftyTwoWeekHigh { get;  }
+    [ColumnWithKey("fifty_two_week_low", Order = 4, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? FiftyTwoWeekLow { get; }
 
-    [ColumnWithKey("fifty_two_week_low", Order = 5, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal FiftyTwoWeekLow { get;  }
+    [ColumnWithKey("fifty_day_ma", Order = 5, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? FiftyDayMa { get; }
 
-    [ColumnWithKey("fifty_day_ma", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal FiftyDayMa { get;  }
+    [ColumnWithKey("two_hundred_day_ma", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TwoHundredDayMa { get; }
 
-    [ColumnWithKey("two_hundred_day_ma", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal TwoHundredDayMa { get;  }
+    [ColumnWithKey("created_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

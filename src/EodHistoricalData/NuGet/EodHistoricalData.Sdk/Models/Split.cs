@@ -8,7 +8,10 @@ namespace EodHistoricalData.Sdk.Models;
 /// </summary>
 public struct Split
 {
-    public DateOnly Date;
+    public DateOnly? Date;
+
     [JsonPropertyName("split")]
-    public string SplitText;
+    public string? SplitText;
+
+    public static Split Empty => new();
 }

@@ -8,9 +8,9 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
 public struct IncomeStatement
 {
     [JsonPropertyName("currency_symbol")]
-    public string CurrencySymbol;
+    public string? CurrencySymbol;
 
-    public IDictionary<string, IncomeStatementItem> Quarterly;
+    public IDictionary<string, IncomeStatementItem>? Quarterly;
 
-    public IDictionary<string, IncomeStatementItem> Yearly;
+    public IDictionary<string, IncomeStatementItem>? Yearly;
 }

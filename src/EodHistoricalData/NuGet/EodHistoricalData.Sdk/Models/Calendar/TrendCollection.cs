@@ -6,16 +6,8 @@
 /// </summary>
 public struct TrendCollection
 {
-    public string Type;
-    public string Description;
-    public string Symbols;
-    public Trend[] Trends;
-
-    public static TrendCollection Empty => new()
-    {
-        Type = string.Empty,
-        Description = string.Empty,
-        Symbols = string.Empty,
-        Trends = Array.Empty<Trend>()
-    };
+    public string? Type;
+    public string? Description;
+    public string? Symbols;
+    public Trend[]? Trends;
 }

@@ -25,7 +25,7 @@ public class SplitsTests : TestBase
         Assert.Equal(beforeCount + num, afterCount);
     }
 
-    private IEnumerable<Domain.Split> CreateSplits(int numberToCreate = 1)
+    private static IEnumerable<Domain.Split> CreateSplits(int numberToCreate = 1)
     {
         for (int i = 0; i < numberToCreate; i++)
         {

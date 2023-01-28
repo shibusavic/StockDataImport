@@ -10,39 +10,40 @@ internal class CompanyEarningsAnnual
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.EarningsPerShare earnings)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
-        Date = earnings.Date.ToDateTime(TimeOnly.MinValue);
+        Date = earnings.Date?.ToDateTime(TimeOnly.MinValue) ??
+            throw new ArgumentException($"{nameof(earnings)} has no {nameof(Date)}");
         EpsActual = earnings.EpsActual;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyEarningsAnnual(
         Guid companyId,
-        DateTime dateCaptured,
         DateTime date,
-        decimal epsActual,
-        DateTime utcTimestamp)
+        decimal? epsActual,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         Date = date;
         EpsActual = epsActual;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid CompanyId { get;  }
+    public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("date", Order = 2, TypeName = "date", IsPartOfKey = true)]
+    public DateTime Date { get; }
 
-    [ColumnWithKey("date", Order = 3, TypeName = "date", IsPartOfKey = true)]
-    public DateTime Date { get;  }
+    [ColumnWithKey("eps_actual", Order = 3, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsActual { get; }
 
-    [ColumnWithKey("eps_actual", Order = 4, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal EpsActual { get;  }
+    [ColumnWithKey("created_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

@@ -10,57 +10,57 @@ internal class CompanyDividend
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.SplitsDividends dividend)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
         ForwardAnnualDividendRate = dividend.ForwardAnnualDividendRate ?? 0D;
         ForwardAnnualDividendYield = dividend.ForwardAnnualDividendYield ?? 0D;
         PayoutRatio = dividend.PayoutRatio ?? 0D;
-        DividendDate = dividend.DividendDate.GetValueOrDefault().ToDateTime(TimeOnly.MinValue);
-        ExDividendDate = dividend.ExDividendDate.GetValueOrDefault().ToDateTime(TimeOnly.MinValue);
+        DividendDate = dividend.DividendDate?.ToDateTime(TimeOnly.MinValue);
+        ExDividendDate = dividend.ExDividendDate?.ToDateTime(TimeOnly.MinValue);
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyDividend(
         Guid companyId,
-        DateTime dateCaptured,
-        double forwardAnnualDividendRate,
-        double forwardAnnualDividendYield,
-        double payoutRatio,
-        DateTime dividendDate,
-        DateTime exDividendDate,
-        DateTime utcTimestamp)
+        double? forwardAnnualDividendRate,
+        double? forwardAnnualDividendYield,
+        double? payoutRatio,
+        DateTime? dividendDate,
+        DateTime? exDividendDate,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         ForwardAnnualDividendRate = forwardAnnualDividendRate;
         ForwardAnnualDividendYield = forwardAnnualDividendYield;
         PayoutRatio = payoutRatio;
         DividendDate = dividendDate;
         ExDividendDate = exDividendDate;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid CompanyId { get;  }
+    public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = true)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("forward_annual_dividend_rate", Order = 2, TypeName = "double precision", IsPartOfKey = false)]
+    public double? ForwardAnnualDividendRate { get; }
 
-    [ColumnWithKey("forward_annual_dividend_rate", Order = 3, TypeName = "double precision", IsPartOfKey = false)]
-    public double ForwardAnnualDividendRate { get;  }
+    [ColumnWithKey("forward_annual_dividend_yield", Order = 3, TypeName = "double precision", IsPartOfKey = false)]
+    public double? ForwardAnnualDividendYield { get; }
 
-    [ColumnWithKey("forward_annual_dividend_yield", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
-    public double ForwardAnnualDividendYield { get;  }
+    [ColumnWithKey("payout_ratio", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
+    public double? PayoutRatio { get; }
 
-    [ColumnWithKey("payout_ratio", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
-    public double PayoutRatio { get;  }
+    [ColumnWithKey("dividend_date", Order = 5, TypeName = "date", IsPartOfKey = false)]
+    public DateTime? DividendDate { get; }
 
-    [ColumnWithKey("dividend_date", Order = 6, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DividendDate { get;  }
+    [ColumnWithKey("ex_dividend_date", Order = 6, TypeName = "date", IsPartOfKey = false)]
+    public DateTime? ExDividendDate { get; }
 
-    [ColumnWithKey("ex_dividend_date", Order = 7, TypeName = "date", IsPartOfKey = false)]
-    public DateTime ExDividendDate { get;  }
+    [ColumnWithKey("created_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

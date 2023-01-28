@@ -13,7 +13,7 @@ public class DividendsTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
+        ApiEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
             if (e.ApiResponseException != null)
             {

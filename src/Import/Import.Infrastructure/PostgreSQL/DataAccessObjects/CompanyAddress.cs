@@ -1,7 +1,5 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.Metrics;
-using System.IO;
 using Shibusa.Data;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 
@@ -13,56 +11,56 @@ internal class CompanyAddress
     {
         if (address.Equals(default)) { throw new ArgumentNullException(nameof(address)); }
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
-        Street = address.Street ?? "";
-        City = address.City ?? "";
-        State = address.State ?? "";
-        Country = address.Country ?? "";
-        PostalCode = address.PostalCode ?? "";
+        Street = address.Street ?? throw new ArgumentException($"{nameof(address)} has no {nameof(Street)}");
+        City = address.City;
+        State = address.State;
+        Country = address.Country;
+        PostalCode = address.PostalCode ?? throw new ArgumentException($"{nameof(address)} has no {nameof(PostalCode)}");
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyAddress(
         Guid companyId,
-        DateTime dateCaptured,
         string street,
-        string city,
-        string state,
-        string country,
+        string? city,
+        string? state,
+        string? country,
         string postalCode,
-        DateTime utcTimestamp)
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         Street = street;
         City = city;
         State = state;
         Country = country;
         PostalCode = postalCode;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
     public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DateCaptured { get; }
-
-    [ColumnWithKey("street", Order = 3, TypeName = "text", IsPartOfKey = true)]
+    [ColumnWithKey("street", Order = 2, TypeName = "text", IsPartOfKey = true)]
     public string Street { get; }
 
-    [ColumnWithKey("city", Order = 4, TypeName = "text", IsPartOfKey = false)]
-    public string City { get; }
+    [ColumnWithKey("city", Order = 3, TypeName = "text", IsPartOfKey = false)]
+    public string? City { get; }
 
-    [ColumnWithKey("state", Order = 5, TypeName = "text", IsPartOfKey = false)]
-    public string State { get; }
+    [ColumnWithKey("state", Order = 4, TypeName = "text", IsPartOfKey = false)]
+    public string? State { get; }
 
-    [ColumnWithKey("country", Order = 6, TypeName = "text", IsPartOfKey = false)]
-    public string Country { get; }
+    [ColumnWithKey("country", Order = 5, TypeName = "text", IsPartOfKey = false)]
+    public string? Country { get; }
 
-    [ColumnWithKey("postal_code", Order = 7, TypeName = "text", IsPartOfKey = true)]
+    [ColumnWithKey("postal_code", Order = 6, TypeName = "text", IsPartOfKey = true)]
     public string PostalCode { get; }
+
+    [ColumnWithKey("created_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }

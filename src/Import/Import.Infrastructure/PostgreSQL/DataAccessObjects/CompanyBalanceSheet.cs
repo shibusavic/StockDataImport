@@ -11,7 +11,6 @@ internal class CompanyBalanceSheet
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.BalanceSheetItem balanceSheetItem)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
         Type = type;
         Date = balanceSheetItem.Date.GetValueOrDefault().ToDateTime(TimeOnly.MinValue);
         FilingDate = balanceSheetItem.FilingDate.GetValueOrDefault().ToDateTime(TimeOnly.MinValue);
@@ -77,16 +76,16 @@ internal class CompanyBalanceSheet
         NetWorkingCapital = balanceSheetItem.NetWorkingCapital;
         NetInvestedCapital = balanceSheetItem.NetInvestedCapital;
         CommonStockSharesOutstanding = balanceSheetItem.CommonStockSharesOutstanding;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyBalanceSheet(
         Guid companyId,
-        DateTime dateCaptured,
         string type,
         DateTime date,
-        DateTime filingDate,
-        string currencySymbol,
+        DateTime? filingDate,
+        string? currencySymbol,
         decimal? totalAssets,
         decimal? intangibleAssets,
         decimal? earningAssets,
@@ -139,7 +138,7 @@ internal class CompanyBalanceSheet
         decimal? negativeGoodwill,
         decimal? warrants,
         decimal? preferredStockRedeemable,
-        decimal? capitalSurpluse,
+        decimal? capitalSurpluses,
         decimal? liabilitiesAndStockholdersEquity,
         decimal? cashAndShortTermInvestments,
         decimal? propertyPlantAndEquipmentGross,
@@ -148,10 +147,10 @@ internal class CompanyBalanceSheet
         decimal? netWorkingCapital,
         decimal? netInvestedCapital,
         decimal? commonStockSharesOutstanding,
-        DateTime utcTimestamp)
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         Type = type;
         Date = date;
         FilingDate = filingDate;
@@ -208,7 +207,7 @@ internal class CompanyBalanceSheet
         NegativeGoodwill = negativeGoodwill;
         Warrants = warrants;
         PreferredStockRedeemable = preferredStockRedeemable;
-        CapitalSurpluses = capitalSurpluse;
+        CapitalSurpluses = capitalSurpluses;
         LiabilitiesAndStockholdersEquity = liabilitiesAndStockholdersEquity;
         CashAndShortTermInvestments = cashAndShortTermInvestments;
         PropertyPlantAndEquipmentGross = propertyPlantAndEquipmentGross;
@@ -217,211 +216,212 @@ internal class CompanyBalanceSheet
         NetWorkingCapital = netWorkingCapital;
         NetInvestedCapital = netInvestedCapital;
         CommonStockSharesOutstanding = commonStockSharesOutstanding;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid CompanyId { get;  }
+    public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("type", Order = 2, TypeName = "text", IsPartOfKey = true)]
+    public string Type { get; }
 
-    [ColumnWithKey("type", Order = 3, TypeName = "text", IsPartOfKey = true)]
-    public string Type { get;  }
+    [ColumnWithKey("date", Order = 3, TypeName = "date", IsPartOfKey = true)]
+    public DateTime Date { get; }
 
-    [ColumnWithKey("date", Order = 4, TypeName = "date", IsPartOfKey = true)]
-    public DateTime Date { get;  }
+    [ColumnWithKey("filing_date", Order = 4, TypeName = "date", IsPartOfKey = false)]
+    public DateTime? FilingDate { get; }
 
-    [ColumnWithKey("filing_date", Order = 5, TypeName = "date", IsPartOfKey = false)]
-    public DateTime FilingDate { get;  }
+    [ColumnWithKey("currency_symbol", Order = 5, TypeName = "text", IsPartOfKey = false)]
+    public string? CurrencySymbol { get; }
 
-    [ColumnWithKey("currency_symbol", Order = 6, TypeName = "text", IsPartOfKey = false)]
-    public string CurrencySymbol { get;  }
+    [ColumnWithKey("total_assets", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalAssets { get; }
 
-    [ColumnWithKey("total_assets", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalAssets { get;  }
+    [ColumnWithKey("intangible_assets", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? IntangibleAssets { get; }
 
-    [ColumnWithKey("intangible_assets", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? IntangibleAssets { get;  }
+    [ColumnWithKey("earning_assets", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EarningAssets { get; }
 
-    [ColumnWithKey("earning_assets", Order = 9, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EarningAssets { get;  }
+    [ColumnWithKey("other_current_assets", Order = 9, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? OtherCurrentAssets { get; }
 
-    [ColumnWithKey("other_current_assets", Order = 10, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? OtherCurrentAssets { get;  }
+    [ColumnWithKey("total_liab", Order = 10, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalLiab { get; }
 
-    [ColumnWithKey("total_liab", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalLiab { get;  }
+    [ColumnWithKey("total_stockholder_equity", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalStockholderEquity { get; }
 
-    [ColumnWithKey("total_stockholder_equity", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalStockholderEquity { get;  }
+    [ColumnWithKey("deferred_long_term_liab", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? DeferredLongTermLiab { get; }
 
-    [ColumnWithKey("deferred_long_term_liab", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? DeferredLongTermLiab { get;  }
+    [ColumnWithKey("other_current_liab", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? OtherCurrentLiab { get; }
 
-    [ColumnWithKey("other_current_liab", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? OtherCurrentLiab { get;  }
+    [ColumnWithKey("common_stock", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CommonStock { get; }
 
-    [ColumnWithKey("common_stock", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CommonStock { get;  }
+    [ColumnWithKey("capital_stock", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CapitalStock { get; }
 
-    [ColumnWithKey("capital_stock", Order = 16, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CapitalStock { get;  }
+    [ColumnWithKey("retained_earnings", Order = 16, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RetainedEarnings { get; }
 
-    [ColumnWithKey("retained_earnings", Order = 17, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? RetainedEarnings { get;  }
+    [ColumnWithKey("other_liab", Order = 17, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? OtherLiab { get; }
 
-    [ColumnWithKey("other_liab", Order = 18, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? OtherLiab { get;  }
+    [ColumnWithKey("good_will", Order = 18, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? GoodWill { get; }
 
-    [ColumnWithKey("good_will", Order = 19, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? GoodWill { get;  }
+    [ColumnWithKey("other_assets", Order = 19, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? OtherAssets { get; }
 
-    [ColumnWithKey("other_assets", Order = 20, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? OtherAssets { get;  }
+    [ColumnWithKey("cash", Order = 20, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? Cash { get; }
 
-    [ColumnWithKey("cash", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? Cash { get;  }
+    [ColumnWithKey("cash_and_equivalents", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CashAndEquivalents { get; }
 
-    [ColumnWithKey("cash_and_equivalents", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CashAndEquivalents { get;  }
+    [ColumnWithKey("total_current_liabilities", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalCurrentLiabilities { get; }
 
-    [ColumnWithKey("total_current_liabilities", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalCurrentLiabilities { get;  }
+    [ColumnWithKey("current_deferred_revenue", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CurrentDeferredRevenue { get; }
 
-    [ColumnWithKey("current_deferred_revenue", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CurrentDeferredRevenue { get;  }
+    [ColumnWithKey("net_debt", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NetDebt { get; }
 
-    [ColumnWithKey("net_debt", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NetDebt { get;  }
+    [ColumnWithKey("short_term_debt", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ShortTermDebt { get; }
 
-    [ColumnWithKey("short_term_debt", Order = 26, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ShortTermDebt { get;  }
+    [ColumnWithKey("short_long_term_debt", Order = 26, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ShortLongTermDebt { get; }
 
-    [ColumnWithKey("short_long_term_debt", Order = 27, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ShortLongTermDebt { get;  }
+    [ColumnWithKey("short_long_term_debt_total", Order = 27, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ShortLongTermDebtTotal { get; }
 
-    [ColumnWithKey("short_long_term_debt_total", Order = 28, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ShortLongTermDebtTotal { get;  }
+    [ColumnWithKey("other_stockholder_equity", Order = 28, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? OtherStockholderEquity { get; }
 
-    [ColumnWithKey("other_stockholder_equity", Order = 29, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? OtherStockholderEquity { get;  }
+    [ColumnWithKey("property_plant_equipment", Order = 29, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? PropertyPlantEquipment { get; }
 
-    [ColumnWithKey("property_plant_equipment", Order = 30, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? PropertyPlantEquipment { get;  }
+    [ColumnWithKey("total_current_assets", Order = 30, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalCurrentAssets { get; }
 
-    [ColumnWithKey("total_current_assets", Order = 31, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalCurrentAssets { get;  }
+    [ColumnWithKey("long_term_investments", Order = 31, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? LongTermInvestments { get; }
 
-    [ColumnWithKey("long_term_investments", Order = 32, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? LongTermInvestments { get;  }
+    [ColumnWithKey("net_tangible_assets", Order = 32, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NetTangibleAssets { get; }
 
-    [ColumnWithKey("net_tangible_assets", Order = 33, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NetTangibleAssets { get;  }
+    [ColumnWithKey("short_term_investments", Order = 33, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ShortTermInvestments { get; }
 
-    [ColumnWithKey("short_term_investments", Order = 34, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ShortTermInvestments { get;  }
+    [ColumnWithKey("net_receivables", Order = 34, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NetReceivables { get; }
 
-    [ColumnWithKey("net_receivables", Order = 35, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NetReceivables { get;  }
+    [ColumnWithKey("long_term_debt", Order = 35, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? LongTermDebt { get; }
 
-    [ColumnWithKey("long_term_debt", Order = 36, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? LongTermDebt { get;  }
+    [ColumnWithKey("inventory", Order = 36, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? Inventory { get; }
 
-    [ColumnWithKey("inventory", Order = 37, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? Inventory { get;  }
+    [ColumnWithKey("accounts_payable", Order = 37, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? AccountsPayable { get; }
 
-    [ColumnWithKey("accounts_payable", Order = 38, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? AccountsPayable { get;  }
+    [ColumnWithKey("total_permanent_equity", Order = 38, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalPermanentEquity { get; }
 
-    [ColumnWithKey("total_permanent_equity", Order = 39, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalPermanentEquity { get;  }
+    [ColumnWithKey("noncontrolling_interest_in_consolidated_entity", Order = 39, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NoncontrollingInterestInConsolidatedEntity { get; }
 
-    [ColumnWithKey("noncontrolling_interest_in_consolidated_entity", Order = 40, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NoncontrollingInterestInConsolidatedEntity { get;  }
+    [ColumnWithKey("temporary_equity_redeemable_noncontrolling_interests", Order = 40, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TemporaryEquityRedeemableNoncontrollingInterests { get; }
 
-    [ColumnWithKey("temporary_equity_redeemable_noncontrolling_interests", Order = 41, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TemporaryEquityRedeemableNoncontrollingInterests { get;  }
+    [ColumnWithKey("accumulated_other_comprehensive_income", Order = 41, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? AccumulatedOtherComprehensiveIncome { get; }
 
-    [ColumnWithKey("accumulated_other_comprehensive_income", Order = 42, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? AccumulatedOtherComprehensiveIncome { get;  }
+    [ColumnWithKey("additional_paid_in_capital", Order = 42, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? AdditionalPaidInCapital { get; }
 
-    [ColumnWithKey("additional_paid_in_capital", Order = 43, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? AdditionalPaidInCapital { get;  }
+    [ColumnWithKey("common_stock_total_equity", Order = 43, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CommonStockTotalEquity { get; }
 
-    [ColumnWithKey("common_stock_total_equity", Order = 44, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CommonStockTotalEquity { get;  }
+    [ColumnWithKey("preferred_stock_total_equity", Order = 44, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? PreferredStockTotalEquity { get; }
 
-    [ColumnWithKey("preferred_stock_total_equity", Order = 45, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? PreferredStockTotalEquity { get;  }
+    [ColumnWithKey("retained_earnings_total_equity", Order = 45, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RetainedEarningsTotalEquity { get; }
 
-    [ColumnWithKey("retained_earnings_total_equity", Order = 46, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? RetainedEarningsTotalEquity { get;  }
+    [ColumnWithKey("treasury_stock", Order = 46, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TreasuryStock { get; }
 
-    [ColumnWithKey("treasury_stock", Order = 47, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TreasuryStock { get;  }
+    [ColumnWithKey("accumulated_amortization", Order = 47, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? AccumulatedAmortization { get; }
 
-    [ColumnWithKey("accumulated_amortization", Order = 48, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? AccumulatedAmortization { get;  }
+    [ColumnWithKey("non_currrent_assets_other", Order = 48, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NonCurrrentAssetsOther { get; }
 
-    [ColumnWithKey("non_currrent_assets_other", Order = 49, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NonCurrrentAssetsOther { get;  }
+    [ColumnWithKey("deferred_long_term_asset_charges", Order = 49, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? DeferredLongTermAssetCharges { get; }
 
-    [ColumnWithKey("deferred_long_term_asset_charges", Order = 50, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? DeferredLongTermAssetCharges { get;  }
+    [ColumnWithKey("non_current_assets_total", Order = 50, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NonCurrentAssetsTotal { get; }
 
-    [ColumnWithKey("non_current_assets_total", Order = 51, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NonCurrentAssetsTotal { get;  }
+    [ColumnWithKey("capital_lease_obligations", Order = 51, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CapitalLeaseObligations { get; }
 
-    [ColumnWithKey("capital_lease_obligations", Order = 52, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CapitalLeaseObligations { get;  }
+    [ColumnWithKey("long_term_debt_total", Order = 52, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? LongTermDebtTotal { get; }
 
-    [ColumnWithKey("long_term_debt_total", Order = 53, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? LongTermDebtTotal { get;  }
+    [ColumnWithKey("non_current_liabilities_other", Order = 53, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NonCurrentLiabilitiesOther { get; }
 
-    [ColumnWithKey("non_current_liabilities_other", Order = 54, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NonCurrentLiabilitiesOther { get;  }
+    [ColumnWithKey("non_current_liabilities_total", Order = 54, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NonCurrentLiabilitiesTotal { get; }
 
-    [ColumnWithKey("non_current_liabilities_total", Order = 55, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NonCurrentLiabilitiesTotal { get;  }
+    [ColumnWithKey("negative_goodwill", Order = 55, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NegativeGoodwill { get; }
 
-    [ColumnWithKey("negative_goodwill", Order = 56, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NegativeGoodwill { get;  }
+    [ColumnWithKey("warrants", Order = 56, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? Warrants { get; }
 
-    [ColumnWithKey("warrants", Order = 57, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? Warrants { get;  }
+    [ColumnWithKey("preferred_stock_redeemable", Order = 57, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? PreferredStockRedeemable { get; }
 
-    [ColumnWithKey("preferred_stock_redeemable", Order = 58, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? PreferredStockRedeemable { get;  }
+    [ColumnWithKey("capital_surpluses", Order = 58, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CapitalSurpluses { get; }
 
-    [ColumnWithKey("capital_surpluses", Order = 59, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CapitalSurpluses { get;  }
+    [ColumnWithKey("liabilities_and_stockholders_equity", Order = 59, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? LiabilitiesAndStockholdersEquity { get; }
 
-    [ColumnWithKey("liabilities_and_stockholders_equity", Order = 60, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? LiabilitiesAndStockholdersEquity { get;  }
+    [ColumnWithKey("cash_and_short_term_investments", Order = 60, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CashAndShortTermInvestments { get; }
 
-    [ColumnWithKey("cash_and_short_term_investments", Order = 61, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CashAndShortTermInvestments { get;  }
+    [ColumnWithKey("property_plant_and_equipment_gross", Order = 61, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? PropertyPlantAndEquipmentGross { get; }
 
-    [ColumnWithKey("property_plant_and_equipment_gross", Order = 62, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? PropertyPlantAndEquipmentGross { get;  }
+    [ColumnWithKey("property_plant_and_equipment_net", Order = 62, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? PropertyPlantAndEquipmentNet { get; }
 
-    [ColumnWithKey("property_plant_and_equipment_net", Order = 63, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? PropertyPlantAndEquipmentNet { get;  }
+    [ColumnWithKey("accumulated_depreciation", Order = 63, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? AccumulatedDepreciation { get; }
 
-    [ColumnWithKey("accumulated_depreciation", Order = 64, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? AccumulatedDepreciation { get;  }
+    [ColumnWithKey("net_working_capital", Order = 64, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NetWorkingCapital { get; }
 
-    [ColumnWithKey("net_working_capital", Order = 65, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NetWorkingCapital { get;  }
+    [ColumnWithKey("net_invested_capital", Order = 65, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NetInvestedCapital { get; }
 
-    [ColumnWithKey("net_invested_capital", Order = 66, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NetInvestedCapital { get;  }
+    [ColumnWithKey("common_stock_shares_outstanding", Order = 66, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CommonStockSharesOutstanding { get; }
 
-    [ColumnWithKey("common_stock_shares_outstanding", Order = 67, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CommonStockSharesOutstanding { get;  }
+    [ColumnWithKey("created_timestamp", Order = 67, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 68, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

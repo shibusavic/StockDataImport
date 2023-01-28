@@ -6,16 +6,8 @@
 /// </summary>
 public struct EarningsCollection
 {
-    public string Type;
-    public string Description;
-    public string Symbols;
-    public Earnings[] Earnings;
-
-    public static EarningsCollection Empty => new()
-    {
-        Type = string.Empty,
-        Description = string.Empty,
-        Symbols = string.Empty,
-        Earnings = Array.Empty<Earnings>()
-    };
+    public string? Type;
+    public string? Description;
+    public string? Symbols;
+    public Earnings[]? Earnings;
 }

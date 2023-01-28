@@ -10,7 +10,6 @@ internal class CompanyHighlights
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.Highlights highlights)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
         MarketCapitalization = highlights.MarketCapitalization.GetValueOrDefault();
         MarketCapitalizationMln = highlights.MarketCapitalizationMln.GetValueOrDefault();
         Ebitda = highlights.Ebitda.GetValueOrDefault();
@@ -36,41 +35,41 @@ internal class CompanyHighlights
         GrossProfitTtm = highlights.GrossProfitTtm.GetValueOrDefault();
         DilutedEpsTtm = highlights.DilutedEpsTtm.GetValueOrDefault();
         QuarterlyEarningsGrowthYoy = highlights.QuarterlyEarningsGrowthYoy.GetValueOrDefault();
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyHighlights(
         Guid companyId,
-        DateTime dateCaptured,
-        decimal marketCapitalization,
-        decimal marketCapitalizationMln,
-        decimal ebitda,
-        double peRatio,
-        double pegRatio,
-        decimal wallStreetTargetPrice,
-        double bookValue,
-        double dividendShare,
-        double dividendYield,
-        decimal earningsShare,
-        decimal epsEstimateCurrentYear,
-        decimal epsEstimateNextYear,
-        decimal epsEstimateNextQuarter,
-        decimal epsEstimateCurrentQuarter,
-        DateTime mostRecentQuarter,
-        double profitMargin,
-        double operatingMarginTtm,
-        double returnOnAssetsTtm,
-        double returnOnEquityTtm,
-        decimal revenueTtm,
-        decimal revenuePerShareTtm,
-        double quarterlyRevenueGrowthYoy,
-        decimal grossProfitTtm,
-        decimal dilutedEpsTtm,
-        double quarterlyEarningsGrowthYoy,
-        DateTime utcTimestamp)
+        decimal? marketCapitalization,
+        decimal? marketCapitalizationMln,
+        decimal? ebitda,
+        double? peRatio,
+        double? pegRatio,
+        decimal? wallStreetTargetPrice,
+        double? bookValue,
+        double? dividendShare,
+        double? dividendYield,
+        decimal? earningsShare,
+        decimal? epsEstimateCurrentYear,
+        decimal? epsEstimateNextYear,
+        decimal? epsEstimateNextQuarter,
+        decimal? epsEstimateCurrentQuarter,
+        DateTime? mostRecentQuarter,
+        double? profitMargin,
+        double? operatingMarginTtm,
+        double? returnOnAssetsTtm,
+        double? returnOnEquityTtm,
+        decimal? revenueTtm,
+        decimal? revenuePerShareTtm,
+        double? quarterlyRevenueGrowthYoy,
+        decimal? grossProfitTtm,
+        decimal? dilutedEpsTtm,
+        double? quarterlyEarningsGrowthYoy,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         MarketCapitalization = marketCapitalization;
         MarketCapitalizationMln = marketCapitalizationMln;
         Ebitda = ebitda;
@@ -96,90 +95,91 @@ internal class CompanyHighlights
         GrossProfitTtm = grossProfitTtm;
         DilutedEpsTtm = dilutedEpsTtm;
         QuarterlyEarningsGrowthYoy = quarterlyEarningsGrowthYoy;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
     public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = true)]
-    public DateTime DateCaptured { get; }
+    [ColumnWithKey("market_capitalization", Order = 2, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? MarketCapitalization { get; }
 
-    [ColumnWithKey("market_capitalization", Order = 3, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal MarketCapitalization { get; }
+    [ColumnWithKey("market_capitalization_mln", Order = 3, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? MarketCapitalizationMln { get; }
 
-    [ColumnWithKey("market_capitalization_mln", Order = 4, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal MarketCapitalizationMln { get; }
+    [ColumnWithKey("ebitda", Order = 4, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? Ebitda { get; }
 
-    [ColumnWithKey("ebitda", Order = 5, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal Ebitda { get; }
+    [ColumnWithKey("pe_ratio", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
+    public double? PeRatio { get; }
 
-    [ColumnWithKey("pe_ratio", Order = 6, TypeName = "double precision", IsPartOfKey = false)]
-    public double PeRatio { get; }
+    [ColumnWithKey("peg_ratio", Order = 6, TypeName = "double precision", IsPartOfKey = false)]
+    public double? PegRatio { get; }
 
-    [ColumnWithKey("peg_ratio", Order = 7, TypeName = "double precision", IsPartOfKey = false)]
-    public double PegRatio { get; }
+    [ColumnWithKey("wall_street_target_price", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? WallStreetTargetPrice { get; }
 
-    [ColumnWithKey("wall_street_target_price", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal WallStreetTargetPrice { get; }
+    [ColumnWithKey("book_value", Order = 8, TypeName = "double precision", IsPartOfKey = false)]
+    public double? BookValue { get; }
 
-    [ColumnWithKey("book_value", Order = 9, TypeName = "double precision", IsPartOfKey = false)]
-    public double BookValue { get; }
+    [ColumnWithKey("dividend_share", Order = 9, TypeName = "double precision", IsPartOfKey = false)]
+    public double? DividendShare { get; }
 
-    [ColumnWithKey("dividend_share", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
-    public double DividendShare { get; }
+    [ColumnWithKey("dividend_yield", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
+    public double? DividendYield { get; }
 
-    [ColumnWithKey("dividend_yield", Order = 11, TypeName = "double precision", IsPartOfKey = false)]
-    public double DividendYield { get; }
+    [ColumnWithKey("earnings_share", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EarningsShare { get; }
 
-    [ColumnWithKey("earnings_share", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal EarningsShare { get; }
+    [ColumnWithKey("eps_estimate_current_year", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsEstimateCurrentYear { get; }
 
-    [ColumnWithKey("eps_estimate_current_year", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal EpsEstimateCurrentYear { get; }
+    [ColumnWithKey("eps_estimate_next_year", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsEstimateNextYear { get; }
 
-    [ColumnWithKey("eps_estimate_next_year", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal EpsEstimateNextYear { get; }
+    [ColumnWithKey("eps_estimate_next_quarter", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsEstimateNextQuarter { get; }
 
-    [ColumnWithKey("eps_estimate_next_quarter", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal EpsEstimateNextQuarter { get; }
+    [ColumnWithKey("eps_estimate_current_quarter", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsEstimateCurrentQuarter { get; }
 
-    [ColumnWithKey("eps_estimate_current_quarter", Order = 16, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal EpsEstimateCurrentQuarter { get; }
+    [ColumnWithKey("most_recent_quarter", Order = 16, TypeName = "date", IsPartOfKey = false)]
+    public DateTime? MostRecentQuarter { get; }
 
-    [ColumnWithKey("most_recent_quarter", Order = 17, TypeName = "date", IsPartOfKey = false)]
-    public DateTime MostRecentQuarter { get; }
+    [ColumnWithKey("profit_margin", Order = 17, TypeName = "double precision", IsPartOfKey = false)]
+    public double? ProfitMargin { get; }
 
-    [ColumnWithKey("profit_margin", Order = 18, TypeName = "double precision", IsPartOfKey = false)]
-    public double ProfitMargin { get; }
+    [ColumnWithKey("operating_margin_ttm", Order = 18, TypeName = "double precision", IsPartOfKey = false)]
+    public double? OperatingMarginTtm { get; }
 
-    [ColumnWithKey("operating_margin_ttm", Order = 19, TypeName = "double precision", IsPartOfKey = false)]
-    public double OperatingMarginTtm { get; }
+    [ColumnWithKey("return_on_assets_ttm", Order = 19, TypeName = "double precision", IsPartOfKey = false)]
+    public double? ReturnOnAssetsTtm { get; }
 
-    [ColumnWithKey("return_on_assets_ttm", Order = 20, TypeName = "double precision", IsPartOfKey = false)]
-    public double ReturnOnAssetsTtm { get; }
+    [ColumnWithKey("return_on_equity_ttm", Order = 20, TypeName = "double precision", IsPartOfKey = false)]
+    public double? ReturnOnEquityTtm { get; }
 
-    [ColumnWithKey("return_on_equity_ttm", Order = 21, TypeName = "double precision", IsPartOfKey = false)]
-    public double ReturnOnEquityTtm { get; }
+    [ColumnWithKey("revenue_ttm", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RevenueTtm { get; }
 
-    [ColumnWithKey("revenue_ttm", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal RevenueTtm { get; }
+    [ColumnWithKey("revenue_per_share_ttm", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RevenuePerShareTtm { get; }
 
-    [ColumnWithKey("revenue_per_share_ttm", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal RevenuePerShareTtm { get; }
+    [ColumnWithKey("quarterly_revenue_growth_yoy", Order = 23, TypeName = "double precision", IsPartOfKey = false)]
+    public double? QuarterlyRevenueGrowthYoy { get; }
 
-    [ColumnWithKey("quarterly_revenue_growth_yoy", Order = 24, TypeName = "double precision", IsPartOfKey = false)]
-    public double QuarterlyRevenueGrowthYoy { get; }
+    [ColumnWithKey("gross_profit_ttm", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? GrossProfitTtm { get; }
 
-    [ColumnWithKey("gross_profit_ttm", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal GrossProfitTtm { get; }
+    [ColumnWithKey("diluted_eps_ttm", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? DilutedEpsTtm { get; }
 
-    [ColumnWithKey("diluted_eps_ttm", Order = 26, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal DilutedEpsTtm { get; }
+    [ColumnWithKey("quarterly_earnings_growth_yoy", Order = 26, TypeName = "double precision", IsPartOfKey = false)]
+    public double? QuarterlyEarningsGrowthYoy { get; }
 
-    [ColumnWithKey("quarterly_earnings_growth_yoy", Order = 27, TypeName = "double precision", IsPartOfKey = false)]
-    public double QuarterlyEarningsGrowthYoy { get; }
+    [ColumnWithKey("created_timestamp", Order = 27, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 28, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }

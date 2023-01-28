@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using EodHistoricalData.Sdk.Events;
 using Import.Infrastructure.Abstractions;
+using Import.Infrastructure.Events;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -58,7 +59,7 @@ internal abstract class BasePostgreSQLContext : DbContext
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var tableNames = (await GetTableNames("public", cancellationToken)).ToArray();
+        var tableNames = (await GetTableNames(schema, cancellationToken)).ToArray();
 
         CancellationTokenSource cts = new();
 
@@ -75,7 +76,7 @@ internal abstract class BasePostgreSQLContext : DbContext
 
                 if (sql != null)
                 {
-                    tasks.Add(Task.Factory.StartNew(() => ExecuteAsync(sql, null, 120, cancellationToken), cts.Token));
+                    tasks.Add(Task.Factory.StartNew(async () => await ExecuteAsync(sql, null, 120, cancellationToken), cts.Token));
                 }
             }
         }
@@ -93,13 +94,13 @@ internal abstract class BasePostgreSQLContext : DbContext
             {
                 if (ie is OperationCanceledException && !raisedCancellationMessage)
                 {
-                    DomainEventPublisher.RaiseMessageEvent(this, "Purging of the database was cancelled.", nameof(PurgeAsync));
+                    ApiEventPublisher.RaiseMessageEvent(this, "Purging of the database was cancelled.", nameof(PurgeAsync), LogLevel.Information);
                     raisedCancellationMessage = true;
                 }
                 else
                 {
-                    DomainEventPublisher.RaiseMessageEvent(this, "Purge", ie.Message, nameof(PurgeAsync));
-                    logger?.LogCritical(ie, "{MESSAGE}", ie.Message);
+                    ApiEventPublisher.RaiseMessageEvent(this, "Purge", ie.Message, nameof(PurgeAsync), LogLevel.Information);
+                    logger?.LogError(ie, "{MESSAGE}", ie.Message);
                 }
             }
         }
@@ -144,9 +145,12 @@ FROM information_schema.tables WHERE table_schema = @Schema";
             await connection.ExecuteAsync(sql, parameters, transaction, commandTimeout);
             await transaction.CommitAsync(cancellationToken);
         }
-        catch
+        catch (Exception exc)
         {
             await transaction.RollbackAsync(cancellationToken);
+
+            DomainEventPublisher.RaiseDatabaseError(this, nameof(ExecuteAsync), exc, sql, parameters);
+
             throw;
         }
         finally

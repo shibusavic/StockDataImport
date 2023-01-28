@@ -5,10 +5,10 @@
 /// </summary>
 public struct EarningsHistory
 {
-    public DateOnly ReportDate;
-    public DateOnly Date;
-    public string BeforeAfterMarket;
-    public string Currency;
+    public DateOnly? ReportDate;
+    public DateOnly? Date;
+    public string? BeforeAfterMarket;
+    public string? Currency;
     public decimal? EpsActual;
     public decimal? EpsEstimate;
     public decimal? EpsDifference;

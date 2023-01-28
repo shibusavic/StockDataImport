@@ -6,14 +6,14 @@
 /// </summary>
 public struct ContractCollection
 {
-    public DateOnly ExpirationDate;
-    public double ImpliedVolatility;
-    public int PutVolume;
-    public int CallVolume;
-    public double PutCallVolumeRatio;
-    public int PutOpenInterest;
-    public int CallOpenInterest;
-    public double PutCallOpenInterestRatio;
-    public int OptionsCount;
-    public IDictionary<string, Contract[]> Options;
+    public DateOnly? ExpirationDate;
+    public double? ImpliedVolatility;
+    public int? PutVolume;
+    public int? CallVolume;
+    public double? PutCallVolumeRatio;
+    public int? PutOpenInterest;
+    public int? CallOpenInterest;
+    public double? PutCallOpenInterestRatio;
+    public int? OptionsCount;
+    public IDictionary<string, Contract[]>? Options;
 }

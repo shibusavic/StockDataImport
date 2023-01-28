@@ -5,6 +5,6 @@
 /// </summary>
 public struct Holders
 {
-    public IDictionary<string, Institution> Institutions;
-    public IDictionary<string, Institution> Funds;
+    public IDictionary<string, Institution>? Institutions;
+    public IDictionary<string, Institution>? Funds;
 }

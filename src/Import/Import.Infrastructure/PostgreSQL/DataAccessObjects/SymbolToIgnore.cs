@@ -11,37 +11,37 @@ internal class SymbolToIgnore
         Symbol = symbol;
         Exchange = exchange ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         Reason = reason;
-        DateIgnored = DateTime.UtcNow;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public SymbolToIgnore(
         string symbol,
         string exchange,
-        DateTime dateIgnored,
         string? reason,
-        DateTime utcTimestamp)
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
         Exchange = exchange;
-        DateIgnored = dateIgnored;
         Reason = reason;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("symbol", Order = 1, TypeName = "text", IsPartOfKey = true)]
-    public string Symbol { get;  }
+    public string Symbol { get; }
 
     [ColumnWithKey("exchange", Order = 2, TypeName = "text", IsPartOfKey = true)]
-    public string Exchange { get;  }
+    public string Exchange { get; }
 
-    [ColumnWithKey("date_ignored", Order = 3, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DateIgnored { get;  }
+    [ColumnWithKey("reason", Order = 3, TypeName = "text", IsPartOfKey = false)]
+    public string? Reason { get; }
 
-    [ColumnWithKey("reason", Order = 4, TypeName = "text", IsPartOfKey = false)]
-    public string? Reason { get;  }
+    [ColumnWithKey("created_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

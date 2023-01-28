@@ -12,18 +12,30 @@ using static Import.Infrastructure.Configuration.Constants;
 
 namespace Import.AppServices;
 
-public class DataImportCycle
+public class DataImportCycle : IDisposable
 {
     private readonly DataImportService dataImportService;
     private readonly ILogger? logger;
     private readonly Regex textToTimeRegex = new(@"(\d+)\s+(year|month|week|day)", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+    private bool disposedValue;
 
     internal DataImportCycle(DataImportService dataImportService, ILogger? logger = null)
     {
-
         Actions = Array.Empty<ActionItem>();
         this.dataImportService = dataImportService;
         this.logger = logger;
+
+        ApiEventPublisher.RaiseApiResponseEventHandler += DomainEventPublisher_RaiseApiResponseEventHandler;
+    }
+
+    private async void DomainEventPublisher_RaiseApiResponseEventHandler(object? sender, ApiResponseEventArgs e)
+    {
+        await dataImportService.SaveApiResponse(e.Request, e.Response, e.StatusCode);
+
+        if (e.ApiResponseException != null)
+        {
+            logger?.LogError(e.ApiResponseException, e.ApiResponseException.Message);
+        }
     }
 
     public ActionItem[] Actions { get; private set; }
@@ -38,13 +50,13 @@ public class DataImportCycle
         {
             if (!dryRun)
             {
-                DomainEventPublisher.RaiseMessageEvent(this, "Import started", nameof(ExecuteAsync));
+                ApiEventPublisher.RaiseMessageEvent(this, "Import started", nameof(ExecuteAsync), LogLevel.Information);
 
                 var saveTask = dataImportService.LogsDb.SaveActionItemsAsync(Actions, cancellationToken);
 
-                DomainEventPublisher.RaiseMessageEvent(this, ApiService.GetAvailableCreditFormula(), nameof(DataImportCycle));
+                ApiEventPublisher.RaiseMessageEvent(this, ApiService.GetAvailableCreditFormula(), nameof(DataImportCycle), LogLevel.Information);
 
-                DomainEventPublisher.RaiseMessageEvent(this, $"{Actions.Length} action(s) identified.", nameof(DataImportCycle));
+                ApiEventPublisher.RaiseMessageEvent(this, $"{Actions.Length} action(s) identified.", nameof(DataImportCycle), LogLevel.Information);
 
                 var purgeActions = Actions.Where(a => a.ActionName.Equals(ActionNames.Purge)).ToArray();
 
@@ -76,15 +88,19 @@ public class DataImportCycle
 
                     int baseCost = ApiService.GetCost(uri);
 
+                    int symbolCount = SymbolMetaDataRepository.Find(s =>
+                        s.Exchange != null &&
+                        s.Exchange.Equals(action.TargetName, StringComparison.InvariantCultureIgnoreCase)).Count();
+
                     int factor = action.TargetDataType! switch
                     {
-                        DataTypes.Dividends => SymbolMetaDataRepository.Count,
+                        DataTypes.Dividends => symbolCount,
                         DataTypes.Exchanges => 1,
-                        DataTypes.Fundamentals => SymbolMetaDataRepository.RequiresFundamentalsCount,
-                        DataTypes.Options => SymbolMetaDataRepository.OptionsCount,
-                        DataTypes.Prices => SymbolMetaDataRepository.Count,
-                        DataTypes.Splits => SymbolMetaDataRepository.Count,
-                        DataTypes.Symbols => SymbolMetaDataRepository.Count,
+                        DataTypes.Fundamentals => Math.Min(SymbolMetaDataRepository.RequiresFundamentalsCount, symbolCount),
+                        DataTypes.Options => SymbolMetaDataRepository.Find(s => s.HasOptions).Count(),
+                        DataTypes.Prices => symbolCount,
+                        DataTypes.Splits => symbolCount,
+                        DataTypes.Symbols => symbolCount,
                         _ => 0
                     };
 
@@ -106,6 +122,8 @@ public class DataImportCycle
             // All the specified actions were saved, but only those we can afford remain in this cycle.
             Actions = Actions.Except(removalCandidates).ToArray();
 
+            // TODO: Raise messages here about removed actions.
+
             if (!dryRun)
             {
                 await ExecuteAsync(importConfiguration, cancellationToken);
@@ -124,9 +142,10 @@ public class DataImportCycle
 
             action.Start();
 
-            DomainEventPublisher.RaiseMessageEvent(this,
+            ApiEventPublisher.RaiseMessageEvent(this,
                 $"Running {action}",
-                nameof(ExecuteAsync));
+                nameof(ExecuteAsync),
+                LogLevel.Information);
 
             try
             {
@@ -180,6 +199,7 @@ public class DataImportCycle
             catch (Exception exc)
             {
                 action.Error(exc);
+                throw;
             }
             finally
             {
@@ -228,12 +248,12 @@ public class DataImportCycle
         {
             if (await dataImportService.ImportsDb.IsDatabaseEmptyAsync() && (config.OnEmptyDatabase?.Any() ?? false))
             {
-                items.AddRange(ParseActionItems(nameof(config.OnEmptyDatabase), config.OnEmptyDatabase!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.OnEmptyDatabase), config.OnEmptyDatabase!));
             }
 
             if (config.AnyDay?.Any() ?? false)
             {
-                items.AddRange(ParseActionItems(nameof(config.AnyDay), config.AnyDay!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.AnyDay), config.AnyDay!));
             }
 
             // purposefully choosing DateTime.Now over DateTime.UtcNow so that the day of week
@@ -242,44 +262,47 @@ public class DataImportCycle
 
             if ((config.Sunday?.Any() ?? false) && dayOfWeek == DayOfWeek.Sunday)
             {
-                items.AddRange(ParseActionItems(nameof(config.Sunday), config.Sunday!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.Sunday), config.Sunday!));
             }
 
             if ((config.Monday?.Any() ?? false) && dayOfWeek == DayOfWeek.Monday)
             {
-                items.AddRange(ParseActionItems(nameof(config.Monday), config.Monday!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.Monday), config.Monday!));
             }
 
             if ((config.Tuesday?.Any() ?? false) && dayOfWeek == DayOfWeek.Tuesday)
             {
-                items.AddRange(ParseActionItems(nameof(config.Tuesday), config.Tuesday!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.Tuesday), config.Tuesday!));
             }
 
             if ((config.Wednesday?.Any() ?? false) && dayOfWeek == DayOfWeek.Wednesday)
             {
-                items.AddRange(ParseActionItems(nameof(config.Wednesday), config.Wednesday!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.Wednesday), config.Wednesday!));
             }
 
             if ((config.Thursday?.Any() ?? false) && dayOfWeek == DayOfWeek.Thursday)
             {
-                items.AddRange(ParseActionItems(nameof(config.Thursday), config.Thursday!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.Thursday), config.Thursday!));
             }
 
             if ((config.Friday?.Any() ?? false) && dayOfWeek == DayOfWeek.Friday)
             {
-                items.AddRange(ParseActionItems(nameof(config.Friday), config.Friday!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.Friday), config.Friday!));
             }
 
             if ((config.Saturday?.Any() ?? false) && dayOfWeek == DayOfWeek.Saturday)
             {
-                items.AddRange(ParseActionItems(nameof(config.Saturday), config.Saturday!));
+                items.AddRange(ParseActionItems(exchanges, nameof(config.Saturday), config.Saturday!));
             }
         }
 
         return SortActionItems(items);
     }
 
-    private static IEnumerable<ActionItem> ParseActionItems(string parent, ImportActions[]? actions)
+    private static IEnumerable<ActionItem> ParseActionItems(
+        Dictionary<string, Dictionary<string, string[]>> exchangeCodes,
+        string parent,
+        ImportActions[]? actions)
     {
         if (actions?.Any() ?? false)
         {
@@ -302,21 +325,56 @@ public class DataImportCycle
 
                 if (action.IsValidForImport())
                 {
-                    //foreach (var exchange in action.Exchanges!)
-                    //{
-                    //    if (exchange.Name != null)
-                    //    {
-                    //        foreach (var dataType in action.DataTypes!)
-                    //        {
-                    //            if (dataType == DataTypes.Exchanges) continue;
-                    //            yield return new ActionItem(actionName: ActionNames.Import,
-                    //                targetName: exchange.Name,
-                    //                targetScope: action.Scope,
-                    //                targetDataType: dataType,
-                    //                priority: action.Priority);
-                    //        }
-                    //    }
-                    //}
+                    /*
+                     * We're parsing something like this:
+                     * 
+                     * Exchange Codes:
+                     *   US:
+                     *     Exchanges:
+                     *     - NYSE
+                     *     - NASDAQ
+                     *     - AMEX
+                     *     Symbol Type:
+                     *     - Common Stock
+                     *     - ETF
+                    */
+
+                    foreach (var exchangeCode in exchangeCodes) // This is the "US"
+                    {
+                        foreach (var filterDictionary in exchangeCode.Value) // This has 2 keys: Exchanges and Symbol Type.
+                        {
+                            if (filterDictionary.Key.Equals(DataTypes.Exchanges, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                foreach (var dt in action.DataTypes ?? Array.Empty<string>())
+                                {
+                                    // Skip exchanges; those are dealt with earlier.
+                                    if (dt.Equals(DataTypes.Exchanges, StringComparison.InvariantCultureIgnoreCase)) continue;
+
+                                    if (dt.Equals(DataTypes.Symbols, StringComparison.InvariantCultureIgnoreCase))
+                                    {
+                                        yield return new ActionItem(actionName: ActionNames.Import,
+                                            targetName: exchangeCode.Key,
+                                            targetScope: action.Scope,
+                                            targetDataType: dt,
+                                            priority: action.Priority);
+                                    }
+                                    else
+                                    {
+                                        foreach (var exchange in filterDictionary.Value) // This is NYSE, NASDAQ, and AMEX
+                                        {
+                                            yield return new ActionItem(actionName: ActionNames.Import,
+                                                targetName: exchange,
+                                                targetScope: action.Scope,
+                                                targetDataType: dt,
+                                                priority: action.Priority);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // TODO: Need to do something with symbol type filters.
+                        }
+                    }
                 }
             }
         }
@@ -434,5 +492,25 @@ public class DataImportCycle
             DataTypes.Symbols => ApiService.ExchangeSymbolListUri,
             _ => null
         };
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                ApiEventPublisher.RaiseApiResponseEventHandler -= DomainEventPublisher_RaiseApiResponseEventHandler;
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

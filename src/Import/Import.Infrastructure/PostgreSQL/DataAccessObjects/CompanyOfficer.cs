@@ -10,43 +10,43 @@ internal class CompanyOfficer
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.Officer officer)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
         Name = officer.Name ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         Title = officer.Title;
         YearBorn = officer.YearBorn;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyOfficer(
         Guid companyId,
-        DateTime dateCaptured,
-        string name,
+        string? name,
         string? title,
         string? yearBorn,
-        DateTime utcTimestamp)
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         Name = name;
         Title = title;
         YearBorn = yearBorn;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
     public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = true)]
-    public DateTime DateCaptured { get; }
+    [ColumnWithKey("name", Order = 2, TypeName = "text", IsPartOfKey = false)]
+    public string? Name { get; }
 
-    [ColumnWithKey("name", Order = 3, TypeName = "text", IsPartOfKey = false)]
-    public string Name { get; }
-
-    [ColumnWithKey("title", Order = 4, TypeName = "text", IsPartOfKey = false)]
+    [ColumnWithKey("title", Order = 3, TypeName = "text", IsPartOfKey = false)]
     public string? Title { get; }
 
-    [ColumnWithKey("year_born", Order = 5, TypeName = "text", IsPartOfKey = false)]
+    [ColumnWithKey("year_born", Order = 4, TypeName = "text", IsPartOfKey = false)]
     public string? YearBorn { get; }
+
+    [ColumnWithKey("created_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }

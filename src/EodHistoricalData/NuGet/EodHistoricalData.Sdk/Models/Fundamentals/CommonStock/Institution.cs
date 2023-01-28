@@ -7,12 +7,12 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
 /// </summary>
 public struct Institution
 {
-    public string Name;
-    public DateOnly Date;
-    public double TotalShares;
-    public double TotalAssets;
-    public int CurrentShares;
-    public int Change;
+    public string? Name;
+    public DateOnly? Date;
+    public double? TotalShares;
+    public double? TotalAssets;
+    public int? CurrentShares;
+    public int? Change;
     [JsonPropertyName("change_p")]
-    public double ChangePercentage;
+    public double? ChangePercentage;
 }

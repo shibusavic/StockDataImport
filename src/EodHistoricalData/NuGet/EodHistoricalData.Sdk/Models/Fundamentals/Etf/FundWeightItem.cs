@@ -8,7 +8,8 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 public struct FundWeightItem
 {
     [JsonPropertyName("fund_%")]
-    public string FundPercentage;
+    public string? FundPercentage;
+
     [JsonPropertyName("relative_to_category")]
-    public string RelativeToCategory;
+    public string? RelativeToCategory;
 }

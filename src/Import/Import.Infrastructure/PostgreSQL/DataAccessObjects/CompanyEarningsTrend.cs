@@ -10,8 +10,8 @@ internal class CompanyEarningsTrend
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.EarningsTrend earningsTrend)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
-        Date = earningsTrend.Date.ToDateTime(TimeOnly.MinValue);
+        Date = earningsTrend.Date?.ToDateTime(TimeOnly.MinValue) ??
+            throw new ArgumentException($"{nameof(earningsTrend)} has no {nameof(Date)}");
         Period = earningsTrend.Period;
         Growth = earningsTrend.Growth.GetValueOrDefault();
         EarningsEstimateAvg = earningsTrend.EarningsEstimateAvg;
@@ -35,15 +35,15 @@ internal class CompanyEarningsTrend
         EpsRevisionsUpLast30Days = earningsTrend.EpsRevisionsUpLast30Days;
         EpsRevisionsDownLast7Days = earningsTrend.EpsRevisionsDownLast7Days;
         EpsRevisionsDownLast30Days = earningsTrend.EpsRevisionsDownLast30Days;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyEarningsTrend(
         Guid companyId,
-        DateTime dateCaptured,
         DateTime date,
-        string period,
-        double growth,
+        string? period,
+        double? growth,
         decimal? earningsEstimateAvg,
         decimal? earningsEstimateLow,
         decimal? earningsEstimateHigh,
@@ -65,10 +65,10 @@ internal class CompanyEarningsTrend
         decimal? epsRevisionsUpLast30Days,
         decimal? epsRevisionsDownLast7Days,
         decimal? epsRevisionsDownLast30Days,
-        DateTime utcTimestamp)
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         Date = date;
         Period = period;
         Growth = growth;
@@ -93,88 +93,89 @@ internal class CompanyEarningsTrend
         EpsRevisionsUpLast30Days = epsRevisionsUpLast30Days;
         EpsRevisionsDownLast7Days = epsRevisionsDownLast7Days;
         EpsRevisionsDownLast30Days = epsRevisionsDownLast30Days;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid CompanyId { get;  }
+    public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("date", Order = 2, TypeName = "date", IsPartOfKey = true)]
+    public DateTime Date { get; }
 
-    [ColumnWithKey("date", Order = 3, TypeName = "date", IsPartOfKey = true)]
-    public DateTime Date { get;  }
+    [ColumnWithKey("period", Order = 3, TypeName = "text", IsPartOfKey = false)]
+    public string? Period { get; }
 
-    [ColumnWithKey("period", Order = 4, TypeName = "text", IsPartOfKey = false)]
-    public string Period { get;  }
+    [ColumnWithKey("growth", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
+    public double? Growth { get; }
 
-    [ColumnWithKey("growth", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
-    public double Growth { get;  }
+    [ColumnWithKey("earnings_estimate_avg", Order = 5, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EarningsEstimateAvg { get; }
 
-    [ColumnWithKey("earnings_estimate_avg", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EarningsEstimateAvg { get;  }
+    [ColumnWithKey("earnings_estimate_low", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EarningsEstimateLow { get; }
 
-    [ColumnWithKey("earnings_estimate_low", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EarningsEstimateLow { get;  }
+    [ColumnWithKey("earnings_estimate_high", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EarningsEstimateHigh { get; }
 
-    [ColumnWithKey("earnings_estimate_high", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EarningsEstimateHigh { get;  }
+    [ColumnWithKey("earnings_estimate_year_ago_eps", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EarningsEstimateYearAgoEps { get; }
 
-    [ColumnWithKey("earnings_estimate_year_ago_eps", Order = 9, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EarningsEstimateYearAgoEps { get;  }
+    [ColumnWithKey("earnings_estimate_number_of_analysts", Order = 9, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EarningsEstimateNumberOfAnalysts { get; }
 
-    [ColumnWithKey("earnings_estimate_number_of_analysts", Order = 10, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EarningsEstimateNumberOfAnalysts { get;  }
+    [ColumnWithKey("earnings_estimate_growth", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
+    public double? EarningsEstimateGrowth { get; }
 
-    [ColumnWithKey("earnings_estimate_growth", Order = 11, TypeName = "double precision", IsPartOfKey = false)]
-    public double? EarningsEstimateGrowth { get;  }
+    [ColumnWithKey("revenue_estimate_avg", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RevenueEstimateAvg { get; }
 
-    [ColumnWithKey("revenue_estimate_avg", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? RevenueEstimateAvg { get;  }
+    [ColumnWithKey("revenue_estimate_low", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RevenueEstimateLow { get; }
 
-    [ColumnWithKey("revenue_estimate_low", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? RevenueEstimateLow { get;  }
+    [ColumnWithKey("revenue_estimate_high", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RevenueEstimateHigh { get; }
 
-    [ColumnWithKey("revenue_estimate_high", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? RevenueEstimateHigh { get;  }
+    [ColumnWithKey("revenue_estimate_year_ago_eps", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RevenueEstimateYearAgoEps { get; }
 
-    [ColumnWithKey("revenue_estimate_year_ago_eps", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? RevenueEstimateYearAgoEps { get;  }
+    [ColumnWithKey("revenue_estimate_number_of_analysts", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? RevenueEstimateNumberOfAnalysts { get; }
 
-    [ColumnWithKey("revenue_estimate_number_of_analysts", Order = 16, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? RevenueEstimateNumberOfAnalysts { get;  }
+    [ColumnWithKey("revenue_estimate_growth", Order = 16, TypeName = "double precision", IsPartOfKey = false)]
+    public double? RevenueEstimateGrowth { get; }
 
-    [ColumnWithKey("revenue_estimate_growth", Order = 17, TypeName = "double precision", IsPartOfKey = false)]
-    public double? RevenueEstimateGrowth { get;  }
+    [ColumnWithKey("eps_trend_current", Order = 17, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsTrendCurrent { get; }
 
-    [ColumnWithKey("eps_trend_current", Order = 18, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsTrendCurrent { get;  }
+    [ColumnWithKey("eps_trend7days_ago", Order = 18, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsTrend7DaysAgo { get; }
 
-    [ColumnWithKey("eps_trend7days_ago", Order = 19, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsTrend7DaysAgo { get;  }
+    [ColumnWithKey("eps_trend30days_ago", Order = 19, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsTrend30DaysAgo { get; }
 
-    [ColumnWithKey("eps_trend30days_ago", Order = 20, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsTrend30DaysAgo { get;  }
+    [ColumnWithKey("eps_trend60days_ago", Order = 20, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsTrend60DaysAgo { get; }
 
-    [ColumnWithKey("eps_trend60days_ago", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsTrend60DaysAgo { get;  }
+    [ColumnWithKey("eps_trend90days_ago", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsTrend90DaysAgo { get; }
 
-    [ColumnWithKey("eps_trend90days_ago", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsTrend90DaysAgo { get;  }
+    [ColumnWithKey("eps_revisions_up_last7days", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsRevisionsUpLast7Days { get; }
 
-    [ColumnWithKey("eps_revisions_up_last7days", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsRevisionsUpLast7Days { get;  }
+    [ColumnWithKey("eps_revisions_up_last30days", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsRevisionsUpLast30Days { get; }
 
-    [ColumnWithKey("eps_revisions_up_last30days", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsRevisionsUpLast30Days { get;  }
+    [ColumnWithKey("eps_revisions_down_last7days", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsRevisionsDownLast7Days { get; }
 
-    [ColumnWithKey("eps_revisions_down_last7days", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsRevisionsDownLast7Days { get;  }
+    [ColumnWithKey("eps_revisions_down_last30days", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsRevisionsDownLast30Days { get; }
 
-    [ColumnWithKey("eps_revisions_down_last30days", Order = 26, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsRevisionsDownLast30Days { get;  }
+    [ColumnWithKey("created_timestamp", Order = 26, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 27, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

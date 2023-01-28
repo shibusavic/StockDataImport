@@ -5,8 +5,8 @@
 /// </summary>
 public struct EarningsTrend
 {
-    public DateOnly Date;
-    public string Period;
+    public DateOnly? Date;
+    public string? Period;
     public double? Growth;
     public decimal? EarningsEstimateAvg;
     public decimal? EarningsEstimateLow;

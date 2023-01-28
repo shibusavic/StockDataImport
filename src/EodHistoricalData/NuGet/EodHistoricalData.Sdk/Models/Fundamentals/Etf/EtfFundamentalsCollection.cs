@@ -8,8 +8,9 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 public struct EtfFundamentalsCollection
 {
     public General General;
+
     public Technicals Technicals;
+
     [JsonPropertyName("etf_data")]
     public EtfData Data;
-    public static EtfFundamentalsCollection Empty => new();
 }

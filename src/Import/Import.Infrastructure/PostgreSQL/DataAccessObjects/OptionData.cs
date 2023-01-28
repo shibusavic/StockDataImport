@@ -11,7 +11,8 @@ internal class OptionData
     {
         Symbol = symbol;
         Exchange = exchange;
-        ExpirationDate = data.ExpirationDate.ToDateTime(TimeOnly.MinValue);
+        ExpirationDate = data.ExpirationDate?.ToDateTime(TimeOnly.MinValue) ??
+            throw new ArgumentException($"{nameof(data)} has no {nameof(ExpirationDate)}");
         ImpliedVolatility = data.ImpliedVolatility;
         PutVolume = data.PutVolume;
         CallVolume = data.CallVolume;
@@ -20,6 +21,7 @@ internal class OptionData
         CallOpenInterest = data.CallOpenInterest;
         PutCallOpenInterestRatio = data.PutCallOpenInterestRatio;
         OptionsCount = data.OptionsCount;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -27,15 +29,16 @@ internal class OptionData
         string symbol,
         string exchange,
         DateTime expirationDate,
-        double impliedVolatility,
-        int putVolume,
-        int callVolume,
-        double putCallVolumeRatio,
-        int putOpenInterest,
-        int callOpenInterest,
-        double putCallOpenInterestRatio,
-        int optionsCount,
-        DateTime utcTimestamp)
+        double? impliedVolatility,
+        int? putVolume,
+        int? callVolume,
+        double? putCallVolumeRatio,
+        int? putOpenInterest,
+        int? callOpenInterest,
+        double? putCallOpenInterestRatio,
+        int? optionsCount,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
         Exchange = exchange;
@@ -48,7 +51,8 @@ internal class OptionData
         CallOpenInterest = callOpenInterest;
         PutCallOpenInterestRatio = putCallOpenInterestRatio;
         OptionsCount = optionsCount;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
@@ -62,29 +66,32 @@ internal class OptionData
     public DateTime ExpirationDate { get; }
 
     [ColumnWithKey("implied_volatility", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
-    public double ImpliedVolatility { get; }
+    public double? ImpliedVolatility { get; }
 
     [ColumnWithKey("put_volume", Order = 5, TypeName = "integer", IsPartOfKey = false)]
-    public int PutVolume { get; }
+    public int? PutVolume { get; }
 
     [ColumnWithKey("call_volume", Order = 6, TypeName = "integer", IsPartOfKey = false)]
-    public int CallVolume { get; }
+    public int? CallVolume { get; }
 
     [ColumnWithKey("put_call_volume_ratio", Order = 7, TypeName = "double precision", IsPartOfKey = false)]
-    public double PutCallVolumeRatio { get; }
+    public double? PutCallVolumeRatio { get; }
 
     [ColumnWithKey("put_open_interest", Order = 8, TypeName = "integer", IsPartOfKey = false)]
-    public int PutOpenInterest { get; }
+    public int? PutOpenInterest { get; }
 
     [ColumnWithKey("call_open_interest", Order = 9, TypeName = "integer", IsPartOfKey = false)]
-    public int CallOpenInterest { get; }
+    public int? CallOpenInterest { get; }
 
     [ColumnWithKey("put_call_open_interest_ratio", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
-    public double PutCallOpenInterestRatio { get; }
+    public double? PutCallOpenInterestRatio { get; }
 
     [ColumnWithKey("options_count", Order = 11, TypeName = "integer", IsPartOfKey = false)]
-    public int OptionsCount { get; }
+    public int? OptionsCount { get; }
 
-    [ColumnWithKey("utc_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("created_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
+
+    [ColumnWithKey("utc_timestamp", Order = 13, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

@@ -25,16 +25,23 @@ public class ActionService
     {
         List<ActionItem> items = new();
 
-        // get the undone items from the db.
-        items.AddRange(await logsDb.GetActionItemsByStatusAsync(ImportActionStatus.UsageRequirementMet
-            | ImportActionStatus.Error | ImportActionStatus.InProgress | ImportActionStatus.NotStarted));
+        bool purgingActions = false;
 
         if (config.Purges?.Any() ?? false)
         {
             foreach (var name in config.Purges)
             {
+                purgingActions = purgingActions | name.Equals(PurgeName.ActionItems);
+
                 items.Add(new ActionItem(ActionNames.Purge, name, null, null, 0));
             }
+        }
+
+        // get the undone items from the db - if we're not purging actions.
+        if (!purgingActions)
+        {
+            items.AddRange(await logsDb.GetActionItemsByStatusAsync(ImportActionStatus.UsageRequirementMet
+                | ImportActionStatus.Error | ImportActionStatus.InProgress | ImportActionStatus.NotStarted));
         }
 
         if (config.Fixes?.Any() ?? false)

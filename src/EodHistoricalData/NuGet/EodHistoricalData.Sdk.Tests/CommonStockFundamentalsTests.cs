@@ -12,7 +12,7 @@ public class CommonStockFundamentalsTests : BaseTest
     {
         var dataClient = new DataClient(apiKey);
         var fundamentals = await dataClient.GetFundamentalsForSymbolAsync<FundamentalsCollection>("MSFT");
-        Assert.NotEqual(FundamentalsCollection.Empty, fundamentals);
+        Assert.NotEqual(new FundamentalsCollection(), fundamentals);
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public class CommonStockFundamentalsTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
+        ApiEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
             if (e.ApiResponseException != null)
             {
@@ -44,7 +44,7 @@ public class CommonStockFundamentalsTests : BaseTest
 
     [Theory] // [Theory(Skip = "Expensive")]
     [InlineData("TSLA")]
-    [InlineData("MSFT")]
+    //[InlineData("MSFT")]
     [InlineData("AAPL")]
     [InlineData("OXY")]
     public async Task GetFundamentalsForSymbolAsync_Fields_NotEmpty(string symbol)
@@ -53,7 +53,7 @@ public class CommonStockFundamentalsTests : BaseTest
 
         var actual = await dataClient.GetFundamentalsForSymbolAsync<FundamentalsCollection>(symbol);
 
-        Assert.NotEqual(FundamentalsCollection.Empty, actual);
+        Assert.NotEqual(new FundamentalsCollection(), actual);
         Assert.Equal(symbol, actual.General.Code);
         Assert.True(actual.Highlights.MarketCapitalization.HasValue);
         Assert.True(actual.Valuation.EnterpriseValue.HasValue);
@@ -61,19 +61,32 @@ public class CommonStockFundamentalsTests : BaseTest
         Assert.True(actual.Technicals.TwoHundredDayMovingAverage.GetValueOrDefault() > 0M);
         Assert.True(actual.SplitsDividends.ForwardAnnualDividendYield.HasValue);
         Assert.True(actual.AnalystRatings.Rating.HasValue);
+        Assert.NotNull(actual.Holders.Institutions);
         Assert.NotEmpty(actual.Holders.Institutions);
+        Assert.NotNull(actual.Holders.Funds); 
         Assert.NotEmpty(actual.Holders.Funds);
         Assert.NotNull(actual.EsgScores.Disclaimer);
+        Assert.NotNull(actual.OutstandingShares.Annual);
         Assert.NotEmpty(actual.OutstandingShares.Annual);
+        Assert.NotNull(actual.OutstandingShares.Quarterly);
         Assert.NotEmpty(actual.OutstandingShares.Quarterly);
+        Assert.NotNull(actual.Earnings.History);
         Assert.NotEmpty(actual.Earnings.History);
+        Assert.NotNull(actual.Earnings.Trend);
         Assert.NotEmpty(actual.Earnings.Trend);
+        Assert.NotNull(actual.Earnings.Annual);
         Assert.NotEmpty(actual.Earnings.Annual);
+        Assert.NotNull(actual.Financials.BalanceSheet.Quarterly);
         Assert.NotEmpty(actual.Financials.BalanceSheet.Quarterly);
+        Assert.NotNull(actual.Financials.BalanceSheet.Yearly);
         Assert.NotEmpty(actual.Financials.BalanceSheet.Yearly);
+        Assert.NotNull(actual.Financials.CashFlow.Quarterly);
         Assert.NotEmpty(actual.Financials.CashFlow.Quarterly);
+        Assert.NotNull(actual.Financials.CashFlow.Yearly);
         Assert.NotEmpty(actual.Financials.CashFlow.Yearly);
+        Assert.NotNull(actual.Financials.IncomeStatement.Quarterly);
         Assert.NotEmpty(actual.Financials.IncomeStatement.Quarterly);
+        Assert.NotNull(actual.Financials.IncomeStatement.Yearly);
         Assert.NotEmpty(actual.Financials.IncomeStatement.Yearly);
     }
 

@@ -1,4 +1,5 @@
-﻿using EodHistoricalData.Sdk.Models.Fundamentals;
+﻿using EodHistoricalData.Sdk.Events;
+using EodHistoricalData.Sdk.Models.Fundamentals;
 using EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
 using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 using Microsoft.Extensions.Logging;
@@ -32,16 +33,17 @@ public sealed partial class DataClient
 
         var (StringValue, EnumValue) = DetermineSymbolTypeForFundamentalsOutput(json);
 
-        if (EnumValue == SymbolType.CommonStock)
+        if (EnumValue is SymbolType.CommonStock or SymbolType.PreferredStock)
         {
             return JsonSerializer.Deserialize<FundamentalsCollection>(json, SerializerOptions);
         }
-        if (EnumValue == SymbolType.Etf)
+        if (EnumValue is SymbolType.Etf or SymbolType.Fund)
         {
             return JsonSerializer.Deserialize<EtfFundamentalsCollection>(json, SerializerOptions);
         }
 
-        logger?.LogInformation("Unknown type in {FUNCTION}: {TYPE}", nameof(GetFundamentalsForSymbolAsync), StringValue);
+        ApiEventPublisher.RaiseMessageEvent(this, $"Unknown type in {nameof(GetFundamentalsForSymbolAsync)}: {StringValue}",
+            nameof(GetFundamentalsForSymbolAsync), LogLevel.Warning);
 
         return null;
     }
@@ -60,15 +62,17 @@ public sealed partial class DataClient
 
         var info = JsonSerializer.Deserialize<FundamentalsInfo>(json, SerializerOptions);
 
+        if (string.IsNullOrWhiteSpace(info.General.Type)) { return (null, SymbolType.None); }
+        
         return (info.General.Type, info.General.Type.GetEnum<SymbolType>());
     }
 
     internal static async Task<FundamentalsCollection> ConvertToCommonStockFundamentals(string json) =>
-        string.IsNullOrWhiteSpace(json) ? FundamentalsCollection.Empty
+        string.IsNullOrWhiteSpace(json) ? new FundamentalsCollection()
         : await Task.FromResult(JsonSerializer.Deserialize<FundamentalsCollection>(json, SerializerOptions));
 
     internal static async Task<EtfFundamentalsCollection> ConvertToEtfFundamentals(string json) =>
-        string.IsNullOrWhiteSpace(json) ? EtfFundamentalsCollection.Empty
+        string.IsNullOrWhiteSpace(json) ? new EtfFundamentalsCollection()
         : await Task.FromResult(JsonSerializer.Deserialize<EtfFundamentalsCollection>(json, SerializerOptions));
 
     private string BuildFundamentalsUri(string symbol) => $"{ApiService.FundamentalsUri}{symbol}?{GetTokenAndFormat()}";

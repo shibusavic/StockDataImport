@@ -5,9 +5,9 @@
 /// </summary>
 public struct MarketCapitalization
 {
-    public string Mega;
-    public string Big;
-    public string Medium;
-    public string Small;
-    public string Micro;
+    public string? Mega;
+    public string? Big;
+    public string? Medium;
+    public string? Small;
+    public string? Micro;
 }

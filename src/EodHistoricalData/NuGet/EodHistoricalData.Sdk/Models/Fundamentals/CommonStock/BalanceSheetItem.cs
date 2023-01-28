@@ -11,7 +11,7 @@ public struct BalanceSheetItem
     [JsonPropertyName("filing_date")]
     public DateOnly? FilingDate;
     [JsonPropertyName("currency_symbol")]
-    public string CurrencySymbol;
+    public string? CurrencySymbol;
     public decimal? TotalAssets;
     public decimal? IntangibleAssets;
     public decimal? EarningAssets;

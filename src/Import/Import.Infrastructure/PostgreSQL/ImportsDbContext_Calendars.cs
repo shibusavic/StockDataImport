@@ -1,92 +1,49 @@
-﻿using Dapper;
-using Import.Infrastructure.PostgreSQL.DataAccessObjects;
+﻿using Import.Infrastructure.PostgreSQL.DataAccessObjects;
 
 namespace Import.Infrastructure.PostgreSQL;
 
 internal partial class ImportsDbContext
 {
-    public async Task SaveIpos(EodHistoricalData.Sdk.Models.Calendar.IpoCollection ipoCollection,
+    public Task SaveIpos(EodHistoricalData.Sdk.Models.Calendar.IpoCollection ipoCollection,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(CalendarIpo));
 
+        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(CalendarIpo)}"); }
+
         var daoIpos = ipoCollection.Ipos.Select(x => new CalendarIpo(x,
             SymbolMetaDataRepository.GetFirstExchangeForSymbol(x.Symbol))).ToArray();
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using var transaction = connection.BeginTransaction();
-
-        try
-        {
-            await connection.ExecuteAsync(sql, daoIpos, transaction);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return ExecuteAsync(sql, daoIpos, null, cancellationToken);
     }
 
-    public async Task SaveEarnings(EodHistoricalData.Sdk.Models.Calendar.EarningsCollection earnings,
+    public Task SaveEarnings(EodHistoricalData.Sdk.Models.Calendar.EarningsCollection earnings,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(CalendarEarnings));
 
+        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(CalendarEarnings)}"); }
+
         var daoEarnings = earnings.Earnings.Select(e => new CalendarEarnings(e));
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using var transaction = connection.BeginTransaction();
-
-        try
-        {
-            await connection.ExecuteAsync(sql, daoEarnings, transaction);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return ExecuteAsync(sql, daoEarnings, null, cancellationToken);
     }
 
-    public async Task SaveTrends(EodHistoricalData.Sdk.Models.Calendar.TrendCollection trends,
+    public Task SaveTrends(EodHistoricalData.Sdk.Models.Calendar.TrendCollection trends,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(CalendarTrend));
 
+        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(CalendarTrend)}"); }
+
         var daoTrend = trends.Trends.Select(t => new CalendarTrend(t));
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using var transaction = connection.BeginTransaction();
-
-        try
-        {
-            await connection.ExecuteAsync(sql, daoTrend, transaction);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return ExecuteAsync(sql, daoTrend, null, cancellationToken);
     }
 }

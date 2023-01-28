@@ -1,5 +1,4 @@
-﻿using Dapper;
-using Import.Infrastructure.PostgreSQL.DataAccessObjects;
+﻿using Import.Infrastructure.PostgreSQL.DataAccessObjects;
 
 namespace Import.Infrastructure.PostgreSQL;
 
@@ -11,33 +10,19 @@ internal partial class ImportsDbContext
     /// <param name="exchanges">The collection of <see cref="EodHistoricalData.Sdk.Models.Exchange"/> values.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asyncronous operation.</returns>
-    public async Task SaveExchangesAsync(IEnumerable<EodHistoricalData.Sdk.Models.Exchange> exchanges,
+    public Task SaveExchangesAsync(IEnumerable<EodHistoricalData.Sdk.Models.Exchange> exchanges,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (exchanges.Any())
-        {
-            string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(Exchange));
-            var daoExchanges = exchanges.Select(x => new Exchange(x));
+        if (!exchanges.Any()) { return Task.CompletedTask; }
+     
+        string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(Exchange));
 
-            using var connection = await GetOpenConnectionAsync(cancellationToken);
-            using var transaction = connection.BeginTransaction();
+        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(Exchange)}"); }
 
-            try
-            {
-                await connection.ExecuteAsync(sql, daoExchanges, transaction);
-                await transaction.CommitAsync(cancellationToken);
-            }
-            catch
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
-        }
+        var daoExchanges = exchanges.Select(x => new Exchange(x));
+
+        return ExecuteAsync(sql, daoExchanges, null, cancellationToken);
     }
 }

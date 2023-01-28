@@ -8,9 +8,9 @@ namespace EodHistoricalData.Sdk.Models.Calendar;
 /// </summary>
 public struct Ipo
 {
-    public string Code;
-    public string Name;
-    public string Exchange;
+    public string? Code;
+    public string? Name;
+    public string? Exchange;
     public string? Currency;
     [JsonPropertyName("start_date")]
     public DateOnly? StartDate;
@@ -27,5 +27,5 @@ public struct Ipo
     public long? Shares;
     [JsonPropertyName("deal_type")]
     public string? DealType;
-    public string Symbol => Code.Split('.').FirstOrDefault() ?? Code;
+    public string? Symbol => Code?.Split('.').FirstOrDefault();
 }

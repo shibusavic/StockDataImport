@@ -1,23 +1,23 @@
 ﻿namespace EodHistoricalData.Sdk.Events;
 
 /// <summary>
-/// Represents the foundation of domain-level event args.
+/// Represents the foundation of api-level event args.
 /// </summary>
-public class DomainEventArgs : EventArgs
+public class ApiEventArgs : EventArgs
 {
     /// <summary>
-    /// Creates a new instance of the <see cref="DomainEventArgs"/> class.
+    /// Creates a new instance of the <see cref="ApiEventArgs"/> class.
     /// </summary>
     /// <param name="source">The source of the event.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> is null or whitespace.</exception>
-    public DomainEventArgs(string source)
+    public ApiEventArgs(string source)
     {
         Source = string.IsNullOrWhiteSpace(source) ? throw new ArgumentNullException(nameof(source)) : source;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     /// <summary>
-    /// Gets the UTC <see cref="DateTime"/> of when the <see cref="DomainEventArgs"/> instance was instantiated.
+    /// Gets the UTC <see cref="DateTime"/> of when the <see cref="ApiEventArgs"/> instance was instantiated.
     /// </summary>
     public DateTime UtcTimestamp { get; }
 

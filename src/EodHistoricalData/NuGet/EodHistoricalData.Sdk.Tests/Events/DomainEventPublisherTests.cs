@@ -11,41 +11,41 @@ public class DomainEventPublisherTests
     {
         messages = new();
         contexts = new();
-        DomainEventPublisher.RaiseMessageEventHandler += DomainEventPublisher_RaiseMessageEventHandler;
+        ApiEventPublisher.RaiseMessageEventHandler += DomainEventPublisher_RaiseMessageEventHandler;
     }
 
     [Fact]
     public void RaiseMessageEvent_CapturesMessage()
     {
-        DomainEventPublisher.RaiseMessageEvent(this, "message", "source");
+        ApiEventPublisher.RaiseMessageEvent(this, "message", "source", Microsoft.Extensions.Logging.LogLevel.Debug);
         Assert.Contains("message", messages);
     }
 
     [Fact]
     public void RaiseMessageEvent_CapturesContext()
     {
-        DomainEventPublisher.RaiseMessageEvent(this, "context", "message", "source");
+        ApiEventPublisher.RaiseMessageEvent(this, "context", "message", "source", Microsoft.Extensions.Logging.LogLevel.Debug);
         Assert.Contains("context", contexts);
     }
 
     [Fact]
     public void RaiseMessageEvent_DoesNotCaptureEmptyMessage()
     {
-        DomainEventPublisher.RaiseMessageEvent(this, "", "source");
+        ApiEventPublisher.RaiseMessageEvent(this, "", "source", Microsoft.Extensions.Logging.LogLevel.Debug);
         Assert.Empty(messages);
     }
 
     [Fact]
     public void RaiseMessageEvent_DoesNotCaptureEmptyContext()
     {
-        DomainEventPublisher.RaiseMessageEvent(this, "", "message", "source");
+        ApiEventPublisher.RaiseMessageEvent(this, "", "message", "source", Microsoft.Extensions.Logging.LogLevel.Debug);
         Assert.Empty(contexts);
     }
 
     [Fact]
     public void RaiseMessageEvent_AllowsNullSender()
     {
-        DomainEventPublisher.RaiseMessageEvent(null, "context", "message", "source");
+        ApiEventPublisher.RaiseMessageEvent(null, "context", "message", "source", Microsoft.Extensions.Logging.LogLevel.Debug);
         Assert.Single(messages);
         Assert.Single(contexts);
     }

@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using EodHistoricalData.Sdk.Services;
 using Import.Infrastructure.PostgreSQL.DataAccessObjects;
 using Npgsql;
 using System.Text;
@@ -36,7 +35,7 @@ utc_timestamp = CURRENT_TIMESTAMP
         {
             foreach (var chunk in symbols.Chunk(1000))
             {
-                var dao = chunk.Select(c => new Symbol(c, exchange)).ToArray();
+                var dao = chunk.Select(s => new Symbol(s, exchange)).ToArray();
                 await ExecuteAsync(sql, dao, 120, cancellationToken);
             }
         }
@@ -147,24 +146,15 @@ ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asyncronous operation; the task contains a collection of
     /// <see cref="EodHistoricalData.Sdk.Models.Symbol"/> values.</returns>
-    public async Task<IEnumerable<EodHistoricalData.Sdk.Models.Symbol>> GetSymbolsForExchangeAsync(
+    public Task<IEnumerable<EodHistoricalData.Sdk.Models.Symbol>> GetSymbolsForExchangeAsync(
         string exchange, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync(cancellationToken);
-
         string sql = @$"{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(Symbol))} WHERE exchange = @Exchange";
 
-        try
-        {
-            return await connection.QueryAsync<EodHistoricalData.Sdk.Models.Symbol>(sql, new { Exchange = exchange });
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return QueryAsync<EodHistoricalData.Sdk.Models.Symbol>(sql, new { Exchange = exchange }, cancellationToken: cancellationToken);
+
     }
 
     /// <summary>
@@ -182,7 +172,17 @@ ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
 
         try
         {
-            return await connection.QueryAsync<EodHistoricalData.Sdk.Models.Symbol>(Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(Symbol)));
+            return (await connection.QueryAsync<Symbol>(
+                Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(Symbol))))
+                .Select(m => new EodHistoricalData.Sdk.Models.Symbol()
+                {
+                    Code = m.Code,
+                    Name = m.Name,
+                    Country = m.Country,
+                    Currency = m.Currency,
+                    Exchange = m.Exchange,
+                    Type = m.Type
+                });
         }
         finally
         {
@@ -214,6 +214,7 @@ WHERE code = @Code
             sql.Append(@"AND exchange = @Exchange");
         }
 
+
         using var connection = await GetOpenConnectionAsync(cancellationToken);
 
         try
@@ -236,12 +237,9 @@ WHERE code = @Code
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(SymbolToIgnore));
 
-        if (!string.IsNullOrWhiteSpace(sql))
-        {
-            return ExecuteAsync(sql, symbols.Select(s => new SymbolToIgnore(s.Symbol, s.Exchange, s.Reason)), cancellationToken: cancellationToken);
-        }
+        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(SymbolToIgnore)}"); }
 
-        throw new Exception($"Could not create upsert for {nameof(SymbolToIgnore)}");
+        return ExecuteAsync(sql, symbols.Select(s => new SymbolToIgnore(s.Symbol, s.Exchange, s.Reason)), cancellationToken: cancellationToken);
     }
 
     public Task SaveSymbolToIgnore(IgnoredSymbol symbol, CancellationToken cancellationToken = default)
@@ -250,12 +248,9 @@ WHERE code = @Code
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(SymbolToIgnore));
 
-        if (!string.IsNullOrWhiteSpace(sql))
-        {
-            return ExecuteAsync(sql, new SymbolToIgnore(symbol.Symbol, symbol.Exchange, symbol.Reason), cancellationToken: cancellationToken);
-        }
+        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(SymbolToIgnore)}"); }
 
-        throw new Exception($"Could not create upsert for {nameof(SymbolToIgnore)}");
+        return ExecuteAsync(sql, new SymbolToIgnore(symbol.Symbol, symbol.Exchange, symbol.Reason), cancellationToken: cancellationToken);
     }
 
     public async Task<IEnumerable<IgnoredSymbol>> GetSymbolsToIgnoreAsync(CancellationToken cancellationToken = default)
@@ -264,7 +259,8 @@ WHERE code = @Code
 
         const string sql = @"SELECT DISTINCT symbol, exchange, reason FROM public.symbols_to_ignore";
 
-        return (await QueryAsync<SymbolToIgnore>(sql, cancellationToken: cancellationToken)).Select(s => new IgnoredSymbol(s.Symbol, s.Exchange, s.Reason));
+        return (await QueryAsync<SymbolToIgnore>(sql, cancellationToken: cancellationToken))
+            .Select(s => new IgnoredSymbol(s.Symbol, s.Exchange, s.Reason));
     }
 
 }

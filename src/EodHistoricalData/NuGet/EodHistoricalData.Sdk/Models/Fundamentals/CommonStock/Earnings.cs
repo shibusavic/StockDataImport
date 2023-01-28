@@ -5,7 +5,7 @@
 /// </summary>
 public struct Earnings
 {
-    public IDictionary<string, EarningsHistory> History;
-    public IDictionary<string, EarningsTrend> Trend;
-    public IDictionary<string, EarningsPerShare> Annual;
+    public IDictionary<string, EarningsHistory>? History;
+    public IDictionary<string, EarningsTrend>? Trend;
+    public IDictionary<string, EarningsPerShare>? Annual;
 }

@@ -1,18 +1,19 @@
-﻿Max Token Usage: 75000
-Cancel On Exception: true
+﻿Max Token Usage: 100000
+
+Purge Data:
+- Logs
+- Actions
 
 Exchange Codes:
   US:
     Exchanges:
     - NYSE
     - NASDAQ
-    - AMEX
     Symbol Type:
     - Common Stock
     - ETF
-
 Any Day:
 - Priority: 1
   Scope: Full
   Data Types:
-  - Exchanges
+  - Fundamentals

@@ -11,7 +11,7 @@ public struct Dividend
     public DateOnly? RecordDate;
     public DateOnly? PaymentDate;
     public string? Period;
-    public decimal Value;
-    public decimal UnadjustedValue;
-    public string Currency;
+    public decimal? Value;
+    public decimal? UnadjustedValue;
+    public string? Currency;
 }

@@ -1,5 +1,4 @@
 ﻿using EodHistoricalData.Sdk.Models;
-using EodHistoricalData.Sdk.Services;
 using System.Text.Json;
 
 namespace EodHistoricalData.Sdk;
@@ -14,10 +13,9 @@ public sealed partial class DataClient : IDataClient
 
         string? json = await GetSymbolListStringAsync(exchangeCode, cancellationToken);
 
-        return SymbolsToIgnore.FilterSymbolCollection(string.IsNullOrWhiteSpace(json) 
-            ? Enumerable.Empty<Symbol>()
+        return string.IsNullOrWhiteSpace(json)  ? Enumerable.Empty<Symbol>()
             : JsonSerializer.Deserialize<IEnumerable<Symbol>>(json, SerializerOptions)
-                ?? Enumerable.Empty<Symbol>());
+                ?? Enumerable.Empty<Symbol>();
     }
 
     internal async Task<string?> GetSymbolListStringAsync(string exchangeCode, CancellationToken cancellationToken = default)

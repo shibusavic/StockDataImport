@@ -1,6 +1,6 @@
 ﻿namespace EodHistoricalData.Sdk.Events;
 
-public class ApiLimitReachedEventArgs : DomainEventArgs
+public class ApiLimitReachedEventArgs : ApiEventArgs
 {
     public ApiLimitReachedEventArgs(ApiLimitReachedException exception, string source) : base(source)
     {

@@ -6,8 +6,8 @@
 /// </summary>
 public struct BulkSplit
 {
-    public string Code;
-    public string Exchange;
-    public DateOnly Date;
-    public string Split;
+    public string? Code;
+    public string? Exchange;
+    public DateOnly? Date;
+    public string? Split;
 }

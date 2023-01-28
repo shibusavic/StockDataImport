@@ -5,6 +5,6 @@
 /// </summary>
 public struct OutstandingShares
 {
-    public IDictionary<string, OutstandingSharesItem> Annual;
-    public IDictionary<string, OutstandingSharesItem> Quarterly;
+    public IDictionary<string, OutstandingSharesItem>? Annual;
+    public IDictionary<string, OutstandingSharesItem>? Quarterly;
 }

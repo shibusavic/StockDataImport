@@ -64,86 +64,41 @@ internal class LogsDbContext : BasePostgreSQLContext, ILogsDbContext
         });
     }
 
-    public async Task SaveActionItemAsync(ActionItem actionItem, CancellationToken cancellationToken = default)
+    public Task SaveActionItemAsync(ActionItem actionItem, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
+
+        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(DataAccessObjects.ActionItem)}"); }
+
         var dao = new DataAccessObjects.ActionItem(actionItem);
 
-        await retryPolicy.ExecuteAsync(async () =>
-        {
-            using var connection = await GetOpenConnectionAsync(cancellationToken);
-            using NpgsqlTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                await connection.ExecuteAsync(sql, dao, transaction);
-                await transaction.CommitAsync(cancellationToken);
-            }
-            catch
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
-        });
+        return ExecuteAsync(sql, dao, null, cancellationToken);
     }
 
-    public async Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
+    public Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
     {
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using NpgsqlTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(DataAccessObjects.ActionItem)}"); }
 
-        try
-        {
-            await connection.ExecuteAsync(sql, actions.Select(a => new DataAccessObjects.ActionItem(a)).ToArray(), transaction);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return ExecuteAsync(sql, actions.Select(a => new DataAccessObjects.ActionItem(a)).ToArray(), null, cancellationToken);
     }
 
-    public async Task SaveApiResponseAsync(string request, string response, int statusCode, CancellationToken cancellationToken = default)
+    public Task SaveApiResponseAsync(string request, string response, int statusCode, CancellationToken cancellationToken = default)
     {
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateInsert(typeof(DataAccessObjects.ApiResponse));
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using NpgsqlTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+        if (sql == null) { throw new Exception($"Could not create insert for {nameof(DataAccessObjects.ApiResponse)}"); }
 
-        try
+        return ExecuteAsync(sql, new
         {
-            await connection.ExecuteAsync(sql, new
-            {
-                Request = request,
-                Response = response,
-                StatusCode = statusCode,
-                UtcTimestamp = DateTime.UtcNow,
-            }, transaction);
-
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+            Request = request,
+            Response = response,
+            StatusCode = statusCode,
+            UtcTimestamp = DateTime.UtcNow,
+        }, null, cancellationToken);
     }
 
     public async Task<ActionItem?> GetActionItemAsync(Guid globalId, CancellationToken cancellationToken = default)
@@ -201,28 +156,28 @@ WHERE status = Any(@Statuses)
         return daos.Any() ? daos.Select(d => d.ToDomainObject()!) : Enumerable.Empty<ActionItem>();
     }
 
-    public async Task TruncateLogsAsync(string logLevel, DateTime date, CancellationToken cancellationToken = default)
+    public Task TruncateLogsAsync(string logLevel, DateTime date, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         string sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.Log)) ?? string.Empty;
         sql += " WHERE log_level = @LogLevel AND utc_timestamp < @Date";
 
-        await ExecuteAsync(sql, new
+        return ExecuteAsync(sql, new
         {
             LogLevel = logLevel,
             Date = date
         }, 120, cancellationToken);
     }
 
-    public async Task TruncateApiResponsesAsync(DateTime date, CancellationToken cancellationToken = default)
+    public Task TruncateApiResponsesAsync(DateTime date, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         string sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ApiResponse)) ?? string.Empty;
         sql += " WHERE utc_timestamp < @Date";
 
-        await ExecuteAsync(sql, new
+        return ExecuteAsync(sql, new
         {
             Date = date
         }, 120, cancellationToken);
@@ -241,39 +196,36 @@ WHERE status = Any(@Statuses)
         }, 120, cancellationToken);
     }
 
-    public async Task PurgeLogsAsync(CancellationToken cancellationToken = default)
+    public Task PurgeLogsAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.Log));
 
-        if (!string.IsNullOrWhiteSpace(sql))
-        {
-            await ExecuteAsync(sql, null, 120, cancellationToken);
-        }
+        if (sql == null) { throw new Exception($"Could not create delete for {nameof(DataAccessObjects.Log)}"); }
+
+        return ExecuteAsync(sql, null, 120, cancellationToken);
     }
 
-    public async Task PurgeActionItemsAsync(CancellationToken cancellationToken = default)
+    public Task PurgeActionItemsAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ActionItem));
 
-        if (!string.IsNullOrWhiteSpace(sql))
-        {
-            await ExecuteAsync(sql, null, 120, cancellationToken: cancellationToken);
-        }
+        if (sql == null) { throw new Exception($"Could not create delete for {nameof(DataAccessObjects.ActionItem)}"); }
+
+        return ExecuteAsync(sql, null, 120, cancellationToken: cancellationToken);
     }
 
-    public async Task PurgeApiResponsesAsync(CancellationToken cancellationToken = default)
+    public Task PurgeApiResponsesAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ApiResponse));
 
-        if (!string.IsNullOrWhiteSpace(sql))
-        {
-            await ExecuteAsync(sql, cancellationToken: cancellationToken);
-        }
+        if (sql == null) { throw new Exception($"Could not create delete for {nameof(DataAccessObjects.ApiResponse)}"); }
+
+        return ExecuteAsync(sql, cancellationToken: cancellationToken);
     }
 }

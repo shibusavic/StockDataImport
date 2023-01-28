@@ -10,38 +10,37 @@ internal class CompanyEsgActivity
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.ActivityInvolvement esgActivity)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
-        Activity = esgActivity.Activity;
+        Activity = esgActivity.Activity ?? throw new ArgumentException($"{nameof(esgActivity)} has no {nameof(Activity)}");
         Involved = esgActivity.Involvement;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyEsgActivity(
         Guid companyId,
-        DateTime dateCaptured,
         string activity,
-        bool involved,
-        DateTime utcTimestamp)
+        bool? involved,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         Activity = activity;
         Involved = involved;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
-
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
     public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = true)]
-    public DateTime DateCaptured { get; }
-
-    [ColumnWithKey("activity", Order = 3, TypeName = "text", IsPartOfKey = true)]
+    [ColumnWithKey("activity", Order = 2, TypeName = "text", IsPartOfKey = true)]
     public string Activity { get; }
 
-    [ColumnWithKey("involved", Order = 4, TypeName = "boolean", IsPartOfKey = false)]
-    public bool Involved { get; }
+    [ColumnWithKey("involved", Order = 3, TypeName = "boolean", IsPartOfKey = false)]
+    public bool? Involved { get; }
+
+    [ColumnWithKey("created_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }

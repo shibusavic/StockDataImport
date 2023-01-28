@@ -5,8 +5,8 @@
 /// </summary>
 public struct OutstandingSharesItem
 {
-    public string Date;
-    public DateOnly DateFormatted;
-    public string SharesMln;
-    public double Shares; // This is sometimes returned as a non-integer (it has a decimal point)
+    public string? Date;
+    public DateOnly? DateFormatted;
+    public string? SharesMln;
+    public double? Shares; // This is sometimes returned as a non-integer (it has a decimal point)
 }

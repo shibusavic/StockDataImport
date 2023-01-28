@@ -10,44 +10,44 @@ internal class EtfMorningStar
         EodHistoricalData.Sdk.Models.Fundamentals.Etf.MorningStar morningStar)
     {
         EtfId = etfId;
-        DateCaptured = DateTime.UtcNow;
         Ratio = Convert.ToInt32(morningStar.Ratio);
         CategoryBenchmark = morningStar.CategoryBenchmark;
         SustainabilityRatio = Convert.ToInt32(morningStar.SustainabilityRatio);
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public EtfMorningStar(
         Guid etfId,
-        DateTime dateCaptured,
-        int ratio,
-        string categoryBenchmark,
-        int sustainabilityRatio,
-        DateTime utcTimestamp)
+        int? ratio,
+        string? categoryBenchmark,
+        int? sustainabilityRatio,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
-        DateCaptured = dateCaptured;
         Ratio = ratio;
         CategoryBenchmark = categoryBenchmark;
         SustainabilityRatio = sustainabilityRatio;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("etf_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
     public Guid EtfId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = true)]
-    public DateTime DateCaptured { get; }
+    [ColumnWithKey("ratio", Order = 2, TypeName = "integer", IsPartOfKey = false)]
+    public int? Ratio { get; }
 
-    [ColumnWithKey("ratio", Order = 3, TypeName = "integer", IsPartOfKey = false)]
-    public int Ratio { get; }
+    [ColumnWithKey("category_benchmark", Order = 3, TypeName = "text", IsPartOfKey = false)]
+    public string? CategoryBenchmark { get; }
 
-    [ColumnWithKey("category_benchmark", Order = 4, TypeName = "text", IsPartOfKey = false)]
-    public string CategoryBenchmark { get; }
+    [ColumnWithKey("sustainability_ratio", Order = 4, TypeName = "integer", IsPartOfKey = false)]
+    public int? SustainabilityRatio { get; }
 
-    [ColumnWithKey("sustainability_ratio", Order = 5, TypeName = "integer", IsPartOfKey = false)]
-    public int SustainabilityRatio { get; }
+    [ColumnWithKey("created_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }

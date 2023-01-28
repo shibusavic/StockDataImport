@@ -10,33 +10,34 @@ internal class CompanyEarningsHistory
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.EarningsHistory earningsHistory)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
-        ReportDate = earningsHistory.ReportDate.ToDateTime(TimeOnly.MinValue);
-        Date = earningsHistory.Date.ToDateTime(TimeOnly.MinValue);
+        ReportDate = earningsHistory.ReportDate?.ToDateTime(TimeOnly.MinValue) ??
+            throw new ArgumentException($"{nameof(earningsHistory)} has no {nameof(ReportDate)}");
+        Date = earningsHistory.Date?.ToDateTime(TimeOnly.MinValue) ??
+            throw new ArgumentException($"{nameof(earningsHistory)} has no {nameof(Date)}");
         BeforeAfterMarket = earningsHistory.BeforeAfterMarket;
         Currency = earningsHistory.Currency;
         EpsActual = earningsHistory.EpsActual;
         EpsEstimate = earningsHistory.EpsEstimate;
         EpsDifference = earningsHistory.EpsDifference;
         SurprisePercent = earningsHistory.SurprisePercent;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyEarningsHistory(
         Guid companyId,
-        DateTime dateCaptured,
         DateTime reportDate,
-        DateTime date,
-        string beforeAfterMarket,
-        string currency,
+        DateTime? date,
+        string? beforeAfterMarket,
+        string? currency,
         decimal? epsActual,
         decimal? epsEstimate,
         decimal? epsDifference,
         double? surprisePercent,
-        DateTime utcTimestamp)
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         ReportDate = reportDate;
         Date = date;
         BeforeAfterMarket = beforeAfterMarket;
@@ -45,40 +46,41 @@ internal class CompanyEarningsHistory
         EpsEstimate = epsEstimate;
         EpsDifference = epsDifference;
         SurprisePercent = surprisePercent;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid CompanyId { get;  }
+    public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("report_date", Order = 2, TypeName = "date", IsPartOfKey = true)]
+    public DateTime ReportDate { get; }
 
-    [ColumnWithKey("report_date", Order = 3, TypeName = "date", IsPartOfKey = true)]
-    public DateTime ReportDate { get;  }
+    [ColumnWithKey("date", Order = 3, TypeName = "date", IsPartOfKey = false)]
+    public DateTime? Date { get; }
 
-    [ColumnWithKey("date", Order = 4, TypeName = "date", IsPartOfKey = false)]
-    public DateTime Date { get;  }
+    [ColumnWithKey("before_after_market", Order = 4, TypeName = "text", IsPartOfKey = false)]
+    public string? BeforeAfterMarket { get; }
 
-    [ColumnWithKey("before_after_market", Order = 5, TypeName = "text", IsPartOfKey = false)]
-    public string? BeforeAfterMarket { get;  }
+    [ColumnWithKey("currency", Order = 5, TypeName = "text", IsPartOfKey = false)]
+    public string? Currency { get; }
 
-    [ColumnWithKey("currency", Order = 6, TypeName = "text", IsPartOfKey = false)]
-    public string Currency { get;  }
+    [ColumnWithKey("eps_actual", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsActual { get; }
 
-    [ColumnWithKey("eps_actual", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsActual { get;  }
+    [ColumnWithKey("eps_estimate", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsEstimate { get; }
 
-    [ColumnWithKey("eps_estimate", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsEstimate { get;  }
+    [ColumnWithKey("eps_difference", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EpsDifference { get; }
 
-    [ColumnWithKey("eps_difference", Order = 9, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EpsDifference { get;  }
+    [ColumnWithKey("surprise_percent", Order = 9, TypeName = "double precision", IsPartOfKey = false)]
+    public double? SurprisePercent { get; }
 
-    [ColumnWithKey("surprise_percent", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
-    public double? SurprisePercent { get;  }
+    [ColumnWithKey("created_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

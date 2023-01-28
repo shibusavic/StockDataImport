@@ -7,13 +7,13 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 /// </summary>
 public struct Holding
 {
-    public string Code;
-    public string Exchange;
-    public string Name;
-    public string Sector;
-    public string Industry;
-    public string Country;
-    public string Region;
+    public string? Code;
+    public string? Exchange;
+    public string? Name;
+    public string? Sector;
+    public string? Industry;
+    public string? Country;
+    public string? Region;
     [JsonPropertyName("assets_%")]
-    public double AssetsPercentage;
+    public double? AssetsPercentage;
 }

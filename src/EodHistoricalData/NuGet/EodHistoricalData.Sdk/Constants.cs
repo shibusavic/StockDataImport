@@ -29,5 +29,9 @@ public enum SymbolType
     [Description("Common Stock")]
     CommonStock,
     [Description("ETF")]
-    Etf
+    Etf,
+    [Description("FUND")]
+    Fund,
+    [Description("Preferred Stock")]
+    PreferredStock
 }

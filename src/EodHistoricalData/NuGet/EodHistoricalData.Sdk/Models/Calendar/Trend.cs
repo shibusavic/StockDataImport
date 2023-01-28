@@ -6,9 +6,9 @@
 /// </summary>
 public struct Trend
 {
-    public string Code;
-    public DateOnly Date;
-    public string Period;
+    public string? Code;
+    public DateOnly? Date;
+    public string? Period;
     public double? Growth;
     public decimal? EarningsEstimateAvg;
     public decimal? EarningsEstimateLow;

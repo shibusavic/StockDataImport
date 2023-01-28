@@ -5,7 +5,7 @@
 /// </summary>
 public struct Listing
 {
-    public string Code;
-    public string Exchange;
-    public string Name;
+    public string? Code;
+    public string? Exchange;
+    public string? Name;
 }

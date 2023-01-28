@@ -2,12 +2,14 @@
 using EodHistoricalData.Sdk.Events;
 using Import.AppServices;
 using Import.AppServices.Configuration;
+using Import.Infrastructure.Events;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 const string DefaultConfigFileName = "config.yml";
 string NL = Environment.NewLine;
@@ -34,9 +36,11 @@ HandleArguments(args);
 var cts = new CancellationTokenSource();
 var cancellationToken = cts.Token;
 
-DomainEventPublisher.RaiseMessageEventHandler += DomainEventPublisher_RaiseMessageEventHandler;
-DomainEventPublisher.RaiseApiResponseEventHandler += DomainEventPublisher_RaiseApiResponseEventHandler;
-DomainEventPublisher.RaiseApiLimitReachedEventHandler += DomainEventPublisher_RaiseApiLimitReachedEventHandler;
+ApiEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
+ApiEventPublisher.RaiseApiLimitReachedEventHandler += EventPublisher_RaiseApiLimitReachedEventHandler;
+
+DomainEventPublisher.DatabaseErrorHander += EventPublisher_DatabaseErrorHander;
+DomainEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
 
 try
 {
@@ -48,19 +52,16 @@ try
     {
         Configure();
 
-        if (dryRun)
-        {
-            Communicate($"{NL}Dry Run (api credit cost estimation){NL}");
-        }
+        string welcomeMsg = dryRun ? $"{NL}Dry Run (api credit cost estimation){NL}" : $"{NL}Welcome. Starting up ...{NL}";
+        Communicate(welcomeMsg);
 
         await dataImportCycle!.ExecuteAsync(importConfiguration, dryRun, cancellationToken);
 
         if (dryRun)
         {
-            Communicate("Note that the following costs are estimates", true);
-            Communicate("based on the information already present in your database.", true);
-            Communicate("If your database is empty or not fully hydrated (especially the symbols table)", true);
-            Communicate("the cost estimates below are meaningless.", true);
+            Communicate("Note that the following costs are estimates based on the information already present in your database.", true);
+            Communicate("If the database is empty or the symbols table is empty, the estimates will be zero.", true);
+            Communicate("Attempts are made along the way to prevent exceeding the specified API call limit.", true);
             Communicate("", true);
 
             foreach (var action in dataImportCycle.Actions)
@@ -77,7 +78,8 @@ try
 catch (Exception exc)
 {
     exitCode = 1;
-    CommunicateAndLog(exc.ToString(), true);
+    logger?.LogError(exc, message: exc.Message);
+    Communicate(exc.ToString(), true);
 }
 finally
 {
@@ -92,30 +94,59 @@ finally
 
     timer.Stop();
 
-    DomainEventPublisher.RaiseMessageEventHandler -= DomainEventPublisher_RaiseMessageEventHandler;
-    DomainEventPublisher.RaiseApiResponseEventHandler -= DomainEventPublisher_RaiseApiResponseEventHandler;
-    DomainEventPublisher.RaiseApiLimitReachedEventHandler -= DomainEventPublisher_RaiseApiLimitReachedEventHandler;
+    dataImportCycle?.Dispose();
+
+    ApiEventPublisher.RaiseMessageEventHandler -= EventPublisher_RaiseMessageEventHandler;
+    ApiEventPublisher.RaiseApiLimitReachedEventHandler -= EventPublisher_RaiseApiLimitReachedEventHandler;
 
     loggerProvider?.Dispose();
 
     Environment.Exit(exitCode);
 }
 
-void DomainEventPublisher_RaiseApiLimitReachedEventHandler(object? sender, ApiLimitReachedEventArgs e)
+void EventPublisher_RaiseApiLimitReachedEventHandler(object? sender, ApiLimitReachedEventArgs e)
 {
     cts.Cancel();
     CommunicateAndLog($"{e.ApiLimitReachedException.Message}");
 }
 
-void DomainEventPublisher_RaiseApiResponseEventHandler(object? sender, ApiResponseEventArgs e)
+void EventPublisher_RaiseMessageEventHandler(object? sender, MessageEventArgs e)
 {
-    // TODO: fix
-    //dataImportService?.SaveApiResponse(e.Request, e.Response ?? "", e.StatusCode).GetAwaiter().GetResult();
+    bool forceMessage = false;
+
+    if (e.Exception != null)
+    {
+        logger?.LogError(e.Exception, message: e.Message);
+        forceMessage = true;
+    }
+    else if (e.LogLevel != LogLevel.None)
+    {
+        logger?.Log(e.LogLevel, e.Message);
+        forceMessage = e.LogLevel is LogLevel.Critical or LogLevel.Error;
+    }
+
+    Communicate(e.Message, forceMessage);
 }
 
-void DomainEventPublisher_RaiseMessageEventHandler(object? sender, MessageEventArgs e)
+void EventPublisher_DatabaseErrorHander(object? sender, DatabaseErrorEventArgs e)
 {
-    CommunicateAndLog(e.Message);
+    DirectoryInfo dbErrorDir = new DirectoryInfo("errors");
+    if (!dbErrorDir.Exists) { dbErrorDir.Create(); }
+
+    var filename = $"{DateTime.Now:yyyyMMddHHmmss}_{e.Source}_{Guid.NewGuid().ToString()[0..3]}.txt";
+
+    var targetFile = new FileInfo(Path.Combine(dbErrorDir.FullName, filename));
+
+    var json = e.Parameters == null ? null : JsonSerializer.Serialize(e.Parameters);
+
+    StringBuilder text = new();
+    text.AppendLine($"Exception: {e.Exception}");
+    text.AppendLine($"SQL: {e.Sql}");
+    text.AppendLine($"Parameters: {json}");
+
+    File.WriteAllText(targetFile.FullName, text.ToString());
+
+    ApiEventPublisher.RaiseMessageEvent(sender, $"File created: {targetFile.FullName}", e.Source, LogLevel.Warning);
 }
 
 void WriteApiUsage()
@@ -166,9 +197,9 @@ void HandleArguments(string[] args)
 
         switch (argument)
         {
+            // This is the first check for the key.
             case "--key":
             case "-k":
-                // This is the first check for the key.
                 if (a == args.Length - 1) { throw new ArgumentException($"Expected an API key after {args[a]}."); }
                 apiKey ??= args[++a];
                 break;
@@ -204,7 +235,7 @@ void Configure()
 
     configuration = builder.Build();
 
-    // This is the second check for the key. First one found wins.
+    // This is the second check for the key.
     apiKey ??= configuration["EodHistoricalDataApiKey"];
 
     ConfigureServices();
@@ -212,12 +243,15 @@ void Configure()
 
 void ConfigureServices()
 {
+    Communicate("Configuring services ...", prefixWithTimestamp: true);
+
     var services = new ServiceCollection();
 
     loggerProvider = ServiceFactory.CreateLoggerProvider(configuration);
 
     if (loggerProvider != null)
     {
+        Communicate("Configuring logger.", prefixWithTimestamp: true);
         var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.ClearProviders();
@@ -230,6 +264,7 @@ void ConfigureServices()
         _ = logger.BeginScope(sourceName);
     }
 
+    Communicate($"Reading {configFileInfo.FullName}", prefixWithTimestamp: true);
     importConfiguration = ImportConfiguration.Create(File.ReadAllText(configFileInfo.FullName));
     apiKey ??= importConfiguration.ApiKey; // This is the final check for the key.
     importConfiguration.ApiKey = apiKey;
@@ -238,6 +273,7 @@ void ConfigureServices()
 
     serviceFactory = new ServiceFactory(configuration, logger);
 
+    Communicate("Creating data import cycle", prefixWithTimestamp: true);
     dataImportCycle = serviceFactory.CreateDataImportCycle(importConfiguration);
 }
 

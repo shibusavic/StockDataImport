@@ -1,7 +1,6 @@
 ﻿using EodHistoricalData.Sdk.Models;
 using EodHistoricalData.Sdk.Models.Calendar;
 using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
-using EodHistoricalData.Sdk.Services;
 
 namespace Import.Infrastructure.Abstractions;
 

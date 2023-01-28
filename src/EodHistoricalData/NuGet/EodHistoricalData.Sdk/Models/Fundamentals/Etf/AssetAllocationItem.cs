@@ -8,9 +8,11 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 public struct AssetAllocationItem
 {
     [JsonPropertyName("long_%")]
-    public string LongPercentage;
+    public string? LongPercentage;
+
     [JsonPropertyName("short_%")]
-    public string ShortPercentage;
+    public string? ShortPercentage;
+    
     [JsonPropertyName("net_assets_%")]
-    public string NetAssetsPercentage;
+    public string? NetAssetsPercentage;
 }

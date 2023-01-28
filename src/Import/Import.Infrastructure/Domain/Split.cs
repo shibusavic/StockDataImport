@@ -16,7 +16,11 @@ namespace Import.Infrastructure.Domain
         {
             Symbol = string.IsNullOrWhiteSpace(symbol) ? throw new ArgumentNullException(nameof(symbol)) : symbol;
             Exchange = string.IsNullOrWhiteSpace(exchange) ? throw new ArgumentNullException(nameof(exchange)) : exchange.Trim();
-            DateOfSplit = new DateOnly(split.Date.Year, split.Date.Month, split.Date.Day);
+
+            DateOfSplit = new DateOnly(split.Date.GetValueOrDefault().Year,
+                split.Date.GetValueOrDefault().Month,
+                split.Date.GetValueOrDefault().Day);
+
             (double BeforeSplit, double AfterSplit) = ParseSplit(split.SplitText);
             SharesBeforeSplit = BeforeSplit;
             SharesAfterSplit = AfterSplit;
@@ -92,8 +96,10 @@ namespace Import.Infrastructure.Domain
         /// <returns>A string that represents the current object.</returns>
         public override string ToString() => $"{Symbol} {Ratio} on {DateOfSplit:yyyy-MM-dd}";
 
-        private static (double BeforeSplit, double AfterSplit) ParseSplit(string ratio)
+        private static (double BeforeSplit, double AfterSplit) ParseSplit(string? ratio)
         {
+            if (ratio == null) return (0D, 0D);
+
             string delimiter = ratio.Contains(':') ? ":"
                 : ratio.Contains('/') ? "/"
                 : throw new ArgumentException($"Invalid split ratio: {ratio}");

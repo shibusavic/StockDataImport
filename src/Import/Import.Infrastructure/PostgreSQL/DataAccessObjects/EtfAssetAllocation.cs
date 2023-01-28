@@ -11,51 +11,50 @@ internal class EtfAssetAllocation
         EodHistoricalData.Sdk.Models.Fundamentals.Etf.AssetAllocationItem assetAllocation)
     {
         EtfId = etfId;
-        DateCaptured = DateTime.UtcNow;
         Category = category;
         LongPercentage = Convert.ToDouble(assetAllocation.LongPercentage);
         ShortPercentage = Convert.ToDouble(assetAllocation.ShortPercentage);
         NetAssetsPercentage = Convert.ToDouble(assetAllocation.NetAssetsPercentage);
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public EtfAssetAllocation(
         Guid etfId,
-        DateTime dateCaptured,
-        string category,
-        double longPercentage,
-        double shortPercentage,
-        double netAssetsPercentage,
-        DateTime utcTimestamp)
+        string? category,
+        double? longPercentage,
+        double? shortPercentage,
+        double? netAssetsPercentage,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
-        DateCaptured = dateCaptured;
         Category = category;
         LongPercentage = longPercentage;
         ShortPercentage = shortPercentage;
         NetAssetsPercentage = netAssetsPercentage;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
-
     [ColumnWithKey("etf_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid EtfId { get;  }
+    public Guid EtfId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = true)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("category", Order = 2, TypeName = "text", IsPartOfKey = false)]
+    public string? Category { get; }
 
-    [ColumnWithKey("category", Order = 3, TypeName = "text", IsPartOfKey = false)]
-    public string Category { get;  }
+    [ColumnWithKey("long_percentage", Order = 3, TypeName = "double precision", IsPartOfKey = false)]
+    public double? LongPercentage { get; }
 
-    [ColumnWithKey("long_percentage", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
-    public double LongPercentage { get;  }
+    [ColumnWithKey("short_percentage", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
+    public double? ShortPercentage { get; }
 
-    [ColumnWithKey("short_percentage", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
-    public double ShortPercentage { get;  }
+    [ColumnWithKey("net_assets_percentage", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
+    public double? NetAssetsPercentage { get; }
 
-    [ColumnWithKey("net_assets_percentage", Order = 6, TypeName = "double precision", IsPartOfKey = false)]
-    public double NetAssetsPercentage { get;  }
+    [ColumnWithKey("created_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

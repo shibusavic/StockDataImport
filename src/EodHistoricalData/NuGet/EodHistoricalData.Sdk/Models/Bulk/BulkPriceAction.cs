@@ -8,15 +8,15 @@ namespace EodHistoricalData.Sdk.Models.Bulk;
 /// </summary>
 public struct BulkPriceAction
 {
-    public string Code;
+    public string? Code;
     [JsonPropertyName("exchange_short_name")]
-    public string ExchangeShortName;
-    public DateOnly Date;
-    public decimal Open;
-    public decimal High;
-    public decimal Low;
-    public decimal Close;
+    public string? ExchangeShortName;
+    public DateOnly? Date;
+    public decimal? Open;
+    public decimal? High;
+    public decimal? Low;
+    public decimal? Close;
     [JsonPropertyName("adjusted_close")]
-    public decimal AdjustedClose;
-    public double Volume;
+    public decimal? AdjustedClose;
+    public double? Volume;
 }

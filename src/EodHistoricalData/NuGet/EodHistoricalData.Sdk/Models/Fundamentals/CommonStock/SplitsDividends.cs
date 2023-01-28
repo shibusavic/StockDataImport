@@ -12,5 +12,5 @@ public struct SplitsDividends
     public DateOnly? ExDividendDate;
     public string? LastSplitFactor;
     public DateOnly? LastSplitDate;
-    public IDictionary<string, CountForYear> NumberDividendsByYear;
+    public IDictionary<string, CountForYear>? NumberDividendsByYear;
 }

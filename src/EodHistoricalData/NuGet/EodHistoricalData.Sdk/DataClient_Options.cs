@@ -35,7 +35,8 @@ public sealed partial class DataClient
 
         string? json = await GetOptionsForSymbolStringAsync(symbol, contractName, from, to, tradeDateFrom, tradeDateTo, cancellationToken);
 
-        return string.IsNullOrWhiteSpace(json) ? OptionsCollection.Empty
+        return string.IsNullOrWhiteSpace(json) 
+            ? new OptionsCollection()
             : JsonSerializer.Deserialize<OptionsCollection>(json, SerializerOptions);
     }
 

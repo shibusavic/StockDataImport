@@ -1,3 +1,4 @@
+using EodHistoricalData.Sdk;
 using Shibusa.Data;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,8 +9,8 @@ internal class CalendarIpo
 {
     public CalendarIpo(EodHistoricalData.Sdk.Models.Calendar.Ipo ipo, string? exchange)
     {
-        Symbol = ipo.Code.Split('.').FirstOrDefault() ?? throw new ArgumentException($"Unable to extract symbol from {ipo.Code}");
-        Exchange = exchange ?? "";
+        Symbol = ipo.Code?.Split('.').FirstOrDefault() ?? throw new ArgumentException($"Unable to extract symbol from code: {ipo.Code}");
+        Exchange = exchange ?? Constants.UnknownValue;
         Name = ipo.Name;
         Currency = ipo.Currency;
         StartDate = ipo.StartDate?.ToDateTime(TimeOnly.MinValue);
@@ -19,24 +20,26 @@ internal class CalendarIpo
         PriceTo = ipo.PriceTo ?? 0M;
         OfferPrice = ipo.OfferPrice ?? 0M;
         Shares = Convert.ToInt64(ipo.Shares);
-        DealType = ipo.DealType ?? EodHistoricalData.Sdk.Constants.UnknownValue;
+        DealType = ipo.DealType ?? Constants.UnknownValue;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CalendarIpo(
         string symbol,
         string exchange,
-        string name,
+        string? name,
         string? currency,
         DateTime? startDate,
         DateTime? filingDate,
         DateTime? amendedDate,
-        decimal priceFrom,
-        decimal priceTo,
-        decimal offerPrice,
-        long shares,
-        string dealType,
-        DateTime utcTimestamp)
+        decimal? priceFrom,
+        decimal? priceTo,
+        decimal? offerPrice,
+        int? shares,
+        string? dealType,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
         Exchange = exchange;
@@ -50,7 +53,8 @@ internal class CalendarIpo
         OfferPrice = offerPrice;
         Shares = shares;
         DealType = dealType;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
@@ -61,7 +65,7 @@ internal class CalendarIpo
     public string Exchange { get; }
 
     [ColumnWithKey("name", Order = 3, TypeName = "text", IsPartOfKey = false)]
-    public string Name { get; }
+    public string? Name { get; }
 
     [ColumnWithKey("currency", Order = 4, TypeName = "text", IsPartOfKey = false)]
     public string? Currency { get; }
@@ -76,20 +80,23 @@ internal class CalendarIpo
     public DateTime? AmendedDate { get; }
 
     [ColumnWithKey("price_from", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal PriceFrom { get; }
+    public decimal? PriceFrom { get; }
 
     [ColumnWithKey("price_to", Order = 9, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal PriceTo { get; }
+    public decimal? PriceTo { get; }
 
     [ColumnWithKey("offer_price", Order = 10, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal OfferPrice { get; }
+    public decimal? OfferPrice { get; }
 
     [ColumnWithKey("shares", Order = 11, TypeName = "bigint", IsPartOfKey = false)]
-    public long Shares { get; }
+    public long? Shares { get; }
 
     [ColumnWithKey("deal_type", Order = 12, TypeName = "text", IsPartOfKey = false)]
-    public string DealType { get; }
+    public string? DealType { get; }
 
-    [ColumnWithKey("utc_timestamp", Order = 13, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("created_timestamp", Order = 13, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
+
+    [ColumnWithKey("utc_timestamp", Order = 14, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

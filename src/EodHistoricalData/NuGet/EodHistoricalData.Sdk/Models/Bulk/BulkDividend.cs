@@ -6,14 +6,14 @@
 /// </summary>
 public struct BulkDividend
 {
-    public string Code;
-    public string Exchange;
-    public DateOnly Date;
-    public string Dividend;
-    public string Currency;
+    public string? Code;
+    public string? Exchange;
+    public DateOnly? Date;
+    public string? Dividend;
+    public string? Currency;
     public DateOnly? DeclarationDate;
     public DateOnly? RecordDate;
     public DateOnly? PaymentDate;
     public string? Period;
-    public string UnadjustedValue;
+    public string? UnadjustedValue;
 }

@@ -8,17 +8,17 @@ namespace EodHistoricalData.Sdk.Models.Calendar;
 /// </summary>
 public struct Earnings
 {
-    public string Code;
+    public string? Code;
 
     [JsonPropertyName("report_date")]
-    public DateOnly ReportDate;
+    public DateOnly? ReportDate;
 
-    public DateOnly Date;
+    public DateOnly? Date;
 
     [JsonPropertyName("before_after_market")]
     public string? BeforeAfterMarket;
 
-    public string Currency;
+    public string? Currency;
 
     public decimal? Actual;
 

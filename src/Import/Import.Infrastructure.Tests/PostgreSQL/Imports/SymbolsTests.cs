@@ -1,5 +1,4 @@
 ﻿using EodHistoricalData.Sdk.Models;
-using EodHistoricalData.Sdk.Services;
 using Import.Infrastructure.Tests.Fixtures;
 
 namespace Import.Infrastructure.PostgreSQL.Tests;

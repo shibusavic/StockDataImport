@@ -2,6 +2,7 @@
 using Import.Infrastructure;
 using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Configuration;
+using Import.Infrastructure.Events;
 using Import.Infrastructure.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -52,7 +53,7 @@ public sealed class ServiceFactory
         logsDbContext == null ? throw new Exception($"{nameof(logsDbContext)} is not initialized")
             : importsDbContext == null
             ? throw new Exception($"{nameof(importsDbContext)} is not initialized")
-            : new DataImportService(logsDbContext, importsDbContext, apiKey, maxUsage, logger);
+            : new DataImportService(logsDbContext, importsDbContext, apiKey, maxUsage);
 
     internal DataImportService GetOrCreateDataImportService(ImportConfiguration importConfig)
     {
@@ -64,7 +65,7 @@ public sealed class ServiceFactory
 
             dataImportServices.Add(importConfig,
                     new DataImportService(logsDbContext, importsDbContext, importConfig.ApiKey!,
-                        importConfig.MaxTokenUsage ?? 100_000, logger));
+                        importConfig.MaxTokenUsage ?? 100_000));
         }
 
         return dataImportServices[importConfig];

@@ -1,21 +1,13 @@
 ﻿namespace EodHistoricalData.Sdk.Events;
 
-public class ApiResponseEventArgs : DomainEventArgs
+public class ApiResponseEventArgs : ApiEventArgs
 {
-    public ApiResponseEventArgs(int statusCode, string request, string response, string source) : base(source)
+    public ApiResponseEventArgs(int statusCode, string request, string response, string source,
+        ApiResponseException? apiResponseException = null) : base(source)
     {
         StatusCode = statusCode;
         Request = request;
         Response = response;
-        ApiResponseException = null;
-    }
-
-    public ApiResponseEventArgs(int statusCode, string request,
-        ApiResponseException? apiResponseException, string source) : base(source)
-    {
-        StatusCode = statusCode;
-        Request = request;
-        Response = null;
         ApiResponseException = apiResponseException;
     }
 
@@ -25,7 +17,7 @@ public class ApiResponseEventArgs : DomainEventArgs
 
     public string Request { get; }
 
-    public string? Response { get; }
+    public string Response { get; }
 
     public ApiResponseException? ApiResponseException { get; }
 }

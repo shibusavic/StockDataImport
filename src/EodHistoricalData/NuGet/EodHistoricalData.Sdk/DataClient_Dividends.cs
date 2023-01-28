@@ -33,6 +33,6 @@ public sealed partial class DataClient
     }
 
     private string BuildDividendUri(string symbol,
-    DateOnly? from = null,
-    DateOnly? to = null) => $"{ApiService.DividendUri}{symbol.ToUpper()}?{GetTokenAndFormat()}&{BuildFromAndTo(from, to)}";
+        DateOnly? from = null,
+        DateOnly? to = null) => $"{ApiService.DividendUri}{symbol.ToUpper()}?{GetTokenAndFormat()}&{BuildFromAndTo(from, to)}";
 }

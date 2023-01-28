@@ -13,11 +13,9 @@ public struct FundamentalsCollection
     public SplitsDividends SplitsDividends;
     public AnalystRatings AnalystRatings;
     public Holders Holders;
-    public IDictionary<string, InsiderTransaction> InsiderTransactions;
+    public IDictionary<string, InsiderTransaction>? InsiderTransactions;
     public EsgScores EsgScores;
     public OutstandingShares OutstandingShares;
     public Earnings Earnings;
     public Financials Financials;
-
-    public static FundamentalsCollection Empty => new();
 }

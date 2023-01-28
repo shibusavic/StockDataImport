@@ -13,7 +13,7 @@ public class EtfFundamentalsTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
+        ApiEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
             if (e.ApiResponseException != null)
             {
@@ -33,7 +33,7 @@ public class EtfFundamentalsTests : BaseTest
 
         var actual = await dataClient.GetFundamentalsForSymbolAsync<EtfFundamentalsCollection>(symbol);
 
-        Assert.NotEqual(EtfFundamentalsCollection.Empty, actual);
+        Assert.NotEqual(new EtfFundamentalsCollection(), actual);
         Assert.Equal(symbol, actual.General.Code);
         Assert.True(actual.Technicals.TwoHundredDayMovingAverage.GetValueOrDefault() > 0M);
         Assert.False(string.IsNullOrWhiteSpace(actual.Data.CompanyName));

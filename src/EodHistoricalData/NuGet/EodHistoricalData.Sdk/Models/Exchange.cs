@@ -6,11 +6,11 @@
 /// </summary>
 public struct Exchange
 {
-    public string Name;
     public string Code;
+    public string? Name;
     public string? OperatingMic;
-    public string Country;
-    public string Currency;
+    public string? Country;
+    public string? Currency;
     public string? CountryIso2;
     public string? CountryIso3;
 }

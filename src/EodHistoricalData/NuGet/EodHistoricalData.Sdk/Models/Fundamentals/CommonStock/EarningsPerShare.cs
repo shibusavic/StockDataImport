@@ -5,6 +5,6 @@
 /// </summary>
 public struct EarningsPerShare
 {
-    public DateOnly Date;
-    public decimal EpsActual;
+    public DateOnly? Date;
+    public decimal? EpsActual;
 }

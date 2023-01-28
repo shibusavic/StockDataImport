@@ -10,21 +10,24 @@ internal class CompanyDividendsByYear
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.CountForYear dividendCount)
     {
         CompanyId = companyId;
-        Year = dividendCount.Year;
+        Year = dividendCount.Year ?? throw new ArgumentException($"{nameof(dividendCount)} has no {nameof(Year)}");
         Count = dividendCount.Count;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyDividendsByYear(
         Guid companyId,
         int year,
-        int count,
-        DateTime utcTimestamp)
+        int? count,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
         Year = year;
         Count = count;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
@@ -35,8 +38,11 @@ internal class CompanyDividendsByYear
     public int Year { get; }
 
     [ColumnWithKey("count", Order = 3, TypeName = "integer", IsPartOfKey = false)]
-    public int Count { get; }
+    public int? Count { get; }
 
-    [ColumnWithKey("utc_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("created_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
+
+    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

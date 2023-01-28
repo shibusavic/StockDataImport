@@ -8,10 +8,10 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.CommonStock
     public struct CashFlow
     {
         [JsonPropertyName("currency_symbol")]
-        public string CurrencySymbol;
+        public string? CurrencySymbol;
 
-        public IDictionary<string, CashFlowItem> Quarterly;
+        public IDictionary<string, CashFlowItem>? Quarterly;
 
-        public IDictionary<string, CashFlowItem> Yearly;
+        public IDictionary<string, CashFlowItem>? Yearly;
     }
 }

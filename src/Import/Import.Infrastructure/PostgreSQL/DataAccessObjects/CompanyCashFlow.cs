@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Shibusa.Data;
 
 namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
@@ -11,7 +12,6 @@ internal class CompanyCashFlow
         EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.CashFlowItem cashFlowItem)
     {
         CompanyId = companyId;
-        DateCaptured = DateTime.UtcNow;
         Type = type;
         Date = cashFlowItem.Date.GetValueOrDefault().ToDateTime(TimeOnly.MinValue);
         FilingDate = cashFlowItem.FilingDate.GetValueOrDefault().ToDateTime(TimeOnly.MinValue);
@@ -44,16 +44,17 @@ internal class CompanyCashFlow
         ChangeInWorkingCapital = cashFlowItem.ChangeInWorkingCapital;
         OtherNonCashItems = cashFlowItem.OtherNonCashItems;
         FreeCashFlow = cashFlowItem.FreeCashFlow;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
+    [JsonConstructor]
     public CompanyCashFlow(
         Guid companyId,
-        DateTime dateCaptured,
         string type,
         DateTime date,
-        DateTime filingDate,
-        string currencySymbol,
+        DateTime? filingDate,
+        string? currencySymbol,
         decimal? investments,
         decimal? changeToLiabilities,
         decimal? totalCashflowsFromInvestingActivities,
@@ -82,10 +83,10 @@ internal class CompanyCashFlow
         decimal? changeInWorkingCapital,
         decimal? otherNonCashItems,
         decimal? freeCashFlow,
-        DateTime utcTimestamp)
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
-        DateCaptured = dateCaptured;
         Type = type;
         Date = date;
         FilingDate = filingDate;
@@ -118,112 +119,113 @@ internal class CompanyCashFlow
         ChangeInWorkingCapital = changeInWorkingCapital;
         OtherNonCashItems = otherNonCashItems;
         FreeCashFlow = freeCashFlow;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid CompanyId { get;  }
+    public Guid CompanyId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = false)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("type", Order = 2, TypeName = "text", IsPartOfKey = true)]
+    public string Type { get; }
 
-    [ColumnWithKey("type", Order = 3, TypeName = "text", IsPartOfKey = true)]
-    public string Type { get;  }
+    [ColumnWithKey("date", Order = 3, TypeName = "date", IsPartOfKey = true)]
+    public DateTime Date { get; }
 
-    [ColumnWithKey("date", Order = 4, TypeName = "date", IsPartOfKey = true)]
-    public DateTime Date { get;  }
+    [ColumnWithKey("filing_date", Order = 4, TypeName = "date", IsPartOfKey = false)]
+    public DateTime? FilingDate { get; }
 
-    [ColumnWithKey("filing_date", Order = 5, TypeName = "date", IsPartOfKey = false)]
-    public DateTime FilingDate { get;  }
+    [ColumnWithKey("currency_symbol", Order = 5, TypeName = "text", IsPartOfKey = false)]
+    public string? CurrencySymbol { get; }
 
-    [ColumnWithKey("currency_symbol", Order = 6, TypeName = "text", IsPartOfKey = false)]
-    public string CurrencySymbol { get;  }
+    [ColumnWithKey("investments", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? Investments { get; }
 
-    [ColumnWithKey("investments", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? Investments { get;  }
+    [ColumnWithKey("change_to_liabilities", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ChangeToLiabilities { get; }
 
-    [ColumnWithKey("change_to_liabilities", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ChangeToLiabilities { get;  }
+    [ColumnWithKey("total_cashflows_from_investing_activities", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalCashflowsFromInvestingActivities { get; }
 
-    [ColumnWithKey("total_cashflows_from_investing_activities", Order = 9, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalCashflowsFromInvestingActivities { get;  }
+    [ColumnWithKey("net_borrowings", Order = 9, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NetBorrowings { get; }
 
-    [ColumnWithKey("net_borrowings", Order = 10, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NetBorrowings { get;  }
+    [ColumnWithKey("total_cash_from_financing_activities", Order = 10, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalCashFromFinancingActivities { get; }
 
-    [ColumnWithKey("total_cash_from_financing_activities", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalCashFromFinancingActivities { get;  }
+    [ColumnWithKey("change_to_operating_activities", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ChangeToOperatingActivities { get; }
 
-    [ColumnWithKey("change_to_operating_activities", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ChangeToOperatingActivities { get;  }
+    [ColumnWithKey("net_income", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? NetIncome { get; }
 
-    [ColumnWithKey("net_income", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? NetIncome { get;  }
+    [ColumnWithKey("change_in_cash", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ChangeInCash { get; }
 
-    [ColumnWithKey("change_in_cash", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ChangeInCash { get;  }
+    [ColumnWithKey("begin_period_cash_flow", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? BeginPeriodCashFlow { get; }
 
-    [ColumnWithKey("begin_period_cash_flow", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? BeginPeriodCashFlow { get;  }
+    [ColumnWithKey("end_period_cash_flow", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? EndPeriodCashFlow { get; }
 
-    [ColumnWithKey("end_period_cash_flow", Order = 16, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? EndPeriodCashFlow { get;  }
+    [ColumnWithKey("total_cash_from_operating_activities", Order = 16, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? TotalCashFromOperatingActivities { get; }
 
-    [ColumnWithKey("total_cash_from_operating_activities", Order = 17, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? TotalCashFromOperatingActivities { get;  }
+    [ColumnWithKey("issuance_of_capital_stock", Order = 17, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? IssuanceOfCapitalStock { get; }
 
-    [ColumnWithKey("issuance_of_capital_stock", Order = 18, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? IssuanceOfCapitalStock { get;  }
+    [ColumnWithKey("depreciation", Order = 18, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? Depreciation { get; }
 
-    [ColumnWithKey("depreciation", Order = 19, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? Depreciation { get;  }
+    [ColumnWithKey("other_cashflows_from_investing_activities", Order = 19, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? OtherCashflowsFromInvestingActivities { get; }
 
-    [ColumnWithKey("other_cashflows_from_investing_activities", Order = 20, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? OtherCashflowsFromInvestingActivities { get;  }
+    [ColumnWithKey("dividends_paid", Order = 20, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? DividendsPaid { get; }
 
-    [ColumnWithKey("dividends_paid", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? DividendsPaid { get;  }
+    [ColumnWithKey("change_to_inventory", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ChangeToInventory { get; }
 
-    [ColumnWithKey("change_to_inventory", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ChangeToInventory { get;  }
+    [ColumnWithKey("change_to_account_receivables", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ChangeToAccountReceivables { get; }
 
-    [ColumnWithKey("change_to_account_receivables", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ChangeToAccountReceivables { get;  }
+    [ColumnWithKey("sale_purchase_of_stock", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? SalePurchaseOfStock { get; }
 
-    [ColumnWithKey("sale_purchase_of_stock", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? SalePurchaseOfStock { get;  }
+    [ColumnWithKey("other_cashflows_from_financing_activities", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? OtherCashflowsFromFinancingActivities { get; }
 
-    [ColumnWithKey("other_cashflows_from_financing_activities", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? OtherCashflowsFromFinancingActivities { get;  }
+    [ColumnWithKey("change_to_netincome", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ChangeToNetincome { get; }
 
-    [ColumnWithKey("change_to_netincome", Order = 26, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ChangeToNetincome { get;  }
+    [ColumnWithKey("capital_expenditures", Order = 26, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CapitalExpenditures { get; }
 
-    [ColumnWithKey("capital_expenditures", Order = 27, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CapitalExpenditures { get;  }
+    [ColumnWithKey("change_receivables", Order = 27, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ChangeReceivables { get; }
 
-    [ColumnWithKey("change_receivables", Order = 28, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ChangeReceivables { get;  }
+    [ColumnWithKey("cash_flows_other_operating", Order = 28, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CashFlowsOtherOperating { get; }
 
-    [ColumnWithKey("cash_flows_other_operating", Order = 29, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CashFlowsOtherOperating { get;  }
+    [ColumnWithKey("exchange_rate_changes", Order = 29, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ExchangeRateChanges { get; }
 
-    [ColumnWithKey("exchange_rate_changes", Order = 30, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ExchangeRateChanges { get;  }
+    [ColumnWithKey("cash_and_cash_equivalents_changes", Order = 30, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? CashAndCashEquivalentsChanges { get; }
 
-    [ColumnWithKey("cash_and_cash_equivalents_changes", Order = 31, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? CashAndCashEquivalentsChanges { get;  }
+    [ColumnWithKey("change_in_working_capital", Order = 31, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? ChangeInWorkingCapital { get; }
 
-    [ColumnWithKey("change_in_working_capital", Order = 32, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? ChangeInWorkingCapital { get;  }
+    [ColumnWithKey("other_non_cash_items", Order = 32, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? OtherNonCashItems { get; }
 
-    [ColumnWithKey("other_non_cash_items", Order = 33, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? OtherNonCashItems { get;  }
+    [ColumnWithKey("free_cash_flow", Order = 33, TypeName = "numeric", IsPartOfKey = false)]
+    public decimal? FreeCashFlow { get; }
 
-    [ColumnWithKey("free_cash_flow", Order = 34, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal? FreeCashFlow { get;  }
+    [ColumnWithKey("created_timestamp", Order = 34, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 35, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

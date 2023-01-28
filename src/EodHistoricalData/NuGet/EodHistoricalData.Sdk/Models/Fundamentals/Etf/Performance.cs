@@ -8,21 +8,29 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 public struct Performance
 {
     [JsonPropertyName("1y_volatility")]
-    public string OneYearVolatility;
+    public string? OneYearVolatility;
+
     [JsonPropertyName("3y_volatility")]
-    public string ThreeYearVolatility;
+    public string? ThreeYearVolatility;
+
     [JsonPropertyName("3y_expreturn")]
-    public string ThreeYearExpectedReturn;
+    public string? ThreeYearExpectedReturn;
+    
     [JsonPropertyName("3y_sharpratio")]
-    public string ThreeYearSharpRatio;
+    public string? ThreeYearSharpRatio;
+    
     [JsonPropertyName("returns_ytd")]
-    public string ReturnsYearToDate;
+    public string? ReturnsYearToDate;
+    
     [JsonPropertyName("returns_1y")]
-    public string ReturnsOneYear;
+    public string? ReturnsOneYear;
+    
     [JsonPropertyName("returns_3y")]
-    public string ReturnsThreeYear;
+    public string? ReturnsThreeYear;
+    
     [JsonPropertyName("returns_5y")]
-    public string ReturnsFiveYear;
+    public string? ReturnsFiveYear;
+    
     [JsonPropertyName("returns_10y")]
-    public string ReturnsTenYear;
+    public string? ReturnsTenYear;
 }

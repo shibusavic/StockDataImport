@@ -5,6 +5,6 @@
 /// </summary>
 public struct CountForYear
 {
-    public int Year;
-    public int Count;
+    public int? Year;
+    public int? Count;
 }

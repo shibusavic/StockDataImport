@@ -14,7 +14,7 @@ public struct PriceAction
     public decimal Low;
     public decimal Close;
     [JsonPropertyName("adjusted_close")]
-    public decimal AdjustedClose;
+    public decimal? AdjustedClose;
     public double Volume;
 
     /// <summary>

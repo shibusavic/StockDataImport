@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Import.Infrastructure.PostgreSQL.Tests;
 
-internal class ImportsDbContext : Infrastructure.PostgreSQL.ImportsDbContext
+internal class ImportsDbContext : PostgreSQL.ImportsDbContext
 {
     public ImportsDbContext(string connectionString, ILogger? logger = null) : base(connectionString, logger)
     {

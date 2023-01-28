@@ -136,13 +136,21 @@ public class NullableDateTimeJsonConverter : JsonConverter<DateTime?>
     {
         string? dateString = reader.GetString();
 
-        if (dateString == null)
+        if (dateString == null || dateString == "0000-00-00 00:00:00")
         {
             return null;
         }
         else
         {
-            return DateTime.ParseExact(dateString, Format, CultureInfo.InvariantCulture);
+            try
+            {
+                return DateTime.ParseExact(dateString, Format, CultureInfo.InvariantCulture);
+            }
+            catch (Exception exc)
+            {
+                string x = exc.ToString();
+            }
+            return null;
         }
     }
 

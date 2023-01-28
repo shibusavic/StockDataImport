@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
+using System.Collections.ObjectModel;
 
 namespace Import.Infrastructure.PostgreSQL;
 
@@ -17,7 +19,18 @@ internal partial class ImportsDbContext
         var address = company.General.AddressData == null ? null :
             new DataAccessObjects.CompanyAddress(companyId, company.General.AddressData.GetValueOrDefault());
 
-        var listings = company.General.Listings?.Values.Select(v => new DataAccessObjects.CompanyListing(companyId, v)).ToArray();
+        Collection<DataAccessObjects.CompanyListing> listings = new();
+
+        if (company.General.Listings != null)
+        {
+            foreach (var lst in company.General.Listings.Values)
+            {
+                if (!default(Listing).Equals(lst))
+                {
+                    listings.Add(new DataAccessObjects.CompanyListing(companyId, lst));
+                }
+            }
+        }
 
         var officers = company.General.Officers?.Values
             .Select(v => new DataAccessObjects.CompanyOfficer(companyId, v)).ToArray();
@@ -97,7 +110,7 @@ internal partial class ImportsDbContext
         {
             Task.Run(() => SaveFundamentalDataAsync(companyGeneral,cancellationToken), cancellationToken),
             Task.Run(() => SaveFundamentalDataAsync(address,cancellationToken), cancellationToken),
-            Task.Run(() => SaveFundamentalDataAsync(listings, cancellationToken), cancellationToken),
+            Task.Run(() => SaveFundamentalDataAsync(listings.ToArray(), cancellationToken), cancellationToken),
             Task.Run(() => SaveFundamentalDataAsync(officers, cancellationToken), cancellationToken),
             Task.Run(() => SaveFundamentalDataAsync(highlights, cancellationToken), cancellationToken),
             Task.Run(() => SaveFundamentalDataAsync(valuation, cancellationToken), cancellationToken),
@@ -148,61 +161,29 @@ WHERE symbol = @Symbol AND exchange = @Exchange AND type = @Type AND name = @Nam
         }
     }
 
-    private async Task SaveFundamentalDataAsync<T>(T obj, CancellationToken cancellationToken = default)
+    private Task SaveFundamentalDataAsync<T>(T obj, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (obj == null) { return; }
+        if (obj == null) { return Task.CompletedTask; }
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(T));
 
         if (sql == null) { throw new Exception($"Could not create upsert for {obj!.GetType().Name}"); }
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using var transaction = connection.BeginTransaction();
-
-        try
-        {
-            await connection.ExecuteAsync(sql, obj, transaction);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return ExecuteAsync(sql, obj, null, cancellationToken);
     }
 
-    private async Task SaveFundamentalDataAsync<T>(T[]? obj, CancellationToken cancellationToken = default)
+    private Task SaveFundamentalDataAsync<T>(T[]? obj, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if ((obj?.Length ?? 0) == 0) return;
+        if ((obj?.Length ?? 0) == 0) return Task.CompletedTask;
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(T));
 
         if (sql == null) { throw new Exception($"Could not create upsert for {obj!.GetType()?.GetElementType()?.Name}"); }
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
-        using var transaction = connection.BeginTransaction();
-
-        try
-        {
-            await connection.ExecuteAsync(sql, obj, transaction);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-        finally
-        {
-            await connection.CloseAsync();
-        }
+        return ExecuteAsync(sql, obj, null, cancellationToken);
     }
 }

@@ -13,7 +13,7 @@ public class CalendarTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
+        ApiEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
             if (e.ApiResponseException != null)
             {
@@ -21,7 +21,7 @@ public class CalendarTests : BaseTest
             }
         };
 
-        Assert.Equal(EarningsCollection.Empty, await dataClient.GetEarningsForSymbolsAsync("AAPL", DateOnly.MinValue));
+        Assert.Equal(new EarningsCollection(), await dataClient.GetEarningsForSymbolsAsync("AAPL", DateOnly.MinValue));
         Assert.Single(excs);
     }
 
@@ -30,7 +30,7 @@ public class CalendarTests : BaseTest
     {
         var dataClient = new DataClient(apiKey);
 
-        Assert.Equal(EarningsCollection.Empty, await dataClient.GetEarningsForSymbolsAsync(Guid.NewGuid().ToString()[..4], DateOnly.MinValue));
+        Assert.Equal(new EarningsCollection(), await dataClient.GetEarningsForSymbolsAsync(Guid.NewGuid().ToString()[..4], DateOnly.MinValue));
     }
 
     [Fact] //[Fact(Skip = "Expensive")]
@@ -41,6 +41,7 @@ public class CalendarTests : BaseTest
 
         Assert.Equal("MSFT", earnings.Symbols);
         Assert.Equal("Earnings", earnings.Type);
+        Assert.NotNull(earnings.Earnings);
         Assert.NotEmpty(earnings.Earnings);
     }
 
@@ -51,7 +52,7 @@ public class CalendarTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
+        ApiEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
             if (e.ApiResponseException != null)
             {
@@ -59,7 +60,7 @@ public class CalendarTests : BaseTest
             }
         };
 
-        Assert.Equal(TrendCollection.Empty, await dataClient.GetTrendsForSymbolsAsync("AAPL"));
+        Assert.Equal(new TrendCollection(), await dataClient.GetTrendsForSymbolsAsync("AAPL"));
         Assert.True(excs.Count > 0);
     }
 
@@ -68,7 +69,7 @@ public class CalendarTests : BaseTest
     {
         var dataClient = new DataClient(apiKey);
 
-        Assert.Equal(TrendCollection.Empty, await dataClient.GetTrendsForSymbolsAsync(Guid.NewGuid().ToString()[..4]));
+        Assert.Equal(new TrendCollection(), await dataClient.GetTrendsForSymbolsAsync(Guid.NewGuid().ToString()[..4]));
     }
 
     [Fact] //[Fact(Skip = "Expensive")]
@@ -79,6 +80,7 @@ public class CalendarTests : BaseTest
 
         Assert.Equal("MSFT", trends.Symbols);
         Assert.Equal("Trends", trends.Type);
+        Assert.NotNull(trends.Trends);
         Assert.NotEmpty(trends.Trends);
     }
 
@@ -89,7 +91,7 @@ public class CalendarTests : BaseTest
 
         List<ApiResponseException> excs = new();
 
-        DomainEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
+        ApiEventPublisher.RaiseApiResponseEventHandler += (sender, e) =>
         {
             if (e.ApiResponseException != null)
             {
@@ -97,7 +99,7 @@ public class CalendarTests : BaseTest
             }
         };
 
-        Assert.Equal(IpoCollection.Empty, await dataClient.GetIposAsync());
+        Assert.Equal(new IpoCollection(), await dataClient.GetIposAsync());
         Assert.Single(excs);
     }
 
@@ -107,6 +109,7 @@ public class CalendarTests : BaseTest
         var dataClient = new DataClient(apiKey);
         var ipos = await dataClient.GetIposAsync(new DateOnly(2015, 1, 1));
 
+        Assert.NotNull(ipos.Ipos);
         Assert.NotEmpty(ipos.Ipos);
     }
 }

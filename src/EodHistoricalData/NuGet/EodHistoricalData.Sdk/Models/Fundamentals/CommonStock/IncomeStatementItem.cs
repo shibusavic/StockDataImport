@@ -13,7 +13,7 @@ public struct IncomeStatementItem
     public DateOnly? FilingDate;
 
     [JsonPropertyName("currency_symbol")]
-    public string CurrencySymbol;
+    public string? CurrencySymbol;
 
     public decimal? ResearchDevelopment;
 

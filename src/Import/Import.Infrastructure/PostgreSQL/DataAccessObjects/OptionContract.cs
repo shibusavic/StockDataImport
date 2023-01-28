@@ -11,13 +11,15 @@ internal class OptionContract
     {
         Symbol = symbol;
         Exchange = exchange;
-        ExpirationDate = contract.ExpirationDate.ToDateTime(TimeOnly.MinValue);
-        OptionType = contract.Type;
+        ExpirationDate = contract.ExpirationDate?.ToDateTime(TimeOnly.MinValue) ??
+            throw new ArgumentException($"{nameof(contract)} has no {nameof(ExpirationDate)}");
+        OptionType = contract.Type ??
+            throw new ArgumentException($"{nameof(contract)} has no {nameof(OptionType)}");
         ContractName = contract.ContractName;
         ContractSize = contract.ContractSize;
         ContractPeriod = contract.ContractPeriod;
         Currency = contract.Currency;
-        InTheMoney = contract.InTheMoney.Equals("true", StringComparison.InvariantCultureIgnoreCase);
+        InTheMoney = contract.InTheMoney?.Equals("true", StringComparison.InvariantCultureIgnoreCase);
         LastTradeDate = contract.LastTradeDateTime;
         Strike = contract.Strike;
         LastPrice = contract.LastPrice ?? 0M;
@@ -37,6 +39,7 @@ internal class OptionContract
         IntrinsicValue = contract.IntrinsicValue;
         TimeValue = contract.TimeValue;
         UpdatedAt = contract.UpdatedAt;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -45,31 +48,32 @@ internal class OptionContract
         string exchange,
         DateTime expirationDate,
         string optionType,
-        string contractName,
-        string contractSize,
-        string contractPeriod,
-        string currency,
-        bool inTheMoney,
-        DateTime lastTradeDate,
-        decimal strike,
-        decimal lastPrice,
-        decimal bid,
-        decimal ask,
-        decimal change,
-        double changePercent,
-        int volume,
-        int openInterest,
-        double impliedVolatility,
-        double delta,
-        double gamma,
-        double theta,
-        double vega,
-        double rho,
-        decimal theoretical,
-        decimal intrinsicValue,
-        decimal timeValue,
-        DateTime updatedAt,
-        DateTime utcTimestamp)
+        string? contractName,
+        string? contractSize,
+        string? contractPeriod,
+        string? currency,
+        bool? inTheMoney,
+        DateTime? lastTradeDate,
+        decimal? strike,
+        decimal? lastPrice,
+        decimal? bid,
+        decimal? ask,
+        decimal? change,
+        double? changePercent,
+        int? volume,
+        int? openInterest,
+        double? impliedVolatility,
+        double? delta,
+        double? gamma,
+        double? theta,
+        double? vega,
+        double? rho,
+        decimal? theoretical,
+        decimal? intrinsicValue,
+        decimal? timeValue,
+        DateTime? updatedAt,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
         Exchange = exchange;
@@ -99,7 +103,8 @@ internal class OptionContract
         IntrinsicValue = intrinsicValue;
         TimeValue = timeValue;
         UpdatedAt = updatedAt;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
@@ -116,77 +121,80 @@ internal class OptionContract
     public string OptionType { get; }
 
     [ColumnWithKey("contract_name", Order = 5, TypeName = "text", IsPartOfKey = false)]
-    public string ContractName { get; }
+    public string? ContractName { get; }
 
     [ColumnWithKey("contract_size", Order = 6, TypeName = "text", IsPartOfKey = false)]
-    public string ContractSize { get; }
+    public string? ContractSize { get; }
 
     [ColumnWithKey("contract_period", Order = 7, TypeName = "text", IsPartOfKey = false)]
-    public string ContractPeriod { get; }
+    public string? ContractPeriod { get; }
 
     [ColumnWithKey("currency", Order = 8, TypeName = "text", IsPartOfKey = false)]
-    public string Currency { get; }
+    public string? Currency { get; }
 
     [ColumnWithKey("in_the_money", Order = 9, TypeName = "boolean", IsPartOfKey = false)]
-    public bool InTheMoney { get; }
+    public bool? InTheMoney { get; }
 
     [ColumnWithKey("last_trade_date", Order = 10, TypeName = "date", IsPartOfKey = false)]
-    public DateTime LastTradeDate { get; }
+    public DateTime? LastTradeDate { get; }
 
     [ColumnWithKey("strike", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal Strike { get; }
+    public decimal? Strike { get; }
 
     [ColumnWithKey("last_price", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal LastPrice { get; }
+    public decimal? LastPrice { get; }
 
     [ColumnWithKey("bid", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal Bid { get; }
+    public decimal? Bid { get; }
 
     [ColumnWithKey("ask", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal Ask { get; }
+    public decimal? Ask { get; }
 
     [ColumnWithKey("change", Order = 15, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal Change { get; }
+    public decimal? Change { get; }
 
     [ColumnWithKey("change_percent", Order = 16, TypeName = "double precision", IsPartOfKey = false)]
-    public double ChangePercent { get; }
+    public double? ChangePercent { get; }
 
     [ColumnWithKey("volume", Order = 17, TypeName = "integer", IsPartOfKey = false)]
-    public int Volume { get; }
+    public int? Volume { get; }
 
     [ColumnWithKey("open_interest", Order = 18, TypeName = "integer", IsPartOfKey = false)]
-    public int OpenInterest { get; }
+    public int? OpenInterest { get; }
 
     [ColumnWithKey("implied_volatility", Order = 19, TypeName = "double precision", IsPartOfKey = false)]
-    public double ImpliedVolatility { get; }
+    public double? ImpliedVolatility { get; }
 
     [ColumnWithKey("delta", Order = 20, TypeName = "double precision", IsPartOfKey = false)]
-    public double Delta { get; }
+    public double? Delta { get; }
 
     [ColumnWithKey("gamma", Order = 21, TypeName = "double precision", IsPartOfKey = false)]
-    public double Gamma { get; }
+    public double? Gamma { get; }
 
     [ColumnWithKey("theta", Order = 22, TypeName = "double precision", IsPartOfKey = false)]
-    public double Theta { get; }
+    public double? Theta { get; }
 
     [ColumnWithKey("vega", Order = 23, TypeName = "double precision", IsPartOfKey = false)]
-    public double Vega { get; }
+    public double? Vega { get; }
 
     [ColumnWithKey("rho", Order = 24, TypeName = "double precision", IsPartOfKey = false)]
-    public double Rho { get; }
+    public double? Rho { get; }
 
     [ColumnWithKey("theoretical", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal Theoretical { get; }
+    public decimal? Theoretical { get; }
 
     [ColumnWithKey("intrinsic_value", Order = 26, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal IntrinsicValue { get; }
+    public decimal? IntrinsicValue { get; }
 
     [ColumnWithKey("time_value", Order = 27, TypeName = "numeric", IsPartOfKey = false)]
-    public decimal TimeValue { get; }
+    public decimal? TimeValue { get; }
 
     [ColumnWithKey("updated_at", Order = 28, TypeName = "date", IsPartOfKey = false)]
-    public DateTime UpdatedAt { get; }
+    public DateTime? UpdatedAt { get; }
 
-    [ColumnWithKey("utc_timestamp", Order = 29, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("created_timestamp", Order = 29, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
+
+    [ColumnWithKey("utc_timestamp", Order = 30, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

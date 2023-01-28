@@ -5,6 +5,6 @@
 /// </summary>
 public struct GeneralInfo
 {
-    public string Code;
-    public string Type;
+    public string? Code;
+    public string? Type;
 }

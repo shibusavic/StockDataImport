@@ -11,45 +11,45 @@ internal class EtfSectorWeight
         EodHistoricalData.Sdk.Models.Fundamentals.Etf.EquityWeightItem sectorWeight)
     {
         EtfId = etfId;
-        DateCaptured = DateTime.UtcNow;
         Sector = sector;
         EquityPercentage = Convert.ToDouble(sectorWeight.EquityPercentage);
         RelativeToCategory = Convert.ToDouble(sectorWeight.RelativeToCategory);
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public EtfSectorWeight(
         Guid etfId,
-        DateTime dateCaptured,
-        string sector,
-        double equityPercentage,
-        double relativeToCategory,
-        DateTime utcTimestamp)
+        string? sector,
+        double? equityPercentage,
+        double? relativeToCategory,
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
-        DateCaptured = dateCaptured;
         Sector = sector;
         EquityPercentage = equityPercentage;
         RelativeToCategory = relativeToCategory;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
     [ColumnWithKey("etf_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
-    public Guid EtfId { get;  }
+    public Guid EtfId { get; }
 
-    [ColumnWithKey("date_captured", Order = 2, TypeName = "date", IsPartOfKey = true)]
-    public DateTime DateCaptured { get;  }
+    [ColumnWithKey("sector", Order = 2, TypeName = "text", IsPartOfKey = false)]
+    public string? Sector { get; }
 
-    [ColumnWithKey("sector", Order = 3, TypeName = "text", IsPartOfKey = false)]
-    public string Sector { get;  }
+    [ColumnWithKey("equity_percentage", Order = 3, TypeName = "double precision", IsPartOfKey = false)]
+    public double? EquityPercentage { get; }
 
-    [ColumnWithKey("equity_percentage", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
-    public double EquityPercentage { get;  }
+    [ColumnWithKey("relative_to_category", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
+    public double? RelativeToCategory { get; }
 
-    [ColumnWithKey("relative_to_category", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
-    public double RelativeToCategory { get;  }
+    [ColumnWithKey("created_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = true)]
+    public DateTime CreatedTimestamp { get; }
 
     [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime UtcTimestamp { get;  }
+    public DateTime UtcTimestamp { get; }
 }

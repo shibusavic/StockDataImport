@@ -5,6 +5,6 @@
 /// </summary>
 public struct ActivityInvolvement
 {
-    public string Activity;
-    public bool Involvement;
+    public string? Activity;
+    public bool? Involvement;
 }

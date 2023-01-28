@@ -16,5 +16,5 @@ public struct EsgScores
     public double? GovernanceScore;
     public int? GovernanceScorePercentile;
     public int? ControversyLevel;
-    public IDictionary<string, ActivityInvolvement> ActivitiesInvolvement;
+    public IDictionary<string, ActivityInvolvement>? ActivitiesInvolvement;
 }

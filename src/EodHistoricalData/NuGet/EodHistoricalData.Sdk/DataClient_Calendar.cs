@@ -24,7 +24,7 @@ public sealed partial class DataClient
 
         string? json = await GetEarningsForSymbolsStringAsync(symbols, from, to, cancellationToken);
 
-        return string.IsNullOrWhiteSpace(json) ? EarningsCollection.Empty
+        return string.IsNullOrWhiteSpace(json) ? new EarningsCollection()
             : JsonSerializer.Deserialize<EarningsCollection>(json, SerializerOptions);
     }
 
@@ -42,7 +42,7 @@ public sealed partial class DataClient
 
         string? json = await GetTrendsForSymbolsStringAsync(symbols, cancellationToken);
 
-        if (string.IsNullOrWhiteSpace(json)) { return TrendCollection.Empty; }
+        if (string.IsNullOrWhiteSpace(json)) { return new TrendCollection(); }
 
         var dao = JsonSerializer.Deserialize<TrendCollectionDao>(json, SerializerOptions);
 
@@ -100,7 +100,7 @@ public sealed partial class DataClient
 
         string? json = await GetIposStringAsync(from, to, cancellationToken);
 
-        return string.IsNullOrWhiteSpace(json) ? IpoCollection.Empty
+        return string.IsNullOrWhiteSpace(json) ? new IpoCollection()
             : JsonSerializer.Deserialize<IpoCollection>(json, SerializerOptions);
     }
 

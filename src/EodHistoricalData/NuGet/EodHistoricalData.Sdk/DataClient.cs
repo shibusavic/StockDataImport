@@ -1,7 +1,6 @@
 ﻿using EodHistoricalData.Sdk.Events;
 using EodHistoricalData.Sdk.Models;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 using System.Text.Json;
 
 namespace EodHistoricalData.Sdk;
@@ -11,7 +10,6 @@ namespace EodHistoricalData.Sdk;
 /// </summary>
 public sealed partial class DataClient
 {
-    private readonly ILogger? logger;
     private readonly string apiKey;
     private static readonly HttpClient httpClient;
     private static readonly DateOnly DateOnlyMinValue = new(1900, 1, 1);
@@ -26,11 +24,9 @@ public sealed partial class DataClient
     /// Creates a new instance of <see cref="DataClient"/>.
     /// </summary>
     /// <param name="apiKey">The API key to be used on all requests.</param>
-    /// <param name="logger">An <see cref="ILogger"/> instance.</param>
-    public DataClient(string apiKey, ILogger? logger = null)
+    public DataClient(string apiKey)
     {
         this.apiKey = apiKey;
-        this.logger = logger;
     }
 
     /// <summary>
@@ -74,17 +70,17 @@ public sealed partial class DataClient
         HttpResponseMessage response = await httpClient.GetAsync(uri, cancellationToken);
         ApiService.AddCallToUsage(uri);
 
+        string stringResponse = await response.Content.ReadAsStringAsync(cancellationToken);
+
         if (response.IsSuccessStatusCode)
         {
-            string stringResponse = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            DomainEventPublisher.RaiseApiResponseEvent(this, (int)response.StatusCode, uri, stringResponse, source);
+            ApiEventPublisher.RaiseApiResponseEvent(this, (int)response.StatusCode, uri, stringResponse, source);
 
             return stringResponse;
         }
 
-        DomainEventPublisher.RaiseApiResponseEvent(this, (int)response.StatusCode, uri,
-            new ApiResponseException(uri, response, source), source);
+        ApiEventPublisher.RaiseApiResponseEvent(this, (int)response.StatusCode, uri, stringResponse, source,
+            new ApiResponseException(uri, response, source));
 
         return null;
     }

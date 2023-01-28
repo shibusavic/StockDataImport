@@ -7,47 +7,72 @@ namespace EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 /// </summary>
 public struct EtfData
 {
-    public string Isin;
+    public string? Isin;
+
     [JsonPropertyName("company_name")]
-    public string CompanyName;
+    public string? CompanyName;
+    
     [JsonPropertyName("etf_url")]
-    public string Url;
-    public string Domicile;
+    public string? Url;
+    
+    public string? Domicile;
+    
     [JsonPropertyName("index_name")]
     public string? IndexName;
+    
     public double? Yield;
+    
     [JsonPropertyName("dividend_paying_frequency")]
-    public string DividendPayingFrequency;
+    public string? DividendPayingFrequency;
+    
     [JsonPropertyName("inception_date")]
-    public DateOnly InceptionDate;
+    public DateOnly? InceptionDate;
+    
     [JsonPropertyName("max_annual_mgmt_charge")]
-    public string MaxAnnualManagementCharge;
+    public string? MaxAnnualManagementCharge;
+    
     [JsonPropertyName("ongoing_charge")]
-    public string OngoingCharge;
+    public string? OngoingCharge;
+    
     [JsonPropertyName("date_ongoing_charge")]
-    public DateOnly DateOngoingCharge;
-    public string NetExpenseRatio;
-    public string AnnualHoldingsTurnover;
-    public string TotalAssets;
+    public DateOnly? DateOngoingCharge;
+    
+    public string? NetExpenseRatio;
+    
+    public string? AnnualHoldingsTurnover;
+    
+    public string? TotalAssets;
+    
     [JsonPropertyName("average_mkt_cap_mil")]
-    public string AverageMarketCapitalizationMillions;
+    public string? AverageMarketCapitalizationMillions;
+    
     [JsonPropertyName("market_capitalisation")]
     public MarketCapitalization MarketCapitalization;
+    
     [JsonPropertyName("asset_allocation")]
-    public IDictionary<string, AssetAllocationItem> AssetAllocations;
+    public IDictionary<string, AssetAllocationItem>? AssetAllocations;
+    
     [JsonPropertyName("world_regions")]
-    public IDictionary<string, EquityWeightItem> WorldRegions;
+    public IDictionary<string, EquityWeightItem>? WorldRegions;
+    
     [JsonPropertyName("sector_weights")]
-    public IDictionary<string, EquityWeightItem> SectorWeights;
+    public IDictionary<string, EquityWeightItem>? SectorWeights;
+    
     [JsonPropertyName("fixed_income")]
-    public IDictionary<string, FundWeightItem> FixedIncome;
+    public IDictionary<string, FundWeightItem>? FixedIncome;
+    
     [JsonPropertyName("holdings_count")]
-    public int HoldingsCount;
+    public int? HoldingsCount;
+    
     [JsonPropertyName("top_10_holdings")]
-    public IDictionary<string, Holding> TopTenHoldings;
-    public IDictionary<string, Holding> Holdings;
+    public IDictionary<string, Holding>? TopTenHoldings;
+    
+    public IDictionary<string, Holding>? Holdings;
+    
     [JsonPropertyName("valuations_growth")]
-    public IDictionary<string, Valuation> ValuationsGrowth;
+    public IDictionary<string, Valuation>? ValuationsGrowth;
+    
     public MorningStar MorningStar;
+    
     public Performance Performance;
 }

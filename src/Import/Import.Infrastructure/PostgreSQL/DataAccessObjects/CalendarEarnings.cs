@@ -1,3 +1,4 @@
+using EodHistoricalData.Sdk;
 using Shibusa.Data;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,23 +9,26 @@ internal class CalendarEarnings
 {
     public CalendarEarnings(EodHistoricalData.Sdk.Models.Calendar.Earnings earnings)
     {
-        Symbol = earnings.Code.Split('.')[0];
-        Exchange = earnings.Code.Split('.')[1];
-        ReportDate = earnings.ReportDate.ToDateTime(TimeOnly.MinValue);
-        EndingDate = earnings.Date.ToDateTime(TimeOnly.MinValue);
+        Symbol = earnings.Code?.Split('.')[0] ??
+            throw new ArgumentException($"{nameof(earnings)} has no {nameof(Symbol)}");
+        Exchange = earnings.Code?.Split('.')[1] ?? Constants.UnknownValue;
+        ReportDate = earnings.ReportDate?.ToDateTime(TimeOnly.MinValue);
+        EndingDate = earnings.Date?.ToDateTime(TimeOnly.MinValue) ??
+            throw new ArgumentException($"{nameof(earnings)} has no {nameof(EndingDate)}");
         BeforeAfterMarket = earnings.BeforeAfterMarket;
         Currency = earnings.Currency;
         Actual = earnings.Actual;
         Estimate = earnings.Estimate;
         Difference = earnings.Difference;
         Percent = earnings.Percent;
+        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CalendarEarnings(
         string symbol,
         string exchange,
-        DateTime reportDate,
+        DateTime? reportDate,
         DateTime endingDate,
         string? beforeAfterMarket,
         string? currency,
@@ -32,7 +36,8 @@ internal class CalendarEarnings
         decimal? estimate,
         decimal? difference,
         double? percent,
-        DateTime utcTimestamp)
+        DateTime? createdTimestamp = null,
+        DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
         Exchange = exchange;
@@ -44,7 +49,8 @@ internal class CalendarEarnings
         Estimate = estimate;
         Difference = difference;
         Percent = percent;
-        UtcTimestamp = utcTimestamp;
+        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
+        UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
 
@@ -55,7 +61,7 @@ internal class CalendarEarnings
     public string Exchange { get; }
 
     [ColumnWithKey("report_date", Order = 3, TypeName = "date", IsPartOfKey = false)]
-    public DateTime ReportDate { get; }
+    public DateTime? ReportDate { get; }
 
     [ColumnWithKey("ending_date", Order = 4, TypeName = "date", IsPartOfKey = true)]
     public DateTime EndingDate { get; }
@@ -78,6 +84,9 @@ internal class CalendarEarnings
     [ColumnWithKey("percent", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
     public double? Percent { get; }
 
-    [ColumnWithKey("utc_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("created_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    public DateTime CreatedTimestamp { get; }
+
+    [ColumnWithKey("utc_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }
