@@ -10,11 +10,11 @@ public struct EsgScores
     public double? TotalEsg;
     public double? TotalEsgPercentile;
     public double? EnvironmentScore;
-    public int? EnvironmentScorePercentile;
+    public double? EnvironmentScorePercentile;
     public double? SocialScore;
-    public int? SocialScorePercentile;
+    public double? SocialScorePercentile;
     public double? GovernanceScore;
-    public int? GovernanceScorePercentile;
-    public int? ControversyLevel;
+    public double? GovernanceScorePercentile;
+    public double? ControversyLevel;
     public IDictionary<string, ActivityInvolvement>? ActivitiesInvolvement;
 }

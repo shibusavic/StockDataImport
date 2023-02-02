@@ -23,7 +23,6 @@ public class ImportConfigurationTests
         Assert.NotNull(config);
         Assert.NotNull(config.Exception);
 
-        Assert.Null(config.MaxTokenUsage);
         Assert.Null(config.ApiKey);
         Assert.Null(config.Purges);
         Assert.Null(config.DataRetention);
@@ -39,36 +38,11 @@ public class ImportConfigurationTests
     }
 
     [Fact]
-    public void MaxTokenUsageAsync_Invalid_Null()
-    {
-        var text = $@"
-{Constants.ConfigurationKeys.MaxTokenUsage}: badint
-...
-";
-
-        var config = ImportConfiguration.Create(text);
-        Assert.Null(config.MaxTokenUsage);
-    }
-
-    [Fact]
-    public void MaxTokenUsage_Valid_NotNull()
-    {
-        var text = $@"
-{Constants.ConfigurationKeys.MaxTokenUsage}: 99000
-...
-";
-
-        var config = ImportConfiguration.Create(text);
-        Assert.Equal(99_000, config.MaxTokenUsage);
-    }
-
-    [Fact]
     public void ApiKey_Valid_NotNull()
     {
         string expected = "123.456";
 
         var text = $@"
-{Constants.ConfigurationKeys.MaxTokenUsage}: 99000
 {Constants.ConfigurationKeys.ApiKey}: {expected}
 ...
 ";
@@ -422,7 +396,6 @@ Exchange Codes:
 
         var config = new ImportConfiguration()
         {
-            MaxTokenUsage = 990,
             ApiKey = "TEST",
             Purges = new string[] {
                 Constants.PurgeName.Logs,

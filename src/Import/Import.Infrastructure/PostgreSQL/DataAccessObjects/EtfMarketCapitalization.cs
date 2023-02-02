@@ -9,12 +9,36 @@ internal class EtfMarketCapitalization
     public EtfMarketCapitalization(Guid etfId,
         EodHistoricalData.Sdk.Models.Fundamentals.Etf.MarketCapitalization marketCapitalization)
     {
+
         EtfId = etfId;
-        Mega = Convert.ToDouble(marketCapitalization.Mega);
-        Big = Convert.ToDouble(marketCapitalization.Big);
-        Medium = Convert.ToDouble(marketCapitalization.Medium);
-        Small = Convert.ToDouble(marketCapitalization.Small);
-        Micro = Convert.ToDouble(marketCapitalization.Micro);
+
+        // These TryParse statements are necessary because these values can sometimes arrive as "-".
+
+        if (double.TryParse(marketCapitalization.Mega, out double mega))
+        {
+            Mega = mega;
+        }
+
+        if (double.TryParse(marketCapitalization.Big, out double big))
+        {
+            Big = big;
+        }
+
+        if (double.TryParse(marketCapitalization.Medium, out double medium))
+        {
+            Medium = medium;
+        }
+
+        if (double.TryParse(marketCapitalization.Small, out double small))
+        {
+            Small = small;
+        }
+
+        if (double.TryParse(marketCapitalization.Micro, out double micro))
+        {
+            Micro = micro;
+        }
+
         CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }

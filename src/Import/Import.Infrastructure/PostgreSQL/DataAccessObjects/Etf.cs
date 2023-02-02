@@ -23,7 +23,7 @@ internal class Etf
         UpdateAt = etf.General.UpdatedAt.GetValueOrDefault().ToDateTime(TimeOnly.MinValue);
         Isin = etf.Data.Isin;
         CompanyName = etf.Data.CompanyName;
-        CompanyUrl = etf.Data.Url; // TODO: not sure about this one.
+        CompanyUrl = etf.Data.Url; // TODO: not sure about this one; this feels wrong.
         EtfUrl = etf.Data.Url;
         Domicile = etf.Data.Domicile;
         IndexName = etf.Data.IndexName ?? EodHistoricalData.Sdk.Constants.UnknownValue;
@@ -36,7 +36,15 @@ internal class Etf
         NetExpenseRatio = Convert.ToDouble(etf.Data.NetExpenseRatio);
         AnnualHoldingsTurnover = Convert.ToDouble(etf.Data.AnnualHoldingsTurnover);
         TotalAssets = Convert.ToDecimal(etf.Data.TotalAssets);
-        AverageMktCapMln = Convert.ToDecimal(etf.Data.AverageMarketCapitalizationMillions);
+        try
+        {
+            // This can be delivered as "No Data" for some unknowable reason.
+            AverageMktCapMln = Convert.ToDecimal(etf.Data.AverageMarketCapitalizationMillions);
+        }
+        catch 
+        {
+            AverageMktCapMln = null;
+        }
         HoldingsCount = etf.Data.HoldingsCount;
         CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;

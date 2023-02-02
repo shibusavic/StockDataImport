@@ -19,7 +19,7 @@ public class PriceActionsTests : TestBase
         var priceActions = CreatePriceActions(num).ToArray();
 
         var beforeCount = await sut.CountPriceActionsAsync();
-        await sut.SavePriceActionsAsync("TEST", "NYSE", priceActions);
+        await sut.SavePriceActionsAsync("SPATEST", "NYSE", priceActions);
         var afterCount = await sut.CountPriceActionsAsync();
 
         Assert.Equal(beforeCount + num, afterCount);

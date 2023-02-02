@@ -11,36 +11,43 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
-const string DefaultConfigFileName = "config.yml";
+Stopwatch timer = Stopwatch.StartNew();
+
 string NL = Environment.NewLine;
+int exitCode = -1;
+
+const string DefaultConfigFileName = "config.yml";
+const string sourceName = "import";
 
 ILoggerProvider? loggerProvider = null;
 ServiceFactory serviceFactory;
 ILogger? logger = null;
 IConfiguration configuration;
-Stopwatch timer = Stopwatch.StartNew();
 
-string sourceName = "import";
+DataImportService? dataImportService = null;
+DataImportCycle? dataImportCycle = null;
+ImportConfiguration importConfiguration = new();
+FileInfo configFileInfo = new(DefaultConfigFileName);
+
 bool dryRun = false;
 string? apiKey = null;
 bool showHelp = false;
 bool verbose = false;
-FileInfo configFileInfo = new(DefaultConfigFileName);
-DataImportCycle? dataImportCycle = null;
-ImportConfiguration importConfiguration = new();
-
-int exitCode = -1;
 
 HandleArguments(args);
 
 var cts = new CancellationTokenSource();
 var cancellationToken = cts.Token;
 
-ApiEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
-ApiEventPublisher.RaiseApiLimitReachedEventHandler += EventPublisher_RaiseApiLimitReachedEventHandler;
+if (!showHelp)
+{
 
-DomainEventPublisher.DatabaseErrorHander += EventPublisher_DatabaseErrorHander;
-DomainEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
+    ApiEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
+    ApiEventPublisher.RaiseApiLimitReachedEventHandler += EventPublisher_RaiseApiLimitReachedEventHandler;
+
+    DomainEventPublisher.DatabaseErrorHander += EventPublisher_DatabaseErrorHander;
+    DomainEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
+}
 
 try
 {
@@ -52,8 +59,8 @@ try
     {
         Configure();
 
-        string welcomeMsg = dryRun ? $"{NL}Dry Run (api credit cost estimation){NL}" : $"{NL}Welcome. Starting up ...{NL}";
-        Communicate(welcomeMsg);
+        string welcomeMsg = dryRun ? "Dry Run (api credit cost estimation)" : "Welcome. Configuration complete.";
+        Communicate(welcomeMsg, false, true);
 
         await dataImportCycle!.ExecuteAsync(importConfiguration, dryRun, cancellationToken);
 
@@ -71,6 +78,14 @@ try
 
             Communicate($"{NL}Total estimated cost:\t{dataImportCycle.Actions.Select(a => a.EstimatedCost).Sum()}{NL}", true);
         }
+        else
+        {
+            if (dataImportService != null)
+            {
+                Communicate("Saving symbols to ignore", false, true);
+                await dataImportService.SaveSymbolsToIgnoreAsync(cancellationToken);
+            }
+        }
     }
 
     exitCode = 0;
@@ -78,7 +93,7 @@ try
 catch (Exception exc)
 {
     exitCode = 1;
-    logger?.LogError(exc, message: exc.Message);
+    logger?.LogError(exc, "{MESSAGE}", exc.Message);
     Communicate(exc.ToString(), true);
 }
 finally
@@ -94,12 +109,19 @@ finally
 
     timer.Stop();
 
+
+    if (!showHelp)
+    {
+        ApiEventPublisher.RaiseMessageEventHandler -= EventPublisher_RaiseMessageEventHandler;
+        ApiEventPublisher.RaiseApiLimitReachedEventHandler -= EventPublisher_RaiseApiLimitReachedEventHandler;
+
+        DomainEventPublisher.DatabaseErrorHander -= EventPublisher_DatabaseErrorHander;
+        DomainEventPublisher.RaiseMessageEventHandler -= EventPublisher_RaiseMessageEventHandler;
+    }
+
     dataImportCycle?.Dispose();
-
-    ApiEventPublisher.RaiseMessageEventHandler -= EventPublisher_RaiseMessageEventHandler;
-    ApiEventPublisher.RaiseApiLimitReachedEventHandler -= EventPublisher_RaiseApiLimitReachedEventHandler;
-
     loggerProvider?.Dispose();
+    cts.Dispose();
 
     Environment.Exit(exitCode);
 }
@@ -116,21 +138,21 @@ void EventPublisher_RaiseMessageEventHandler(object? sender, MessageEventArgs e)
 
     if (e.Exception != null)
     {
-        logger?.LogError(e.Exception, message: e.Message);
+        logger?.LogError(e.Exception, "{MESSAGE}", e.Message);
         forceMessage = true;
     }
     else if (e.LogLevel != LogLevel.None)
     {
-        logger?.Log(e.LogLevel, e.Message);
+        logger?.Log(e.LogLevel, "{MESSAGE}", e.Message);
         forceMessage = e.LogLevel is LogLevel.Critical or LogLevel.Error;
     }
 
-    Communicate(e.Message, forceMessage);
+    Communicate(e.Message, forceMessage, true);
 }
 
 void EventPublisher_DatabaseErrorHander(object? sender, DatabaseErrorEventArgs e)
 {
-    DirectoryInfo dbErrorDir = new DirectoryInfo("errors");
+    DirectoryInfo dbErrorDir = new("errors");
     if (!dbErrorDir.Exists) { dbErrorDir.Create(); }
 
     var filename = $"{DateTime.Now:yyyyMMddHHmmss}_{e.Source}_{Guid.NewGuid().ToString()[0..3]}.txt";
@@ -273,8 +295,9 @@ void ConfigureServices()
 
     serviceFactory = new ServiceFactory(configuration, logger);
 
-    Communicate("Creating data import cycle", prefixWithTimestamp: true);
+    Communicate("Creating data import cycle; this might take a few minutes.", prefixWithTimestamp: true);
     dataImportCycle = serviceFactory.CreateDataImportCycle(importConfiguration);
+    dataImportService = serviceFactory.CreateDataImportService(apiKey!);
 }
 
 void Communicate(string? message, bool force = false, bool prefixWithTimestamp = false)

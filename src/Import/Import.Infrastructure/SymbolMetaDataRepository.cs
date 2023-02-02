@@ -6,23 +6,27 @@ internal static class SymbolMetaDataRepository
 {
     static readonly SymbolMetaDataCollection metaData = new();
 
+    /// <summary>
+    /// Overwrites internal collection of <see cref="SymbolMetaDataCollection"/>.
+    /// </summary>
+    /// <param name="symbolMetaData"></param>
     public static void SetItems(SymbolMetaData[] symbolMetaData)
     {
         metaData.Clear();
         metaData.AddRange(symbolMetaData);
      
         Count = metaData.Count;
-        OptionsCount = metaData.Count(d => d.HasOptions);
-        RequiresFundamentalsCount = metaData.Count(d => d.RequiresFundamentalUpdate);
     }
 
     public static SymbolMetaData[] GetAll() => metaData.ToArray();
 
     public static int Count { get; private set; }
 
-    public static int OptionsCount { get; private set; }
-
-    public static int RequiresFundamentalsCount { get; private set; }
+    public static int RequiresFundamentalsCount(string? exchange = null)
+    {
+        return exchange == null ? metaData.Count(s => s.RequiresFundamentalUpdate)
+            : metaData.Count(s => s.Exchange == exchange && s.RequiresFundamentalUpdate);
+    }
 
     public static string? GetFirstExchangeForSymbol(string symbol) =>
         metaData.FirstOrDefault(d => d.Symbol.Equals(symbol, StringComparison.InvariantCultureIgnoreCase))?.Exchange;
@@ -33,16 +37,11 @@ internal static class SymbolMetaDataRepository
     {
         if (metaData.ContainsKey(symbolMetaData.Code))
         {
-            metaData[symbolMetaData.Code].LastUpdatedCompany = symbolMetaData.LastUpdatedCompany;
-            metaData[symbolMetaData.Code].LastUpdatedOptions = symbolMetaData.LastUpdatedOptions;
-            metaData[symbolMetaData.Code].LastUpdated = DateTime.UtcNow;
-            metaData[symbolMetaData.Code].LastUpdatedIncomeStatement = symbolMetaData.LastUpdatedIncomeStatement;
+            metaData[symbolMetaData.Code].Update(symbolMetaData);
         }
         else
         {
             metaData.Add(symbolMetaData);
-            if (symbolMetaData.HasOptions) OptionsCount++;
-            if (symbolMetaData.RequiresFundamentalUpdate) RequiresFundamentalsCount++;
             Count++;
         }
     }

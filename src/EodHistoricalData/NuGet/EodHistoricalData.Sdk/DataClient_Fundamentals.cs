@@ -27,23 +27,38 @@ public sealed partial class DataClient
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string? json = await GetFundamentalsForSymbolStringAsync(symbol, cancellationToken);
-
-        if (string.IsNullOrWhiteSpace(json)) { return null; }
-
-        var (StringValue, EnumValue) = DetermineSymbolTypeForFundamentalsOutput(json);
-
-        if (EnumValue is SymbolType.CommonStock or SymbolType.PreferredStock)
+        try
         {
-            return JsonSerializer.Deserialize<FundamentalsCollection>(json, SerializerOptions);
-        }
-        if (EnumValue is SymbolType.Etf or SymbolType.Fund)
-        {
-            return JsonSerializer.Deserialize<EtfFundamentalsCollection>(json, SerializerOptions);
-        }
+            string? json = await GetFundamentalsForSymbolStringAsync(symbol, cancellationToken);
 
-        ApiEventPublisher.RaiseMessageEvent(this, $"Unknown type in {nameof(GetFundamentalsForSymbolAsync)}: {StringValue}",
-            nameof(GetFundamentalsForSymbolAsync), LogLevel.Warning);
+            if (string.IsNullOrWhiteSpace(json)) { return null; }
+
+            var (StringValue, EnumValue) = DetermineSymbolTypeForFundamentalsOutput(json);
+
+            if (StringValue == null)
+            {
+                ApiEventPublisher.RaiseMessageEvent(this, $"No fundamentals found for {symbol}",
+                    nameof(GetFundamentalsForSymbolAsync), LogLevel.Warning);
+                return null;
+            }
+
+            if (EnumValue is SymbolType.CommonStock or SymbolType.PreferredStock)
+            {
+                return JsonSerializer.Deserialize<FundamentalsCollection>(json, SerializerOptions);
+            }
+            if (EnumValue is SymbolType.Etf or SymbolType.Fund or SymbolType.MutualFund)
+            {
+                return JsonSerializer.Deserialize<EtfFundamentalsCollection>(json, SerializerOptions);
+            }
+
+            ApiEventPublisher.RaiseMessageEvent(this, $"Unknown type in {nameof(GetFundamentalsForSymbolAsync)}: {StringValue}",
+                nameof(GetFundamentalsForSymbolAsync), LogLevel.Warning);
+        }
+        catch (Exception exc)
+        {
+            ApiEventPublisher.RaiseMessageEvent(this, $"Symbol {symbol}", exc.Message,
+                nameof(GetFundamentalsForSymbolAsync), LogLevel.Error);
+        }
 
         return null;
     }
@@ -62,8 +77,12 @@ public sealed partial class DataClient
 
         var info = JsonSerializer.Deserialize<FundamentalsInfo>(json, SerializerOptions);
 
+        if (info.Equals(default))
+        {
+
+        }
         if (string.IsNullOrWhiteSpace(info.General.Type)) { return (null, SymbolType.None); }
-        
+
         return (info.General.Type, info.General.Type.GetEnum<SymbolType>());
     }
 

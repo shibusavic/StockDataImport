@@ -11,6 +11,70 @@ public class CompanyTests : TestBase
     }
 
     [Fact]
+    public async Task Save_Gdiv()
+    {
+        string json = File.ReadAllText(@"MockData/gdiv-fundamentals.json");
+
+        var gdiv = JsonSerializer.Deserialize<EodHistoricalData.Sdk.Models.Fundamentals.Etf.EtfFundamentalsCollection>(json,
+            serializerOptions);
+
+        var sut = fixture.ImportDbContext;
+
+        await sut.DeleteCompanyAsync("GDIV", "NYSE", "ETF", "Harbor Dividend Growth Leaders ETF");
+
+        var id = await sut.GetCompanyIdAsync("GDIV", "NYSE", "ETF", "Harbor Dividend Growth Leaders ETF");
+
+        List<int> counts = new()
+        {
+            await sut.CountEtfsAsync("global_id", id),
+            await sut.CountEtfTechnicalsAsync("etf_id", id),
+            await sut.CountEtfMarketCapitalizationAsync("etf_id", id),
+            await sut.CountEtfAssetAllocationAsync("etf_id", id),
+            await sut.CountEtfWorldRegionsAsync("etf_id", id),
+            await sut.CountEtfSectorWeightsAsync("etf_id", id),
+            await sut.CountEtfFixedIncomesAsync("etf_id", id),
+            await sut.CountEtfTopTenHoldingsAsync("etf_id", id),
+            await sut.CountEtfHoldingsAsync("etf_id", id),
+            await sut.CountEtfValuationGrowthAsync("etf_id", id),
+            await sut.CountEtfMorningStarAsync("etf_id", id),
+            await sut.CountEtfPerformanceAsync("etf_id", id)
+        };
+
+        foreach (var c in counts)
+        {
+            Assert.Equal(0, c);
+        }
+
+        await sut.SaveEtfAsync(gdiv);
+
+        id = await sut.GetEtfIdAsync("GDIV", "NYSE", "ETF", "Harbor Dividend Growth Leaders ETF");
+
+        counts = new()
+        {
+            await sut.CountEtfsAsync("global_id", id),
+            await sut.CountEtfTechnicalsAsync("etf_id", id),
+            await sut.CountEtfMarketCapitalizationAsync("etf_id", id),
+            await sut.CountEtfAssetAllocationAsync("etf_id", id),
+            await sut.CountEtfWorldRegionsAsync("etf_id", id),
+            await sut.CountEtfSectorWeightsAsync("etf_id", id),
+            await sut.CountEtfFixedIncomesAsync("etf_id", id),
+            await sut.CountEtfTopTenHoldingsAsync("etf_id", id),
+            await sut.CountEtfHoldingsAsync("etf_id", id),
+            await sut.CountEtfValuationGrowthAsync("etf_id", id),
+            await sut.CountEtfMorningStarAsync("etf_id", id),
+            await sut.CountEtfPerformanceAsync("etf_id", id)
+        };
+
+        int index = 0;
+
+        foreach (var c in counts)
+        {
+            Assert.True(c > 0, index.ToString());
+            index++;
+        }
+    }
+
+    [Fact]
     public async Task Save_Company()
     {
         string json = File.ReadAllText(@"MockData/aapl-fundamentals.json");

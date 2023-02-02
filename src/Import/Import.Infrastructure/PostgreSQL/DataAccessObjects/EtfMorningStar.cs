@@ -9,12 +9,18 @@ internal class EtfMorningStar
     public EtfMorningStar(Guid etfId,
         EodHistoricalData.Sdk.Models.Fundamentals.Etf.MorningStar morningStar)
     {
+
         EtfId = etfId;
         Ratio = Convert.ToInt32(morningStar.Ratio);
         CategoryBenchmark = morningStar.CategoryBenchmark;
-        SustainabilityRatio = Convert.ToInt32(morningStar.SustainabilityRatio);
         CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
+
+        // Sometimes SustainabilityRatio has the value "No rating." Why? Don't know.
+        if (int.TryParse(morningStar.SustainabilityRatio, out int s))
+        {
+            SustainabilityRatio = s;
+        }
     }
 
     public EtfMorningStar(

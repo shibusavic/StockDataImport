@@ -63,7 +63,7 @@ public class SymbolsTests : TestBase
 
         metaData = (await sut.GetSymbolMetaDataAsync()).ToArray();
 
-        Assert.Null(metaData[0].LastUpdatedCompany); // no company check in this test.
+        Assert.Null(metaData[0].LastUpdatedEntity); // no company check in this test.
         Assert.Equal(10M, metaData[0].LastTrade.Close);
         Assert.NotNull(metaData[0].LastTrade.Start);
     }
@@ -86,8 +86,8 @@ public class SymbolsTests : TestBase
 
         Assert.NotNull(item);
 
-        Assert.NotNull(item.LastUpdatedCompany);
-        Assert.NotNull(item.LastUpdatedIncomeStatement);
+        Assert.NotNull(item.LastUpdatedEntity);
+        Assert.NotNull(item.LastUpdatedFinancials);
     }
 
     [Fact]

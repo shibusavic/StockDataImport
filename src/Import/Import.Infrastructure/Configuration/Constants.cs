@@ -12,7 +12,6 @@ public static class Constants
         public const string ReasonsToIgnore = "Reasons to Ignore";
         public const string Fixes = "Fixes";
         public const string DataRetention = "Data Retention";
-        public const string MaxTokenUsage = "Max Token Usage";
         public const string OnEmptyDb = "On Empty Database";
         public const string Sunday = "Sunday";
         public const string Monday = "Monday";
@@ -25,7 +24,6 @@ public static class Constants
 
     public static class ActionNames
     {
-        public const string Fix = "Fix";
         public const string Import = "Import";
         public const string Purge = "Purge";
         public const string Truncate = "Truncate";
@@ -52,7 +50,7 @@ public static class Constants
     public static class PurgeName
     {
         public const string ActionItems = "Actions";
-        public const string ApiResponses = "API Responses";
+        public const string Cycles = "Cycles";
         public const string Imports = "Imports";
         public const string Logs = "Logs";
     }

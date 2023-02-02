@@ -23,7 +23,10 @@ internal static class SymbolsToIgnore
 
     public static void Add(Symbol symbol, string? reason = null)
     {
-        Add(new IgnoredSymbol(symbol.Code, symbol.Exchange ?? Constants.UnknownValue, reason));
+        if (symbol.Code != null)
+        {
+            Add(new IgnoredSymbol(symbol.Code, symbol.Exchange ?? Constants.UnknownValue, reason));
+        }
     }
 
     public static IEnumerable<Symbol> FilterSymbolCollection(IEnumerable<Symbol> symbols)
@@ -45,7 +48,7 @@ internal static class SymbolsToIgnore
             s.Exchange != null &&
             s.Exchange.Equals(exchange, StringComparison.InvariantCultureIgnoreCase));
 
-    public static bool IsOnList(Symbol symbol) => IsOnList(symbol.Code, symbol.Exchange ?? Constants.UnknownValue);
+    public static bool IsOnList(Symbol symbol) => IsOnList(symbol.Code ?? "", symbol.Exchange ?? Constants.UnknownValue);
 
     public static IgnoredSymbol[] GetAll() => symbolsToIgnore.ToArray();
 }

@@ -19,7 +19,7 @@ internal partial class ImportsDbContext
      
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(Exchange));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(Exchange)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(Exchange)}"); }
 
         var daoExchanges = exchanges.Select(x => new Exchange(x));
 

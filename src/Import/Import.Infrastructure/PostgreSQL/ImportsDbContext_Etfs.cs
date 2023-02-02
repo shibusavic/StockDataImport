@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using Import.Infrastructure.Events;
+using System.Collections.ObjectModel;
 
 namespace Import.Infrastructure.PostgreSQL;
 
@@ -8,6 +10,11 @@ internal partial class ImportsDbContext
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        if (etf.General.Code == null) throw new ArgumentException($"{nameof(etf)} is missing Code.");
+        if (etf.General.Exchange == null) throw new ArgumentException($"{nameof(etf)} is missing Exchange");
+        if (etf.General.Type == null) throw new ArgumentException($"{nameof(etf)} is missing Type");
+        if (etf.General.Name == null) throw new ArgumentException($"{nameof(etf)} is missing Name");
 
         var etfId = await GetEtfIdAsync(etf.General.Code, etf.General.Exchange, etf.General.Type, etf.General.Name);
 
@@ -84,23 +91,16 @@ internal partial class ImportsDbContext
         {
             foreach (var kvp in etf.Data.ValuationsGrowth)
             {
-                try
-                {
-                    growths.Add(new DataAccessObjects.EtfValuationGrowth(etfId,
-                        kvp.Key, Convert.ToDouble(kvp.Value.PriceProspectiveEarnings),
-                        Convert.ToDouble(kvp.Value.PriceBook),
-                        Convert.ToDouble(kvp.Value.PriceSales),
-                        Convert.ToDouble(kvp.Value.PriceCashFlow),
-                        Convert.ToDouble(kvp.Value.DividendYieldFactor), DateTime.UtcNow));
-                }
-                catch (Exception ex)
-                {
-                    string m = ex.Message;
-                }
+                growths.Add(new DataAccessObjects.EtfValuationGrowth(etfId,
+                    kvp.Key, Convert.ToDouble(kvp.Value.PriceProspectiveEarnings),
+                    Convert.ToDouble(kvp.Value.PriceBook),
+                    Convert.ToDouble(kvp.Value.PriceSales),
+                    Convert.ToDouble(kvp.Value.PriceCashFlow),
+                    Convert.ToDouble(kvp.Value.DividendYieldFactor), DateTime.UtcNow));
             }
         }
 
-        List<Task> taskList = new()
+        Collection<Task> taskList = new()
         {
             Task.Run(() => SaveFundamentalDataAsync(etfGeneral,cancellationToken), cancellationToken),
             Task.Run(() => SaveFundamentalDataAsync(technicals,cancellationToken), cancellationToken),
@@ -126,7 +126,25 @@ internal partial class ImportsDbContext
             taskList.Add(Task.Run(() => SaveFundamentalDataAsync(performance, cancellationToken), cancellationToken));
         }
 
-        Task.WaitAll(taskList.ToArray(), cancellationToken);
+        try
+        {
+            Task.WaitAll(taskList.ToArray(), cancellationToken);
+        }
+        catch (AggregateException exc)
+        {
+            for (int i = 0; i < exc.InnerExceptions.Count; i++)
+            {
+                DomainEventPublisher.RaiseMessageEvent(this, exc.InnerExceptions[i].ToString(),
+                    nameof(SaveCompanyAsync),
+                    Microsoft.Extensions.Logging.LogLevel.Error);
+            }
+        }
+        catch (Exception exc)
+        {
+            DomainEventPublisher.RaiseMessageEvent(this, exc.ToString(),
+                    nameof(SaveCompanyAsync),
+                    Microsoft.Extensions.Logging.LogLevel.Error);
+        }
     }
 
     internal async Task<Guid> GetEtfIdAsync(string symbol, string exchange,

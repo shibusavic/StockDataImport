@@ -19,11 +19,13 @@ internal partial class ImportsDbContext
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        symbol = Utility.ParseSymbolCode(symbol).Symbol ?? throw new ArgumentException($"Could not parse symbol from '{symbol}'");
+
         if (!priceActions.Any()) { return Task.CompletedTask; }
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(PriceAction));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(PriceAction)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(PriceAction)}"); }
 
         var daoPriceActions = priceActions.Select(p => new PriceAction(symbol, exchange, p)).ToArray();
 

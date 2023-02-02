@@ -15,29 +15,26 @@ internal sealed class Symbol
         Exchange = symbol.Exchange ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         Currency = symbol.Currency ?? throw new ArgumentException($"{nameof(symbol.Currency)} cannot be null");
         Type = symbol.Type ?? throw new ArgumentException($"{nameof(symbol.Type)} cannot be null");
-        HasOptions = null;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public Symbol(
         string code,
-        string? symbol,
+        string? codeSymbol,
         string? exchange,
         string? name,
         string? country,
         string? currency,
         string? type,
-        bool? hasOptions,
         DateTime? utcTimestamp = null)
     {
         Code = code;
-        CodeSymbol = symbol;
+        CodeSymbol = codeSymbol;
         Exchange = exchange;
         Name = name;
         Country = country;
         Currency = currency;
         Type = type;
-        HasOptions = hasOptions;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -62,9 +59,6 @@ internal sealed class Symbol
     [ColumnWithKey("type", Order = 7, TypeName = "text", IsPartOfKey = false)]
     public string? Type { get; }
 
-    [ColumnWithKey("has_options", Order = 8, TypeName = "boolean", IsPartOfKey = false)]
-    public bool? HasOptions { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 9, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

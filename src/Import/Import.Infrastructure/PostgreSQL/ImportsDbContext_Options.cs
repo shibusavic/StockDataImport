@@ -7,8 +7,8 @@ internal partial class ImportsDbContext
 {
     public async Task<IEnumerable<EodHistoricalData.Sdk.Models.Symbol>> GetSymbolsWithOptionsAsync(CancellationToken cancellationToken)
     {
-        string sql = $@"{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.Symbol))}
-WHERE has_options = @HasOptions";
+        //TODO: this is broken - need another path to this determination.
+        string sql = $@"{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.Symbol))}";
 
         using var connection = await GetOpenConnectionAsync(cancellationToken);
 
@@ -27,15 +27,21 @@ WHERE has_options = @HasOptions";
         List<DataAccessObjects.OptionData> optionData = new();
         List<DataAccessObjects.OptionContract> optionContracts = new();
 
-        foreach (var d in optionsCollection.Data)
+        if (optionsCollection.Data != null && symbol != null && exchange != null)
         {
-            optionData.Add(new DataAccessObjects.OptionData(symbol, exchange, d));
-
-            foreach (var contract in d.Options.Values)
+            foreach (var d in optionsCollection.Data)
             {
-                foreach (var c in contract)
+                optionData.Add(new DataAccessObjects.OptionData(symbol, exchange, d));
+
+                if (d.Options != null)
                 {
-                    optionContracts.Add(new DataAccessObjects.OptionContract(symbol, exchange, c));
+                    foreach (var contract in d.Options.Values)
+                    {
+                        foreach (var c in contract)
+                        {
+                            optionContracts.Add(new DataAccessObjects.OptionContract(symbol, exchange, c));
+                        }
+                    }
                 }
             }
         }
@@ -59,7 +65,7 @@ WHERE has_options = @HasOptions";
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(T));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {obj!.GetType().Name}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {obj!.GetType().Name}"); }
 
         return ExecuteAsync(sql, obj, null, cancellationToken);
     }
@@ -72,7 +78,7 @@ WHERE has_options = @HasOptions";
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(T));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {obj!.GetType()?.GetElementType()?.Name}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {obj!.GetType()?.GetElementType()?.Name}"); }
 
         return ExecuteAsync(sql, obj, null, cancellationToken);
     }

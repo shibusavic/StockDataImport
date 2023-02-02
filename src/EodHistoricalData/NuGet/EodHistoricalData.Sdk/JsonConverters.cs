@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace EodHistoricalData.Sdk;
 
@@ -19,6 +20,8 @@ public static class JsonSerializerOptionsFactory
                     PropertyNameCaseInsensitive = true,
                     IncludeFields = true
                 };
+
+                options.Converters.Add(new NullableStringJsonConverter());
 
                 options.Converters.Add(new DateOnlyJsonConverter());
                 options.Converters.Add(new NullableDateOnlyJsonConverter());
@@ -40,6 +43,30 @@ public static class JsonSerializerOptionsFactory
             }
 
             return options;
+        }
+    }
+}
+
+public class NullableStringJsonConverter: JsonConverter<string?>
+{
+    public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var str = reader.GetString();
+
+        if (string.IsNullOrEmpty(str)) return null;
+
+        return str;
+    }
+
+    public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions options)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            writer.WriteNullValue();
+        }
+        else
+        {
+            writer.WriteStringValue(value);
         }
     }
 }
@@ -329,13 +356,27 @@ public class DecimalJsonConverter : JsonConverter<decimal>
 
 public class NullableDecimalJsonConverter : JsonConverter<decimal?>
 {
+    // Sometimes the values delivered by the API are exponential values (e.g., "1.0E+18").
+    private static readonly Regex NotationRegex = new(@"([\d\.]+)?E\+(\d+)");
+
     public override decimal? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
+        string? val = null;
+
         if (reader.TokenType == JsonTokenType.String)
         {
-            var val = reader.GetString();
+            val = reader.GetString();
 
             if (string.IsNullOrWhiteSpace(val)) { return null; }
+
+            if (NotationRegex.IsMatch(val))
+            {
+                var m = NotationRegex.Match(val);
+                if (!decimal.TryParse(m.Groups[1].Value, out decimal b)) { return null; }
+                if (!double.TryParse(m.Groups[2].Value, out double zeroes)) { return null; }
+
+                return b * (decimal)Math.Pow(10, zeroes);
+            }
 
             if (decimal.TryParse(val, out decimal d))
             {
@@ -347,7 +388,7 @@ public class NullableDecimalJsonConverter : JsonConverter<decimal?>
             return reader.GetDecimal();
         }
 
-        throw new JsonException();
+        throw new JsonException($"Could not parse value {val} as a nullable decimal.");
     }
 
     public override void Write(Utf8JsonWriter writer, decimal? value, JsonSerializerOptions options)

@@ -2,7 +2,7 @@
   "profiles": {
     "Import.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "-c test.yml -v"
+      "commandLineArgs": "-c test.yml -v --dry-run"
     }
   }
 }

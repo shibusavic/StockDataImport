@@ -20,6 +20,8 @@ public abstract class TestBase : IClassFixture<DbFixture>
             IncludeFields = true
         };
 
+        serializerOptions.Converters.Add(new NullableStringJsonConverter());
+
         serializerOptions.Converters.Add(new DateOnlyJsonConverter());
         serializerOptions.Converters.Add(new NullableDateOnlyJsonConverter());
 

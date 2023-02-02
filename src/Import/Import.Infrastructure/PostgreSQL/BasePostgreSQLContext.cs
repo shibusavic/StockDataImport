@@ -4,6 +4,7 @@ using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Events;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using System.Text;
@@ -63,22 +64,18 @@ internal abstract class BasePostgreSQLContext : DbContext
 
         CancellationTokenSource cts = new();
 
-        List<Task> tasks = new(tableNames.Length);
+        Collection<Task> tasks = new();
 
         for (int i = 0; i < DaoTableNames.Keys.Count; i++)
         {
             var attr = (TableAttribute?)DaoTypes[i].GetCustomAttribute(typeof(TableAttribute), true);
-            if (attr == null || attr.Schema != schema) continue;
+            if (attr == null || attr.Schema != schema || !tableNames.Contains(attr.Name)) continue;
 
-            if (tableNames.Contains(attr.Name))
-            {
-                string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(DaoTypes[i]);
+            string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(DaoTypes[i]);
 
-                if (sql != null)
-                {
-                    tasks.Add(Task.Factory.StartNew(async () => await ExecuteAsync(sql, null, 120, cancellationToken), cts.Token));
-                }
-            }
+            if (sql == null) throw new Exception($"Could not create DELETE for {DaoTypes[i].Name}");
+
+            tasks.Add(Task.Run(() => ExecuteAsync(sql, null, 120, cancellationToken)));
         }
 
         try
@@ -114,10 +111,9 @@ internal abstract class BasePostgreSQLContext : DbContext
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string tableSql = @"SELECT table_name AS Name
-FROM information_schema.tables WHERE table_schema = @Schema";
+        const string sql = @"SELECT table_name AS Name FROM information_schema.tables WHERE table_schema = @Schema";
 
-        return QueryAsync<string>(tableSql, new { Schema = schema }, cancellationToken: cancellationToken);
+        return QueryAsync<string>(sql, new { Schema = schema }, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -169,7 +165,7 @@ FROM information_schema.tables WHERE table_schema = @Schema";
     /// <param name="cancellationToken">An optional <see cref="CancellationToken"/></param>
     /// <returns>A task; the task contains an IEnumerable of <typeparamref name="T"/></returns>
     internal async Task<IEnumerable<T>> QueryAsync<T>(string sql,
-        object?  parameters = null,
+        object? parameters = null,
         int? commandTimeout = null,
         CancellationToken cancellationToken = default)
     {

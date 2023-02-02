@@ -61,10 +61,10 @@ public class CommonStockFundamentalsTests : BaseTest
         Assert.True(actual.Technicals.TwoHundredDayMovingAverage.GetValueOrDefault() > 0M);
         Assert.True(actual.SplitsDividends.ForwardAnnualDividendYield.HasValue);
         Assert.True(actual.AnalystRatings.Rating.HasValue);
-        Assert.NotNull(actual.Holders.Institutions);
-        Assert.NotEmpty(actual.Holders.Institutions);
-        Assert.NotNull(actual.Holders.Funds); 
-        Assert.NotEmpty(actual.Holders.Funds);
+        Assert.NotNull(actual.Holders.GetValueOrDefault().Institutions);
+        Assert.NotEmpty(actual.Holders.GetValueOrDefault().Institutions!);
+        Assert.NotNull(actual.Holders.GetValueOrDefault().Funds); 
+        Assert.NotEmpty(actual.Holders.GetValueOrDefault().Funds!);
         Assert.NotNull(actual.EsgScores.Disclaimer);
         Assert.NotNull(actual.OutstandingShares.Annual);
         Assert.NotEmpty(actual.OutstandingShares.Annual);

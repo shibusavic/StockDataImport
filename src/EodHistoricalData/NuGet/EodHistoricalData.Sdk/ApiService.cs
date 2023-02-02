@@ -36,7 +36,7 @@ public static class ApiService
 
     public static int Usage { get; internal set; }
 
-    public static int DailyLimit { get; internal set; }
+    public static int DailyLimit { get; internal set; } = 100_000;
 
     public static int Available => Math.Max(DailyLimit - Usage, 0);
 

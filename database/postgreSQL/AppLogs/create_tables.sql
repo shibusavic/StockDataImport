@@ -29,12 +29,3 @@ CREATE TABLE IF NOT EXISTS public.action_items
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (global_id)
 );
-
-CREATE TABLE IF NOT EXISTS public.api_responses
-(
-  request TEXT NOT NULL,
-  response TEXT NOT NULL,
-  status_code INTEGER NOT NULL,
-  utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (request, utc_timestamp)
-)

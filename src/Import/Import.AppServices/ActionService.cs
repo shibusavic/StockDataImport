@@ -44,13 +44,13 @@ public class ActionService
                 | ImportActionStatus.Error | ImportActionStatus.InProgress | ImportActionStatus.NotStarted));
         }
 
-        if (config.Fixes?.Any() ?? false)
-        {
-            foreach (var name in config.Fixes)
-            {
-                items.Add(new ActionItem(ActionNames.Fix, name, null, null, 100)); // send to the end of the list
-            }
-        }
+        //if (config.Fixes?.Any() ?? false)
+        //{
+        //    foreach (var name in config.Fixes)
+        //    {
+        //        items.Add(new ActionItem(ActionNames.Fix, name, null, null, 100)); // send to the end of the list
+        //    }
+        //}
 
         if (config.DataRetention?.Any() ?? false)
         {
@@ -159,11 +159,6 @@ public class ActionService
             {
                 yield return new ActionItem(ActionNames.Truncate, logLevel.GetDescription(),
                     ConvertTextToDateTime(kvp.Value).ToString(), null, 5);
-            }
-            else if (kvp.Key == PurgeName.ApiResponses)
-            {
-                yield return new ActionItem(ActionNames.Truncate, kvp.Key,
-                    ConvertTextToDateTime(kvp.Value).ToString(), null, 6);
             }
         }
     }

@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS public.symbols
   country TEXT NULL,
   currency TEXT NULL,
   type TEXT NULL,
-  has_options BOOLEAN NULL,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (code)
 );

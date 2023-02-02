@@ -70,7 +70,7 @@ internal class LogsDbContext : BasePostgreSQLContext, ILogsDbContext
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(DataAccessObjects.ActionItem)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(DataAccessObjects.ActionItem)}"); }
 
         var dao = new DataAccessObjects.ActionItem(actionItem);
 
@@ -81,24 +81,9 @@ internal class LogsDbContext : BasePostgreSQLContext, ILogsDbContext
     {
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(DataAccessObjects.ActionItem)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(DataAccessObjects.ActionItem)}"); }
 
         return ExecuteAsync(sql, actions.Select(a => new DataAccessObjects.ActionItem(a)).ToArray(), null, cancellationToken);
-    }
-
-    public Task SaveApiResponseAsync(string request, string response, int statusCode, CancellationToken cancellationToken = default)
-    {
-        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateInsert(typeof(DataAccessObjects.ApiResponse));
-
-        if (sql == null) { throw new Exception($"Could not create insert for {nameof(DataAccessObjects.ApiResponse)}"); }
-
-        return ExecuteAsync(sql, new
-        {
-            Request = request,
-            Response = response,
-            StatusCode = statusCode,
-            UtcTimestamp = DateTime.UtcNow,
-        }, null, cancellationToken);
     }
 
     public async Task<ActionItem?> GetActionItemAsync(Guid globalId, CancellationToken cancellationToken = default)
@@ -170,19 +155,6 @@ WHERE status = Any(@Statuses)
         }, 120, cancellationToken);
     }
 
-    public Task TruncateApiResponsesAsync(DateTime date, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        string sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ApiResponse)) ?? string.Empty;
-        sql += " WHERE utc_timestamp < @Date";
-
-        return ExecuteAsync(sql, new
-        {
-            Date = date
-        }, 120, cancellationToken);
-    }
-
     public async Task TruncateActionItemsAsync(DateTime date, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -202,7 +174,7 @@ WHERE status = Any(@Statuses)
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.Log));
 
-        if (sql == null) { throw new Exception($"Could not create delete for {nameof(DataAccessObjects.Log)}"); }
+        if (sql == null) { throw new Exception($"Could not create DELETE for {nameof(DataAccessObjects.Log)}"); }
 
         return ExecuteAsync(sql, null, 120, cancellationToken);
     }
@@ -213,19 +185,8 @@ WHERE status = Any(@Statuses)
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ActionItem));
 
-        if (sql == null) { throw new Exception($"Could not create delete for {nameof(DataAccessObjects.ActionItem)}"); }
+        if (sql == null) { throw new Exception($"Could not create DELETE for {nameof(DataAccessObjects.ActionItem)}"); }
 
         return ExecuteAsync(sql, null, 120, cancellationToken: cancellationToken);
-    }
-
-    public Task PurgeApiResponsesAsync(CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ApiResponse));
-
-        if (sql == null) { throw new Exception($"Could not create delete for {nameof(DataAccessObjects.ApiResponse)}"); }
-
-        return ExecuteAsync(sql, cancellationToken: cancellationToken);
     }
 }

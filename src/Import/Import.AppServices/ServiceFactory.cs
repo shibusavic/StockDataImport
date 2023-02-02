@@ -1,4 +1,5 @@
-﻿using Import.AppServices.Configuration;
+﻿using EodHistoricalData.Sdk;
+using Import.AppServices.Configuration;
 using Import.Infrastructure;
 using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Configuration;
@@ -65,7 +66,7 @@ public sealed class ServiceFactory
 
             dataImportServices.Add(importConfig,
                     new DataImportService(logsDbContext, importsDbContext, importConfig.ApiKey!,
-                        importConfig.MaxTokenUsage ?? 100_000));
+                        ApiService.DailyLimit));
         }
 
         return dataImportServices[importConfig];

@@ -1,19 +1,16 @@
-﻿namespace Import.Infrastructure
+﻿using EodHistoricalData.Sdk;
+using Shibusa.Extensions;
+
+namespace Import.Infrastructure
 {
     internal class SymbolMetaData : IEquatable<SymbolMetaData?>
     {
-        public SymbolMetaData(string code, string symbol, string? exchange = null)
-            : this(code, symbol, exchange, DateTime.UtcNow)
-        {
-        }
-
-        internal SymbolMetaData(string code, string symbol, string? exchange, DateTime lastUpdated, bool hasOptions = false)
+        public SymbolMetaData(string code, string symbol, string? exchange, string? type)
         {
             Code = code;
             Symbol = symbol;
             Exchange = exchange;
-            LastUpdated = lastUpdated;
-            HasOptions = hasOptions;
+            Type = type;
         }
 
         public string Code { get; }
@@ -22,9 +19,16 @@
 
         public string? Exchange { get; }
 
-        public string? Type { get; internal set; }
+        public string? Type { get; set; }
 
-        public bool HasOptions { get; internal set; }
+        public bool UseCompanyFundamentals => Type != null &&
+            (Type.Equals(SymbolType.CommonStock.GetDescription()) ||
+            Type.Equals(SymbolType.PreferredStock.GetDescription()));
+
+        public bool UseEtfFundamentals => Type != null &&
+            (Type.Equals(SymbolType.Etf.GetDescription()) ||
+            Type.Equals(SymbolType.Fund.GetDescription()) ||
+            Type.Equals(SymbolType.MutualFund.GetDescription()));
 
         public string? Sector { get; internal set; }
 
@@ -36,14 +40,33 @@
 
         public DateTime? LastUpdatedOptions { get; internal set; }
 
-        public DateTime? LastUpdatedCompany { get; internal set; }
+        public DateTime? LastUpdatedEntity { get; internal set; }
 
-        public DateTime? LastUpdatedIncomeStatement { get; internal set; }
+        public DateTime? LastUpdatedFinancials { get; internal set; }
 
-        public bool RequiresFundamentalUpdate =>
-            LastUpdatedIncomeStatement.GetValueOrDefault() < DateTime.Now.AddDays(-90);
+        public bool RequiresFundamentalUpdate => Type == null ? false
+                    : UseCompanyFundamentals ? LastUpdatedFinancials.GetValueOrDefault() < DateTime.Now.AddDays(-90)
+                    : UseEtfFundamentals ? LastUpdatedEntity.GetValueOrDefault() < DateTime.Now.AddDays(-7)
+                    : false;
 
-        public override string ToString() => Exchange == null ? Symbol : $"{Symbol}.{Exchange}";
+        internal void Update(SymbolMetaData metaDataItem, bool allowReplacementWithNull = false)
+        {
+            Sector = Sector == null || allowReplacementWithNull ? metaDataItem.Sector
+                : metaDataItem.Sector == null ? Sector : metaDataItem.Sector;
+            Industry = Industry == null || allowReplacementWithNull ? metaDataItem.Sector
+                : metaDataItem.Industry == null ? Industry : metaDataItem.Industry;
+            LastTrade = LastTrade.Start == null || allowReplacementWithNull ? metaDataItem.LastTrade
+                : metaDataItem.LastTrade.Start == null ? LastTrade : metaDataItem.LastTrade;
+            LastUpdatedOptions = LastUpdatedOptions == null || allowReplacementWithNull ? metaDataItem.LastUpdatedOptions
+                : metaDataItem.LastUpdatedOptions == null ? LastUpdatedOptions : metaDataItem.LastUpdatedOptions;
+            LastUpdatedEntity = LastUpdatedEntity == null || allowReplacementWithNull ? metaDataItem.LastUpdatedEntity
+                : metaDataItem.LastUpdatedEntity == null ? LastUpdatedEntity : metaDataItem.LastUpdatedEntity;
+            LastUpdatedFinancials = LastUpdatedFinancials == null || allowReplacementWithNull ? metaDataItem.LastUpdatedFinancials
+                : metaDataItem.LastUpdatedFinancials == null ? LastUpdatedFinancials : metaDataItem.LastUpdatedFinancials;
+            LastUpdated = DateTime.UtcNow;
+        }
+
+        public override string ToString() => Code;
 
         public override bool Equals(object? obj)
         {

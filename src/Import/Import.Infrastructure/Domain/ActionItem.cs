@@ -97,8 +97,8 @@ public class ActionItem : IEquatable<ActionItem?>
 
         List<string> elements = new()
         {
-            $"Cost {EstimatedCost}".PadRight(12),
-            $"Pr {Priority.ToString().PadLeft(3,'0')}",
+            //$"Cost {EstimatedCost}".PadRight(12),
+            //$"Pr {Priority.ToString().PadLeft(3,'0')}",
             ActionName.PadRight(8),
             targetScope.PadRight(10), 
             TargetName.PadRight(11),

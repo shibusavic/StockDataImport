@@ -12,7 +12,7 @@ public struct FundamentalsCollection
     public Technicals Technicals;
     public SplitsDividends SplitsDividends;
     public AnalystRatings AnalystRatings;
-    public Holders Holders;
+    public Holders? Holders;
     public IDictionary<string, InsiderTransaction>? InsiderTransactions;
     public EsgScores EsgScores;
     public OutstandingShares OutstandingShares;

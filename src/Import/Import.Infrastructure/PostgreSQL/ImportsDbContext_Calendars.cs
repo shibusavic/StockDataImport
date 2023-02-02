@@ -11,12 +11,17 @@ internal partial class ImportsDbContext
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(CalendarIpo));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(CalendarIpo)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(CalendarIpo)}"); }
 
-        var daoIpos = ipoCollection.Ipos.Select(x => new CalendarIpo(x,
-            SymbolMetaDataRepository.GetFirstExchangeForSymbol(x.Symbol))).ToArray();
+        if (ipoCollection.Ipos != null)
+        {
+            var daoIpos = ipoCollection.Ipos.Select(x => new CalendarIpo(x,
+                SymbolMetaDataRepository.GetFirstExchangeForSymbol(x.Symbol ?? ""))).ToArray();
 
-        return ExecuteAsync(sql, daoIpos, null, cancellationToken);
+            return ExecuteAsync(sql, daoIpos, null, cancellationToken);
+        }
+
+        return Task.CompletedTask;
     }
 
     public Task SaveEarnings(EodHistoricalData.Sdk.Models.Calendar.EarningsCollection earnings,
@@ -26,11 +31,16 @@ internal partial class ImportsDbContext
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(CalendarEarnings));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(CalendarEarnings)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(CalendarEarnings)}"); }
 
-        var daoEarnings = earnings.Earnings.Select(e => new CalendarEarnings(e));
+        if (earnings.Earnings != null)
+        {
+            var daoEarnings = earnings.Earnings.Select(e => new CalendarEarnings(e));
 
-        return ExecuteAsync(sql, daoEarnings, null, cancellationToken);
+            return ExecuteAsync(sql, daoEarnings, null, cancellationToken);
+        }
+
+        return Task.CompletedTask;
     }
 
     public Task SaveTrends(EodHistoricalData.Sdk.Models.Calendar.TrendCollection trends,
@@ -40,10 +50,14 @@ internal partial class ImportsDbContext
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(CalendarTrend));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(CalendarTrend)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(CalendarTrend)}"); }
 
-        var daoTrend = trends.Trends.Select(t => new CalendarTrend(t));
+        if (trends.Trends != null)
+        {
+            var daoTrend = trends.Trends.Select(t => new CalendarTrend(t));
+            return ExecuteAsync(sql, daoTrend, null, cancellationToken);
+        }
 
-        return ExecuteAsync(sql, daoTrend, null, cancellationToken);
+        return Task.CompletedTask;
     }
 }

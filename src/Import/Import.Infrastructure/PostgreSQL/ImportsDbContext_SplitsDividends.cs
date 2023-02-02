@@ -18,7 +18,7 @@ internal partial class ImportsDbContext
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(Split));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(Split)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(Split)}"); }
 
         var daoSplits = splits.Select(s => new Split(s));
 
@@ -41,7 +41,7 @@ internal partial class ImportsDbContext
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(Dividend));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {nameof(Dividend)}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(Dividend)}"); }
 
         var daoDividends = dividends.Select(d => new Dividend(symbol, exchange, d));
 

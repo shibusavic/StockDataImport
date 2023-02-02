@@ -33,5 +33,7 @@ public enum SymbolType
     [Description("FUND")]
     Fund,
     [Description("Preferred Stock")]
-    PreferredStock
+    PreferredStock,
+    [Description("Mutual Fund")]
+    MutualFund
 }

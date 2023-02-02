@@ -1,19 +1,20 @@
-﻿Max Token Usage: 100000
-
-Purge Data:
-- Logs
+﻿Purge Data:
 - Actions
+
+Reasons to Ignore:
+- No Fundamentals
 
 Exchange Codes:
   US:
     Exchanges:
-    - NYSE
     - NASDAQ
     Symbol Type:
     - Common Stock
     - ETF
+
 Any Day:
 - Priority: 1
   Scope: Full
   Data Types:
   - Fundamentals
+ 

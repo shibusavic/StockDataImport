@@ -29,9 +29,6 @@ public class ImportConfiguration : IEquatable<ImportConfiguration?>
     [YamlMember(Alias = Constants.ConfigurationKeys.ApiKey)]
     public string? ApiKey { get; set; }
 
-    [YamlMember(Alias = Constants.ConfigurationKeys.MaxTokenUsage)]
-    public int? MaxTokenUsage { get; set; }
-
     [YamlMember(Alias = Constants.ConfigurationKeys.CancelOnException)]
     public bool? CancelOnException { get; set; }
 

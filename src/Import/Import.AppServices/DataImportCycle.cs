@@ -4,6 +4,7 @@ using Import.AppServices.Configuration;
 using Import.Infrastructure;
 using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Domain;
+using Import.Infrastructure.Events;
 using Microsoft.Extensions.Logging;
 using Shibusa.Extensions;
 using System.Diagnostics;
@@ -28,13 +29,14 @@ public class DataImportCycle : IDisposable
         ApiEventPublisher.RaiseApiResponseEventHandler += DomainEventPublisher_RaiseApiResponseEventHandler;
     }
 
-    private async void DomainEventPublisher_RaiseApiResponseEventHandler(object? sender, ApiResponseEventArgs e)
+    private void DomainEventPublisher_RaiseApiResponseEventHandler(object? sender, ApiResponseEventArgs e)
     {
-        await dataImportService.SaveApiResponse(e.Request, e.Response, e.StatusCode);
+        // TODO: do something here.
+        //await dataImportService.SaveApiResponse(e.Request, e.Response, e.StatusCode);
 
         if (e.ApiResponseException != null)
         {
-            logger?.LogError(e.ApiResponseException, e.ApiResponseException.Message);
+            logger?.LogError(e.ApiResponseException, "{MESSAGE}", e.ApiResponseException.Message);
         }
     }
 
@@ -59,7 +61,6 @@ public class DataImportCycle : IDisposable
                 ApiEventPublisher.RaiseMessageEvent(this, $"{Actions.Length} action(s) identified.", nameof(DataImportCycle), LogLevel.Information);
 
                 var purgeActions = Actions.Where(a => a.ActionName.Equals(ActionNames.Purge)).ToArray();
-
                 var otherActions = Actions.Except(purgeActions).ToArray();
 
                 await saveTask;
@@ -67,13 +68,30 @@ public class DataImportCycle : IDisposable
                 // Take care of "purge" actions and then remove them from the Actions collection.
                 if (purgeActions.Any())
                 {
+                    var purgeIncludesActions = purgeActions.Any(a => a.TargetName == PurgeName.ActionItems);
+
                     Actions = purgeActions;
+
                     await ExecuteAsync(importConfiguration, cancellationToken);
                     await dataImportService.LogsDb.SaveActionItemsAsync(Actions, cancellationToken);
-                    Actions = otherActions;
-                    await dataImportService.DataClient.ResetUsageAsync(importConfiguration.MaxTokenUsage ?? 100000);
+
+                    if (purgeIncludesActions)
+                    {
+                        // At this point, we've already picked up actions that were in the db that we just purged.
+                        // Rebuilding the list from scratch prevents having to figure out which actions should be removed.
+                        Actions = (await GetSortedActionItemsAsync(importConfiguration)).ToArray();
+                    }
+                    else
+                    {
+                        Actions = otherActions;
+                    }
+
+                    // our meta data collection may have changed as a result of purging.
+                    SymbolMetaDataRepository.SetItems((await dataImportService.ImportsDb.GetSymbolMetaDataAsync(cancellationToken)).ToArray());
                 }
             }
+
+            await dataImportService.DataClient.ResetUsageAsync(ApiService.DailyLimit);
 
             // Calculate cost.
             int availableCredits = ApiService.Available;
@@ -82,47 +100,50 @@ public class DataImportCycle : IDisposable
 
             foreach (var action in Actions)
             {
-                if (!string.IsNullOrWhiteSpace(action.TargetDataType))
+                if (string.IsNullOrWhiteSpace(action.TargetDataType)) continue;
+
+                var uri = FindImportUri(action.TargetDataType);
+
+                int baseCost = ApiService.GetCost(uri);
+
+                int symbolCount = SymbolMetaDataRepository.Find(s =>
+                    s.Exchange != null &&
+                    s.Exchange.Equals(action.TargetName, StringComparison.InvariantCultureIgnoreCase)).Count();
+
+                int factor = action.TargetDataType! switch
                 {
-                    var uri = FindImportUri(action.TargetDataType);
+                    DataTypes.Dividends => symbolCount,
+                    DataTypes.Exchanges => 1,
+                    DataTypes.Fundamentals => SymbolMetaDataRepository.RequiresFundamentalsCount(action.TargetName),
+                    DataTypes.Options => symbolCount,
+                    DataTypes.Prices => symbolCount,
+                    DataTypes.Splits => symbolCount,
+                    DataTypes.Symbols => 1,
+                    _ => 0
+                };
 
-                    int baseCost = ApiService.GetCost(uri);
+                int cost = baseCost * factor;
 
-                    int symbolCount = SymbolMetaDataRepository.Find(s =>
-                        s.Exchange != null &&
-                        s.Exchange.Equals(action.TargetName, StringComparison.InvariantCultureIgnoreCase)).Count();
+                action.EstimatedCost = cost;
 
-                    int factor = action.TargetDataType! switch
-                    {
-                        DataTypes.Dividends => symbolCount,
-                        DataTypes.Exchanges => 1,
-                        DataTypes.Fundamentals => Math.Min(SymbolMetaDataRepository.RequiresFundamentalsCount, symbolCount),
-                        DataTypes.Options => SymbolMetaDataRepository.Find(s => s.HasOptions).Count(),
-                        DataTypes.Prices => symbolCount,
-                        DataTypes.Splits => symbolCount,
-                        DataTypes.Symbols => symbolCount,
-                        _ => 0
-                    };
-
-                    int cost = baseCost * factor;
-
-                    action.EstimatedCost = cost;
-
-                    if (cost > availableCredits)
-                    {
-                        removalCandidates.Add(action);
-                    }
-                    else
-                    {
-                        availableCredits -= cost;
-                    }
+                if (cost > availableCredits)
+                {
+                    removalCandidates.Add(action);
                 }
+                else
+                {
+                    availableCredits -= cost;
+                }
+            }
+
+            foreach (var r in removalCandidates)
+            {
+                DomainEventPublisher.RaiseMessageEvent(this, $"{r.ActionName}-{r.TargetName} removed because cost was too high.",
+                    nameof(DataImportCycle), LogLevel.Information);
             }
 
             // All the specified actions were saved, but only those we can afford remain in this cycle.
             Actions = Actions.Except(removalCandidates).ToArray();
-
-            // TODO: Raise messages here about removed actions.
 
             if (!dryRun)
             {
@@ -155,10 +176,10 @@ public class DataImportCycle : IDisposable
                     continue;
                 }
 
-                if (action.ActionName == ActionNames.Fix)
-                {
-                    await dataImportService.ApplyFixAsync(action.TargetName, cancellationToken);
-                }
+                //if (action.ActionName == ActionNames.Fix)
+                //{
+                //    await dataImportService.ApplyFixAsync(action.TargetName, cancellationToken);
+                //}
 
                 if (action.ActionName == ActionNames.Purge)
                 {
@@ -177,9 +198,10 @@ public class DataImportCycle : IDisposable
                 {
                     if (DateTime.TryParse(action.TargetScope, out DateTime date))
                     {
-                        if (action.TargetName == PurgeName.ApiResponses)
+                        if (action.TargetName == PurgeName.Cycles)
                         {
-                            await dataImportService.TruncateApiResponsesAsync(date, cancellationToken);
+                            //TODO: do something here.
+                            //await dataImportService.TruncateApiResponsesAsync(date, cancellationToken);
                         }
                         else if (action.TargetName == PurgeName.ActionItems)
                         {
@@ -231,13 +253,13 @@ public class DataImportCycle : IDisposable
             }
         }
 
-        if (config.Fixes?.Any() ?? false)
-        {
-            foreach (var name in config.Fixes)
-            {
-                items.Add(new ActionItem(ActionNames.Fix, name, null, null, 100)); // send to the end of the list
-            }
-        }
+        //if (config.Fixes?.Any() ?? false)
+        //{
+        //    foreach (var name in config.Fixes)
+        //    {
+        //        items.Add(new ActionItem(ActionNames.Fix, name, null, null, 100)); // send to the end of the list
+        //    }
+        //}
 
         if (config.DataRetention?.Any() ?? false)
         {
@@ -387,11 +409,6 @@ public class DataImportCycle : IDisposable
             if (Enum.TryParse(kvp.Key, out LogLevel logLevel))
             {
                 yield return new ActionItem(ActionNames.Truncate, logLevel.GetDescription(),
-                    ConvertTextToDateTime(kvp.Value).ToString(), null, 5);
-            }
-            else if (kvp.Key == PurgeName.ApiResponses)
-            {
-                yield return new ActionItem(ActionNames.Truncate, kvp.Key,
                     ConvertTextToDateTime(kvp.Value).ToString(), null, 5);
             }
         }

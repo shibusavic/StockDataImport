@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
+using Import.Infrastructure.Events;
 using System.Collections.ObjectModel;
 
 namespace Import.Infrastructure.PostgreSQL;
@@ -11,13 +12,19 @@ internal partial class ImportsDbContext
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (company.General.Code == null) throw new ArgumentException($"{nameof(company)} is missing Code.");
+        if (company.General.Exchange == null) throw new ArgumentException($"{nameof(company)} is missing Exchange.");
+        if (company.General.Type == null) throw new ArgumentException($"{nameof(company)} is missing Type.");
+        if (company.General.Name == null) throw new ArgumentException($"{nameof(company)} is missing Name.");
+
         var companyId = await GetCompanyIdAsync(company.General.Code,
             company.General.Exchange, company.General.Type, company.General.Name);
 
         var companyGeneral = new DataAccessObjects.Company(company, companyId);
 
-        var address = company.General.AddressData == null ? null :
-            new DataAccessObjects.CompanyAddress(companyId, company.General.AddressData.GetValueOrDefault());
+        var address = company.General.AddressData?.IsValid ?? false
+            ? new DataAccessObjects.CompanyAddress(companyId, company.General.AddressData.GetValueOrDefault())
+            : null;
 
         Collection<DataAccessObjects.CompanyListing> listings = new();
 
@@ -44,10 +51,10 @@ internal partial class ImportsDbContext
                 .Select(v => new DataAccessObjects.CompanyDividendsByYear(companyId, v)).ToArray();
         var analystRatings = new DataAccessObjects.CompanyAnalystRating(companyId, company.AnalystRatings);
 
-        var institutionHolders = company.Holders.Institutions?.Values
+        var institutionHolders = company.Holders?.Institutions?.Values
             .Select(h => new DataAccessObjects.CompanyHolder(companyId, "Institution", h));
 
-        var fundHolders = company.Holders.Funds?.Values
+        var fundHolders = company.Holders?.Funds?.Values
                 .Select(h => new DataAccessObjects.CompanyHolder(companyId, "Fund", h));
 
         var holders = (institutionHolders ?? Array.Empty<DataAccessObjects.CompanyHolder>()).Union(
@@ -106,7 +113,7 @@ internal partial class ImportsDbContext
         var incomeStatements = (incomeStatementQuarterly ?? Array.Empty<DataAccessObjects.CompanyIncomeStatement>())
             .Union(incomeStatementAnnual ?? Array.Empty<DataAccessObjects.CompanyIncomeStatement>()).ToArray();
 
-        List<Task> taskList = new()
+        Collection<Task> taskList = new()
         {
             Task.Run(() => SaveFundamentalDataAsync(companyGeneral,cancellationToken), cancellationToken),
             Task.Run(() => SaveFundamentalDataAsync(address,cancellationToken), cancellationToken),
@@ -132,7 +139,19 @@ internal partial class ImportsDbContext
             Task.Run(() => SaveFundamentalDataAsync(incomeStatements, cancellationToken), cancellationToken)
         };
 
-        Task.WaitAll(taskList.ToArray(), cancellationToken);
+        try
+        {
+            Task.WaitAll(taskList.ToArray(), cancellationToken);
+        }
+        catch (AggregateException exc)
+        {
+            for (int i = 0; i < exc.InnerExceptions.Count; i++)
+            {
+                DomainEventPublisher.RaiseMessageEvent(this, exc.InnerExceptions[i].ToString(),
+                    nameof(SaveCompanyAsync),
+                    Microsoft.Extensions.Logging.LogLevel.Error);
+            }
+        }
     }
 
     internal async Task<Guid> GetCompanyIdAsync(string symbol, string exchange,
@@ -169,7 +188,7 @@ WHERE symbol = @Symbol AND exchange = @Exchange AND type = @Type AND name = @Nam
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(T));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {obj!.GetType().Name}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {obj!.GetType().Name}"); }
 
         return ExecuteAsync(sql, obj, null, cancellationToken);
     }
@@ -182,7 +201,7 @@ WHERE symbol = @Symbol AND exchange = @Exchange AND type = @Type AND name = @Nam
 
         string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(T));
 
-        if (sql == null) { throw new Exception($"Could not create upsert for {obj!.GetType()?.GetElementType()?.Name}"); }
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {obj!.GetType()?.GetElementType()?.Name}"); }
 
         return ExecuteAsync(sql, obj, null, cancellationToken);
     }

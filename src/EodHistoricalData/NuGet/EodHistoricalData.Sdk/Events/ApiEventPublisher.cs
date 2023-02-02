@@ -4,6 +4,8 @@ namespace EodHistoricalData.Sdk.Events;
 
 public static class ApiEventPublisher
 {
+    public const string MissingFundamentalsMessagePrefix = "No fundamentals found for";
+
     public static event EventHandler<MessageEventArgs>? RaiseMessageEventHandler;
     public static event EventHandler<ApiLimitReachedEventArgs>? RaiseApiLimitReachedEventHandler;
     public static event EventHandler<ApiResponseEventArgs>? RaiseApiResponseEventHandler;

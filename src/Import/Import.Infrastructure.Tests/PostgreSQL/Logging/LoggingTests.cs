@@ -76,25 +76,6 @@ public class LoggingTests : IClassFixture<DbFixture>
     }
 
     [Fact]
-    public async Task PurgeApiResponses_DeletesAll()
-    {
-        await CreateApiResponsesAsync(DateTime.Now.AddYears(-1));
-
-        var sut = fixture.LogsDbContext;
-
-        var count = await sut.CountApiResponsesAsync();
-
-        Assert.NotEqual(0, count);
-
-        await sut.PurgeApiResponsesAsync();
-
-        count = await sut.CountApiResponsesAsync();
-
-        Assert.Equal(0, count);
-    }
-
-
-    [Fact]
     public async Task TruncateLogs_RespectsDate()
     {
         await CreateLogsAsync(DateTime.Now.AddYears(-1), null, 1, 3);
@@ -111,21 +92,6 @@ public class LoggingTests : IClassFixture<DbFixture>
         logIds = (await sut.GetAllLogsIdsBeforeDateAsync(targetDate)).ToArray();
 
         Assert.Empty(logIds);
-    }
-
-    [Fact]
-    public async Task SaveApiResponse_SavesAsync()
-    {
-        var sut = fixture.LogsDbContext;
-
-        int beforeCount = await fixture.GetApiResponseCount();
-        int expectedCount = beforeCount + 1;
-
-        await sut.SaveApiResponseAsync("request", "response", 200);
-
-        var actualCount = await fixture.GetApiResponseCount();
-
-        Assert.Equal(expectedCount, actualCount);
     }
 
     private static readonly Random Random = new(Guid.NewGuid().GetHashCode());
@@ -172,28 +138,6 @@ public class LoggingTests : IClassFixture<DbFixture>
                 await db.SaveActionItemAsync(new Domain.ActionItem(Guid.NewGuid(),
                     1, "Import", "Test", Abstractions.ImportActionStatus.NotStarted,
                     runner, null, null, "Full", null, null));
-            }
-
-            runner = runner.AddDays(1);
-        }
-    }
-
-    private async Task CreateApiResponsesAsync(DateTime startDate, DateTime? endDate = null,
-        int minPerDay = 0, int maxPerDay = 5)
-    {
-        endDate ??= DateTime.UtcNow.AddDays(-1);
-
-        DateTime runner = startDate;
-
-        var db = fixture.LogsDbContext;
-
-        while (runner < endDate)
-        {
-            int num = Random.Next(minPerDay, maxPerDay + 1);
-
-            for (int i = 0; i < num; i++)
-            {
-                await db.SaveApiResponseAsync("request","response",200);
             }
 
             runner = runner.AddDays(1);
