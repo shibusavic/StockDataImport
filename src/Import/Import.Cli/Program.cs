@@ -2,14 +2,19 @@
 using EodHistoricalData.Sdk.Events;
 using Import.AppServices;
 using Import.AppServices.Configuration;
+using Import.Infrastructure;
+using Import.Infrastructure.Domain;
 using Import.Infrastructure.Events;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shibusa.Extensions;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using static Import.Infrastructure.Configuration.Constants;
 
 Stopwatch timer = Stopwatch.StartNew();
 
@@ -25,7 +30,6 @@ ILogger? logger = null;
 IConfiguration configuration;
 
 DataImportService? dataImportService = null;
-DataImportCycle? dataImportCycle = null;
 ImportConfiguration importConfiguration = new();
 FileInfo configFileInfo = new(DefaultConfigFileName);
 
@@ -41,7 +45,6 @@ var cancellationToken = cts.Token;
 
 if (!showHelp)
 {
-
     ApiEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
     ApiEventPublisher.RaiseApiLimitReachedEventHandler += EventPublisher_RaiseApiLimitReachedEventHandler;
 
@@ -59,32 +62,117 @@ try
     {
         Configure();
 
-        string welcomeMsg = dryRun ? "Dry Run (api credit cost estimation)" : "Welcome. Configuration complete.";
+        string welcomeMsg = dryRun ? "Dry Run (api credit cost estimation)" : "Configuration complete.";
         Communicate(welcomeMsg, false, true);
 
-        await dataImportCycle!.ExecuteAsync(importConfiguration, dryRun, cancellationToken);
+        using var cycle = dataImportService!.GetImportCycle(importConfiguration, new DirectoryInfo("cycles"));
+
+        if (!(cycle?.Actions.Any() ?? false))
+        {
+            throw new Exception($"No actions were discovered with the provided configuration.");
+        }
 
         if (dryRun)
         {
-            Communicate("Note that the following costs are estimates based on the information already present in your database.", true);
-            Communicate("If the database is empty or the symbols table is empty, the estimates will be zero.", true);
-            Communicate("Attempts are made along the way to prevent exceeding the specified API call limit.", true);
-            Communicate("", true);
-
-            foreach (var action in dataImportCycle.Actions)
-            {
-                Communicate(action.ToString(), true);
-            }
-
-            Communicate($"{NL}Total estimated cost:\t{dataImportCycle.Actions.Select(a => a.EstimatedCost).Sum()}{NL}", true);
+            ShowCost(cycle);
         }
         else
         {
-            if (dataImportService != null)
+            Communicate($"Cycle created: {cycle.Id}", false, true);
+
+            var purgeActions = cycle.Actions.Where(a => a.ActionName.Equals(ActionNames.Purge) &&
+                a.Status == Import.Infrastructure.Abstractions.ImportActionStatus.NotStarted).ToArray();
+
+            if (purgeActions.Any())
             {
-                Communicate("Saving symbols to ignore", false, true);
-                await dataImportService.SaveSymbolsToIgnoreAsync(cancellationToken);
+                DomainEventPublisher.RaiseMessageEvent(null, $"{purgeActions.Length} purge actions found.", "Program");
+
+                await Parallel.ForEachAsync(purgeActions,
+                    new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
+                {
+                    try
+                    {
+                        action.Start();
+
+                        Task t = dataImportService.PurgeDataAsync(action.TargetName, cycle, ct);
+                        DomainEventPublisher.RaiseMessageEvent(null, $"Purging {action.TargetName}", "Program");
+                        await t;
+                        DomainEventPublisher.RaiseMessageEvent(null, $"Purging of {action.TargetName} complete.", "Program");
+
+                        if (action.TargetName.Equals(PurgeName.Imports))
+                        {
+                            // Meta data may have changed as a result of the purge.
+                            t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
+                            DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", "Program");
+                            await t;
+                        }
+
+                        action.Complete();
+                    }
+                    catch (Exception exc)
+                    {
+                        action.Error(exc);
+                    }
+                });
             }
+
+            var importActions = cycle.Actions.Where(a => a.ActionName.Equals(ActionNames.Import) &&
+                a.Status == Import.Infrastructure.Abstractions.ImportActionStatus.NotStarted).ToArray();
+
+            if (importActions.Any())
+            {
+                DomainEventPublisher.RaiseMessageEvent(null, $"{importActions.Length} import actions found.", "Program");
+
+                await Parallel.ForEachAsync(importActions,
+                    new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
+                    {
+                        try
+                        {
+                            action.Start();
+
+                            Task t = dataImportService.ImportDataAsync(action, importConfiguration, ct);
+                            await t;
+
+                            if (action.TargetName.Equals(PurgeName.Imports))
+                            {
+                                // Meta data may have changed as a result of the purge.
+                                t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
+                                DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", "Program");
+                                await t;
+                            }
+
+                            action.Complete();
+                        }
+                        catch (Exception exc)
+                        {
+                            action.Error(exc);
+                        }
+                    });
+            }
+            /*
+
+//            if (!dryRun)
+//            {
+//                await ExecuteAsync(importConfiguration, cancellationToken);
+//                //await dataImportService.LogsDb.SaveActionItemsAsync(Actions, cancellationToken);
+//            }
+//        }
+//    }
+
+ */
+
+            foreach (var action in cycle.Actions.OrderBy(a => a.UtcCompleted))
+            {
+                string text = $"{action} {action.Status.GetDescription()} {action.Details}";
+                DomainEventPublisher.RaiseMessageEvent(null, text, "Program");
+                if (action.Exception != null)
+                {
+                    DomainEventPublisher.RaiseMessageEvent(null, action.Exception.ToString(), "Program");
+                }
+            }
+
+            Communicate("Saving symbols to ignore", false, true);
+            await dataImportService.SaveSymbolsToIgnoreAsync(cancellationToken);
         }
     }
 
@@ -109,7 +197,6 @@ finally
 
     timer.Stop();
 
-
     if (!showHelp)
     {
         ApiEventPublisher.RaiseMessageEventHandler -= EventPublisher_RaiseMessageEventHandler;
@@ -119,11 +206,36 @@ finally
         DomainEventPublisher.RaiseMessageEventHandler -= EventPublisher_RaiseMessageEventHandler;
     }
 
-    dataImportCycle?.Dispose();
     loggerProvider?.Dispose();
     cts.Dispose();
 
     Environment.Exit(exitCode);
+}
+
+
+void ShowCost(ImportCycle cycle)
+{
+    DataImportService.CalculateCost(cycle);
+
+    int totalCost = 0;
+    bool unknowable = false;
+    foreach (var action in cycle.Actions)
+    {
+        if (action.EstimatedCost == null && action.ActionName == ActionNames.Import)
+        {
+            unknowable = true;
+        }
+        totalCost += action.EstimatedCost ?? 0;
+        Communicate($"{action.EstimatedCost.ToString() ?? " ",9}\t{action}", true);
+    }
+    if (unknowable)
+    {
+        Communicate($"Unknown Total cost; necessary inputs missing - probably an empty database.");
+    }
+    else
+    {
+        Communicate($"{totalCost,9}\tTotal cost.");
+    }
 }
 
 void EventPublisher_RaiseApiLimitReachedEventHandler(object? sender, ApiLimitReachedEventArgs e)
@@ -180,7 +292,7 @@ void WriteApiUsage()
     sb.AppendLine($"Daily Limit: {ApiService.DailyLimit}");
     sb.AppendLine(line);
 
-    Communicate(line);
+    Communicate(sb.ToString());
 }
 
 void ShowHelp(string? message = null)
@@ -265,7 +377,7 @@ void Configure()
 
 void ConfigureServices()
 {
-    Communicate("Configuring services ...", prefixWithTimestamp: true);
+    Communicate("Configuring services.", prefixWithTimestamp: true);
 
     var services = new ServiceCollection();
 
@@ -286,18 +398,24 @@ void ConfigureServices()
         _ = logger.BeginScope(sourceName);
     }
 
-    Communicate($"Reading {configFileInfo.FullName}", prefixWithTimestamp: true);
+    Communicate("Configuring service factory.", prefixWithTimestamp: true);
+    serviceFactory = new ServiceFactory(configuration, logger);
+
+    Communicate("Loading in-memory data.", prefixWithTimestamp: true);
+    var metaDataTask = serviceFactory.LoadStaticDataAsync();
+
+    Communicate($"Reading {configFileInfo.FullName}.", prefixWithTimestamp: true);
     importConfiguration = ImportConfiguration.Create(File.ReadAllText(configFileInfo.FullName));
     apiKey ??= importConfiguration.ApiKey; // This is the final check for the key.
     importConfiguration.ApiKey = apiKey;
 
     if (importConfiguration.ApiKey == null) { throw new Exception("Could not determine API key."); }
 
-    serviceFactory = new ServiceFactory(configuration, logger);
-
-    Communicate("Creating data import cycle; this might take a few minutes.", prefixWithTimestamp: true);
-    dataImportCycle = serviceFactory.CreateDataImportCycle(importConfiguration);
+    Communicate("Creating data import service.", prefixWithTimestamp: true);
     dataImportService = serviceFactory.CreateDataImportService(apiKey!);
+
+    Communicate("Finishing load of in-memory data.", prefixWithTimestamp: true);
+    metaDataTask.GetAwaiter().GetResult();
 }
 
 void Communicate(string? message, bool force = false, bool prefixWithTimestamp = false)
@@ -310,9 +428,11 @@ void Communicate(string? message, bool force = false, bool prefixWithTimestamp =
         }
         else
         {
-            Console.WriteLine(prefixWithTimestamp
-                ? $"{DateTime.Now:yyyy-MM-dd HH:mm}\t{message}"
-                : message);
+            string line = prefixWithTimestamp
+                ? $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\t{message}"
+                : message;
+            Console.WriteLine(line);
+
         }
     }
 }

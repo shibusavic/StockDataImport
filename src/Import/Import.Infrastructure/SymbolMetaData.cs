@@ -1,9 +1,10 @@
 ﻿using EodHistoricalData.Sdk;
+using EodHistoricalData.Sdk.Models;
 using Shibusa.Extensions;
 
 namespace Import.Infrastructure
 {
-    internal class SymbolMetaData : IEquatable<SymbolMetaData?>
+    public class SymbolMetaData : IEquatable<SymbolMetaData?>
     {
         public SymbolMetaData(string code, string symbol, string? exchange, string? type)
         {
@@ -44,17 +45,16 @@ namespace Import.Infrastructure
 
         public DateTime? LastUpdatedFinancials { get; internal set; }
 
-        public bool RequiresFundamentalUpdate => Type == null ? false
-                    : UseCompanyFundamentals ? LastUpdatedFinancials.GetValueOrDefault() < DateTime.Now.AddDays(-90)
-                    : UseEtfFundamentals ? LastUpdatedEntity.GetValueOrDefault() < DateTime.Now.AddDays(-7)
-                    : false;
+        public bool RequiresFundamentalUpdate => Type != null 
+            && (UseCompanyFundamentals ? LastUpdatedFinancials.GetValueOrDefault() < DateTime.Now.AddDays(-90)
+                    : UseEtfFundamentals && LastUpdatedEntity.GetValueOrDefault() < DateTime.Now.AddDays(-7));
 
         internal void Update(SymbolMetaData metaDataItem, bool allowReplacementWithNull = false)
         {
             Sector = Sector == null || allowReplacementWithNull ? metaDataItem.Sector
-                : metaDataItem.Sector == null ? Sector : metaDataItem.Sector;
+                : metaDataItem.Sector ?? Sector;
             Industry = Industry == null || allowReplacementWithNull ? metaDataItem.Sector
-                : metaDataItem.Industry == null ? Industry : metaDataItem.Industry;
+                : metaDataItem.Industry ?? Industry;
             LastTrade = LastTrade.Start == null || allowReplacementWithNull ? metaDataItem.LastTrade
                 : metaDataItem.LastTrade.Start == null ? LastTrade : metaDataItem.LastTrade;
             LastUpdatedOptions = LastUpdatedOptions == null || allowReplacementWithNull ? metaDataItem.LastUpdatedOptions

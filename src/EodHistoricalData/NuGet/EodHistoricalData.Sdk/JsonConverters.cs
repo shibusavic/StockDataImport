@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using EodHistoricalData.Sdk.Events;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -47,7 +48,7 @@ public static class JsonSerializerOptionsFactory
     }
 }
 
-public class NullableStringJsonConverter: JsonConverter<string?>
+public class NullableStringJsonConverter : JsonConverter<string?>
 {
     public override string? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -175,7 +176,9 @@ public class NullableDateTimeJsonConverter : JsonConverter<DateTime?>
             }
             catch (Exception exc)
             {
-                string x = exc.ToString();
+                ApiEventPublisher.RaiseMessageEvent(this, exc.ToString(),
+                    nameof(NullableDateTimeJsonConverter),
+                    Microsoft.Extensions.Logging.LogLevel.Error);
             }
             return null;
         }

@@ -1,4 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using Import.Infrastructure;
+using Import.Infrastructure.Domain;
+using Microsoft.VisualBasic;
+using System;
+using System.Collections.ObjectModel;
+using static Import.Infrastructure.Configuration.Constants;
 
 namespace Import.Infrastructure;
 
@@ -10,17 +15,33 @@ internal static class SymbolMetaDataRepository
     /// Overwrites internal collection of <see cref="SymbolMetaDataCollection"/>.
     /// </summary>
     /// <param name="symbolMetaData"></param>
-    public static void SetItems(SymbolMetaData[] symbolMetaData)
+    public static void SetItems(IEnumerable<SymbolMetaData> symbolMetaData)
     {
         metaData.Clear();
         metaData.AddRange(symbolMetaData);
-     
+
         Count = metaData.Count;
     }
 
     public static SymbolMetaData[] GetAll() => metaData.ToArray();
 
     public static int Count { get; private set; }
+
+    public static void AddOrUpdate(SymbolMetaData symbolMetaData)
+    {
+        lock (metaData) // Without this lock, this can crash because the underlying collection can change.
+        {
+            if (metaData.ContainsKey(symbolMetaData.Code))
+            {
+                metaData[symbolMetaData.Code].Update(symbolMetaData);
+            }
+            else
+            {
+                metaData.Add(symbolMetaData);
+                Count++;
+            }
+        }
+    }
 
     public static int RequiresFundamentalsCount(string? exchange = null)
     {
@@ -33,17 +54,11 @@ internal static class SymbolMetaDataRepository
 
     public static IEnumerable<SymbolMetaData> Find(Predicate<SymbolMetaData> predicate) => metaData.Where(d => predicate(d));
 
-    public static void AddOrUpdate(SymbolMetaData symbolMetaData)
+    public static IEnumerable<SymbolMetaData> Find(ActionItem action)
     {
-        if (metaData.ContainsKey(symbolMetaData.Code))
-        {
-            metaData[symbolMetaData.Code].Update(symbolMetaData);
-        }
-        else
-        {
-            metaData.Add(symbolMetaData);
-            Count++;
-        }
+        return action.ActionName == ActionNames.Import
+            ? Find(s => s.Exchange == action.TargetName)
+            : Enumerable.Empty<SymbolMetaData>();
     }
 }
 

@@ -1,6 +1,7 @@
 ﻿using Import.AppServices.Configuration;
 using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Domain;
+using Import.Infrastructure.Events;
 using Microsoft.Extensions.Logging;
 using Shibusa.Extensions;
 using System.Runtime.CompilerServices;
@@ -12,109 +13,103 @@ namespace Import.AppServices;
 
 public class ActionService
 {
-    private readonly ILogsDbContext logsDb;
     private readonly IImportsDbContext importsDb;
 
-    internal ActionService(ILogsDbContext logsDbContext, IImportsDbContext importsDbContext)
+    internal ActionService(IImportsDbContext importsDbContext)
     {
-        logsDb = logsDbContext;
         importsDb = importsDbContext;
     }
 
-    public async Task<IEnumerable<ActionItem>> GetActionItemsAsync(ImportConfiguration config)
+    public IEnumerable<ActionItem> GetSortedActionItems(ImportConfiguration config, ImportCycle? cycle = null)
     {
         List<ActionItem> items = new();
-
-        bool purgingActions = false;
 
         if (config.Purges?.Any() ?? false)
         {
             foreach (var name in config.Purges)
             {
-                purgingActions = purgingActions | name.Equals(PurgeName.ActionItems);
-
-                items.Add(new ActionItem(ActionNames.Purge, name, null, null, 0));
+                items.Add(new ActionItem(ActionNames.Purge, name, null, null, null, cycle));
             }
         }
 
-        // get the undone items from the db - if we're not purging actions.
-        if (!purgingActions)
-        {
-            items.AddRange(await logsDb.GetActionItemsByStatusAsync(ImportActionStatus.UsageRequirementMet
-                | ImportActionStatus.Error | ImportActionStatus.InProgress | ImportActionStatus.NotStarted));
-        }
-
-        //if (config.Fixes?.Any() ?? false)
-        //{
-        //    foreach (var name in config.Fixes)
-        //    {
-        //        items.Add(new ActionItem(ActionNames.Fix, name, null, null, 100)); // send to the end of the list
-        //    }
-        //}
-
         if (config.DataRetention?.Any() ?? false)
         {
-            items.AddRange(GetDataRentionActions(config.DataRetention));
+            items.AddRange(GetDataRentionActions(config.DataRetention, cycle));
         }
 
-        if (await importsDb.IsDatabaseEmptyAsync() && (config.OnEmptyDatabase?.Any() ?? false))
+        if (config.Exchanges != null)
         {
-            items.AddRange(ParseActionItems(nameof(config.OnEmptyDatabase), config.OnEmptyDatabase!));
+            foreach (var k in config.Exchanges)
+            {
+                string exchangeCode = k.Key;
+
+                foreach (var filter in k.Value)
+                {
+                    if (filter.Key.Equals("Exchanges", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        string[] exchanges = filter.Value;
+
+                        if (importsDb.IsDatabaseEmptyAsync().GetAwaiter().GetResult() && (config.OnEmptyDatabase?.Any() ?? false))
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.OnEmptyDatabase), config.OnEmptyDatabase!,
+                                exchangeCode, exchanges, cycle));
+                        }
+
+                        if (config.AnyDay?.Any() ?? false)
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.AnyDay), config.AnyDay!,exchangeCode, exchanges, cycle));
+                        }
+
+                        var dayOfWeek = DateTime.UtcNow.DayOfWeek;
+
+                        if ((config.Sunday?.Any() ?? false) && dayOfWeek == DayOfWeek.Sunday)
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.Sunday), config.Sunday!, exchangeCode, exchanges, cycle));
+                        }
+
+                        if ((config.Monday?.Any() ?? false) && dayOfWeek == DayOfWeek.Monday)
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.Monday), config.Monday!, exchangeCode, exchanges, cycle));
+                        }
+
+                        if ((config.Tuesday?.Any() ?? false) && dayOfWeek == DayOfWeek.Tuesday)
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.Tuesday), config.Tuesday!, exchangeCode, exchanges, cycle));
+                        }
+
+                        if ((config.Wednesday?.Any() ?? false) && dayOfWeek == DayOfWeek.Wednesday)
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.Wednesday), config.Wednesday!, exchangeCode, exchanges, cycle));
+                        }
+
+                        if ((config.Thursday?.Any() ?? false) && dayOfWeek == DayOfWeek.Thursday)
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.Thursday), config.Thursday!, exchangeCode, exchanges, cycle));
+                        }
+
+                        if ((config.Friday?.Any() ?? false) && dayOfWeek == DayOfWeek.Friday)
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.Friday), config.Friday!, exchangeCode, exchanges, cycle));
+                        }
+
+                        if ((config.Saturday?.Any() ?? false) && dayOfWeek == DayOfWeek.Saturday)
+                        {
+                            items.AddRange(ParseActionItems(nameof(config.Saturday), config.Saturday!, exchangeCode, exchanges, cycle));
+                        }
+                    }
+                }
+            }
         }
 
-        if (config.AnyDay?.Any() ?? false)
-        {
-            items.AddRange(ParseActionItems(nameof(config.AnyDay), config.AnyDay!));
-        }
 
-        var dayOfWeek = DateTime.UtcNow.DayOfWeek;
-
-        if ((config.Sunday?.Any() ?? false) && dayOfWeek == DayOfWeek.Sunday)
-        {
-            items.AddRange(ParseActionItems(nameof(config.Sunday), config.Sunday!));
-        }
-
-        if ((config.Monday?.Any() ?? false) && dayOfWeek == DayOfWeek.Monday)
-        {
-            items.AddRange(ParseActionItems(nameof(config.Monday), config.Monday!));
-        }
-
-        if ((config.Tuesday?.Any() ?? false) && dayOfWeek == DayOfWeek.Tuesday)
-        {
-            items.AddRange(ParseActionItems(nameof(config.Tuesday), config.Tuesday!));
-        }
-
-        if ((config.Wednesday?.Any() ?? false) && dayOfWeek == DayOfWeek.Wednesday)
-        {
-            items.AddRange(ParseActionItems(nameof(config.Wednesday), config.Wednesday!));
-        }
-
-        if ((config.Thursday?.Any() ?? false) && dayOfWeek == DayOfWeek.Thursday)
-        {
-            items.AddRange(ParseActionItems(nameof(config.Thursday), config.Thursday!));
-        }
-
-        if ((config.Friday?.Any() ?? false) && dayOfWeek == DayOfWeek.Friday)
-        {
-            items.AddRange(ParseActionItems(nameof(config.Friday), config.Friday!));
-        }
-
-        if ((config.Saturday?.Any() ?? false) && dayOfWeek == DayOfWeek.Saturday)
-        {
-            items.AddRange(ParseActionItems(nameof(config.Saturday), config.Saturday!));
-        }
 
         return SortActionItems(items);
     }
 
-    public Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        return logsDb.SaveActionItemsAsync(actions, cancellationToken);
-    }
-
-    private static IEnumerable<ActionItem> ParseActionItems(string parent, ImportActions[]? actions)
+    private static IEnumerable<ActionItem> ParseActionItems(string parent, ImportActions[]? actions,
+        string? exchangeCode = null,
+        string[]? exchanges = null,
+        ImportCycle? cycle = null)
     {
         if (actions?.Any() ?? false)
         {
@@ -122,7 +117,7 @@ public class ActionService
             {
                 if (action.Skip.GetValueOrDefault())
                 {
-                    yield return new ActionItem(ActionNames.Skip, parent);
+                    yield return new ActionItem(ActionNames.Skip, parent, null, null, null, null);
                     continue;
                 }
 
@@ -130,35 +125,36 @@ public class ActionService
                 {
                     yield return new ActionItem(ActionNames.Import,
                         DataTypes.Exchanges, DataTypeScopes.Full.ToString(),
-                        DataTypes.Exchanges, action.Priority);
+                        DataTypes.Exchanges, exchangeCode, cycle);
                 }
 
-                if (action.IsValidForImport())
+                if (action.IsValidForImport() && (exchanges?.Any() ?? false))
                 {
-                    //foreach (var exchange in action.Exchanges!)
-                    //{
-                    //    if (exchange.Name != null)
-                    //    {
-                    //        foreach (var dataType in action.DataTypes!)
-                    //        {
-                    //            if (dataType == DataTypes.Exchanges) continue;
-                    //            yield return new ActionItem(ActionNames.Import, exchange.Name, action.Scope, dataType, action.Priority);
-                    //        }
-                    //    }
-                    //}
+                    foreach (var exchange in exchanges)
+                    {
+                        if (!string.IsNullOrWhiteSpace(exchange))
+                        {
+                            foreach (var dataType in action.DataTypes!)
+                            {
+                                if (dataType == DataTypes.Exchanges) continue;
+                                yield return new ActionItem(ActionNames.Import, exchange, action.Scope, dataType,
+                                    exchangeCode, cycle);
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    private IEnumerable<ActionItem> GetDataRentionActions(IDictionary<string, string> dataRetention)
+    private IEnumerable<ActionItem> GetDataRentionActions(IDictionary<string, string> dataRetention, ImportCycle? cycle = null)
     {
         foreach (var kvp in dataRetention)
         {
             if (Enum.TryParse(kvp.Key, out LogLevel logLevel))
             {
                 yield return new ActionItem(ActionNames.Truncate, logLevel.GetDescription(),
-                    ConvertTextToDateTime(kvp.Value).ToString(), null, 5);
+                    ConvertTextToDateTime(kvp.Value).ToString(), null, null, cycle);
             }
         }
     }
@@ -197,6 +193,7 @@ public class ActionService
 
         if (actions.Any(a => a.ActionName == ActionNames.Skip))
         {
+            DomainEventPublisher.RaiseMessageEvent(null, "Skip instruction encountered; removing all import actions", nameof(SortActionItems));
             actions.RemoveAll(r => r.ActionName == ActionNames.Import);
         }
 
@@ -227,19 +224,24 @@ public class ActionService
 
         foreach (var fullImport in fullImports)
         {
-            results.RemoveAll(r => r.ActionName == ActionNames.Import &&
-                r.TargetScope == DataTypeScopes.Bulk &&
-                r.TargetDataType == fullImport.TargetDataType);
+            int removalCount = results.RemoveAll(r => r.ActionName == ActionNames.Import &&
+                r.TargetDataType == fullImport.TargetDataType &&
+                r.TargetScope is DataTypeScopes.Bulk or DataTypeScopes.BulkFull);
+
+            if (removalCount > 0)
+            {
+                DomainEventPublisher.RaiseMessageEvent(null, $"Removed some Bulk or BulkFull actions ({fullImport.TargetDataType}) because equivalent Full actions were discovered.", nameof(SortActionItems));
+            }
         }
 
         return results;
     }
 
-    public static int ActionComparison(ActionItem item1, ActionItem item2)
+    private static int ActionComparison(ActionItem item1, ActionItem item2)
     {
         if (ReferenceEquals(item1, item2)) return 0;
 
-        int result = item1.Priority.CompareTo(item2.Priority);
+        int result = item1.ActionName.CompareTo(item2.ActionName);
 
         if (result == 0) { result = item1.TargetScopeValue.GetValueOrDefault().CompareTo(item2.TargetScopeValue.GetValueOrDefault()); }
         if (result == 0) { result = item1.TargetDataTypeSortValue.GetValueOrDefault().CompareTo(item2.TargetDataTypeSortValue.GetValueOrDefault()); }

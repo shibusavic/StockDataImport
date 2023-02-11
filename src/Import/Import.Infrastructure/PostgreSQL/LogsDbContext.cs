@@ -64,82 +64,82 @@ internal class LogsDbContext : BasePostgreSQLContext, ILogsDbContext
         });
     }
 
-    public Task SaveActionItemAsync(ActionItem actionItem, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
+    //public Task SaveActionItemAsync(ActionItem actionItem, CancellationToken cancellationToken = default)
+    //{
+    //    cancellationToken.ThrowIfCancellationRequested();
 
-        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
+    //    var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
 
-        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(DataAccessObjects.ActionItem)}"); }
+    //    if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(DataAccessObjects.ActionItem)}"); }
 
-        var dao = new DataAccessObjects.ActionItem(actionItem);
+    //    var dao = new DataAccessObjects.ActionItem(actionItem);
 
-        return ExecuteAsync(sql, dao, null, cancellationToken);
-    }
+    //    return ExecuteAsync(sql, dao, null, cancellationToken);
+    //}
 
-    public Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
-    {
-        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
+    //public Task SaveActionItemsAsync(IEnumerable<ActionItem> actions, CancellationToken cancellationToken = default)
+    //{
+    //    var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(DataAccessObjects.ActionItem));
 
-        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(DataAccessObjects.ActionItem)}"); }
+    //    if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(DataAccessObjects.ActionItem)}"); }
 
-        return ExecuteAsync(sql, actions.Select(a => new DataAccessObjects.ActionItem(a)).ToArray(), null, cancellationToken);
-    }
+    //    return ExecuteAsync(sql, actions.Select(a => new DataAccessObjects.ActionItem(a)).ToArray(), null, cancellationToken);
+    //}
 
-    public async Task<ActionItem?> GetActionItemAsync(Guid globalId, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
+//    public async Task<ActionItem?> GetActionItemAsync(Guid globalId, CancellationToken cancellationToken = default)
+//    {
+//        cancellationToken.ThrowIfCancellationRequested();
 
-        string sql = $@"
-{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.ActionItem))}
-WHERE global_id = @GlobalId";
+//        string sql = $@"
+//{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.ActionItem))}
+//WHERE global_id = @GlobalId";
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
+//        using var connection = await GetOpenConnectionAsync(cancellationToken);
 
-        var fromDb = await connection.QueryFirstOrDefaultAsync<DataAccessObjects.ActionItem>(sql, new
-        {
-            GlobalId = globalId
-        });
+//        var fromDb = await connection.QueryFirstOrDefaultAsync<DataAccessObjects.ActionItem>(sql, new
+//        {
+//            GlobalId = globalId
+//        });
 
-        await connection.CloseAsync();
+//        await connection.CloseAsync();
 
-        return fromDb.ToDomainObject();
-    }
+//        return fromDb.ToDomainObject();
+//    }
 
-    public async Task<IEnumerable<ActionItem>> GetActionItemsByStatusAsync(ImportActionStatus status, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
+//    public async Task<IEnumerable<ActionItem>> GetActionItemsByStatusAsync(ImportActionStatus status, CancellationToken cancellationToken = default)
+//    {
+//        cancellationToken.ThrowIfCancellationRequested();
 
-        string sql = $@"
-{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.ActionItem))}
-WHERE status = Any(@Statuses)
-";
-        List<string> statuses = new();
+//        string sql = $@"
+//{Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(DataAccessObjects.ActionItem))}
+//WHERE status = Any(@Statuses)
+//";
+//        List<string> statuses = new();
 
-        var possibleItems = Enum.GetValues<ImportActionStatus>()
-            .Where(e => !e.Equals(ImportActionStatus.None)).ToArray();
+//        var possibleItems = Enum.GetValues<ImportActionStatus>()
+//            .Where(e => !e.Equals(ImportActionStatus.None)).ToArray();
 
-        foreach (var item in possibleItems)
-        {
-            if (status.HasFlag(item))
-            {
-                statuses.Add(item.GetDescription());
-            }
-        }
+//        foreach (var item in possibleItems)
+//        {
+//            if (status.HasFlag(item))
+//            {
+//                statuses.Add(item.GetDescription());
+//            }
+//        }
 
-        if (!statuses.Any()) { return Enumerable.Empty<ActionItem>(); }
+//        if (!statuses.Any()) { return Enumerable.Empty<ActionItem>(); }
 
-        using var connection = await GetOpenConnectionAsync(cancellationToken);
+//        using var connection = await GetOpenConnectionAsync(cancellationToken);
 
-        DataAccessObjects.ActionItem[] daos = ((await connection.QueryAsync<DataAccessObjects.ActionItem>(sql, new
-        {
-            Statuses = statuses
-        })) ?? Enumerable.Empty<DataAccessObjects.ActionItem>()).ToArray();
+//        DataAccessObjects.ActionItem[] daos = ((await connection.QueryAsync<DataAccessObjects.ActionItem>(sql, new
+//        {
+//            Statuses = statuses
+//        })) ?? Enumerable.Empty<DataAccessObjects.ActionItem>()).ToArray();
 
-        await connection.CloseAsync();
+//        await connection.CloseAsync();
 
-        return daos.Any() ? daos.Select(d => d.ToDomainObject()!) : Enumerable.Empty<ActionItem>();
-    }
+//        return daos.Any() ? daos.Select(d => d.ToDomainObject()!) : Enumerable.Empty<ActionItem>();
+//    }
 
     public Task TruncateLogsAsync(string logLevel, DateTime date, CancellationToken cancellationToken = default)
     {
@@ -155,18 +155,18 @@ WHERE status = Any(@Statuses)
         }, 120, cancellationToken);
     }
 
-    public async Task TruncateActionItemsAsync(DateTime date, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
+    //public async Task TruncateActionItemsAsync(DateTime date, CancellationToken cancellationToken = default)
+    //{
+    //    cancellationToken.ThrowIfCancellationRequested();
 
-        string sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ActionItem)) ?? string.Empty;
-        sql += " WHERE utc_timestamp < @Date";
+    //    string sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ActionItem)) ?? string.Empty;
+    //    sql += " WHERE utc_timestamp < @Date";
 
-        await ExecuteAsync(sql, new
-        {
-            Date = date
-        }, 120, cancellationToken);
-    }
+    //    await ExecuteAsync(sql, new
+    //    {
+    //        Date = date
+    //    }, 120, cancellationToken);
+    //}
 
     public Task PurgeLogsAsync(CancellationToken cancellationToken = default)
     {
@@ -179,14 +179,14 @@ WHERE status = Any(@Statuses)
         return ExecuteAsync(sql, null, 120, cancellationToken);
     }
 
-    public Task PurgeActionItemsAsync(CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
+    //public Task PurgeActionItemsAsync(CancellationToken cancellationToken = default)
+    //{
+    //    cancellationToken.ThrowIfCancellationRequested();
 
-        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ActionItem));
+    //    var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(typeof(DataAccessObjects.ActionItem));
 
-        if (sql == null) { throw new Exception($"Could not create DELETE for {nameof(DataAccessObjects.ActionItem)}"); }
+    //    if (sql == null) { throw new Exception($"Could not create DELETE for {nameof(DataAccessObjects.ActionItem)}"); }
 
-        return ExecuteAsync(sql, null, 120, cancellationToken: cancellationToken);
-    }
+    //    return ExecuteAsync(sql, null, 120, cancellationToken: cancellationToken);
+    //}
 }

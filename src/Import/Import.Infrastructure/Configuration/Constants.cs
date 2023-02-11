@@ -10,7 +10,6 @@ public static class Constants
         public const string DatabasePurge = "Purge Data";
         public const string Exchanges = "Exchange Codes";
         public const string ReasonsToIgnore = "Reasons to Ignore";
-        public const string Fixes = "Fixes";
         public const string DataRetention = "Data Retention";
         public const string OnEmptyDb = "On Empty Database";
         public const string Sunday = "Sunday";
@@ -45,11 +44,11 @@ public static class Constants
     {
         public const string Bulk = "Bulk";
         public const string Full = "Full";
+        public const string BulkFull = "BulkFull";
     }
 
     public static class PurgeName
     {
-        public const string ActionItems = "Actions";
         public const string Cycles = "Cycles";
         public const string Imports = "Imports";
         public const string Logs = "Logs";

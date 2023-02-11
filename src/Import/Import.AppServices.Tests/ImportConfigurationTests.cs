@@ -399,7 +399,6 @@ Exchange Codes:
             ApiKey = "TEST",
             Purges = new string[] {
                 Constants.PurgeName.Logs,
-                Constants.PurgeName.ActionItems,
                 Constants.PurgeName.Imports
             },
             DataRetention = new Dictionary<string, string>()

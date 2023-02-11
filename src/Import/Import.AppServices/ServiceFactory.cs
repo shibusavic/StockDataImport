@@ -17,13 +17,13 @@ public sealed class ServiceFactory
     private readonly ILogger? logger;
     private readonly ILogsDbContext? logsDbContext;
     private readonly IImportsDbContext? importsDbContext;
-    private readonly IDictionary<ImportConfiguration, DataImportService> dataImportServices;
+    //private readonly IDictionary<ImportConfiguration, DataImportService> dataImportServices;
 
     public ServiceFactory(IConfiguration configuration, ILogger? logger = null)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-        dataImportServices = new Dictionary<ImportConfiguration, DataImportService>();
+        //dataImportServices = new Dictionary<ImportConfiguration, DataImportService>();
 
         this.logger = logger;
 
@@ -43,12 +43,31 @@ public sealed class ServiceFactory
 
     public IConfiguration Configuration { get; }
 
+    public Task LoadStaticDataAsync()
+    {
+        if (importsDbContext == null) return Task.CompletedTask;
+
+        return Task.Factory.StartNew(() =>
+        {
+            DomainEventPublisher.RaiseMessageEvent(this, "Loading symbol meta data.", nameof(LoadStaticDataAsync));
+
+            SymbolMetaDataRepository.SetItems(importsDbContext.GetSymbolMetaDataAsync().GetAwaiter().GetResult());
+
+            DomainEventPublisher.RaiseMessageEvent(this, "Loading symbols to ignore.", nameof(LoadStaticDataAsync));
+
+            SymbolsToIgnore.SetItems(importsDbContext.GetSymbolsToIgnoreAsync().GetAwaiter().GetResult());
+        });
+    }
+
+    public Task<IEnumerable<SymbolMetaData>> GetMetaData(CancellationToken cancellationToken = default)
+    {
+        return importsDbContext?.GetSymbolMetaDataAsync(cancellationToken) ?? Task.FromResult(Enumerable.Empty<SymbolMetaData>());
+    }
+
     public ActionService CreateImportActionService() =>
-        logsDbContext == null
-            ? throw new Exception($"{nameof(logsDbContext)} is not initialized")
-            : importsDbContext == null
+            importsDbContext == null
             ? throw new Exception($"{nameof(importsDbContext)} is not initialized")
-            : new ActionService(logsDbContext, importsDbContext);
+            : new ActionService(importsDbContext);
 
     public DataImportService CreateDataImportService(string apiKey, int maxUsage = 100_000) =>
         logsDbContext == null ? throw new Exception($"{nameof(logsDbContext)} is not initialized")
@@ -56,24 +75,24 @@ public sealed class ServiceFactory
             ? throw new Exception($"{nameof(importsDbContext)} is not initialized")
             : new DataImportService(logsDbContext, importsDbContext, apiKey, maxUsage);
 
-    internal DataImportService GetOrCreateDataImportService(ImportConfiguration importConfig)
-    {
-        if (!dataImportServices.ContainsKey(importConfig))
-        {
-            if (logsDbContext == null) { throw new Exception($"{nameof(logsDbContext)} is not initialized"); }
-            if (importsDbContext == null) { throw new Exception($"{nameof(importsDbContext)} is not initialized"); }
-            if (string.IsNullOrWhiteSpace(importConfig.ApiKey)) { throw new ArgumentException($"{nameof(importConfig.ApiKey)} is required."); }
+    //internal DataImportService GetOrCreateDataImportService(ImportConfiguration importConfig)
+    //{
+    //    if (!dataImportServices.ContainsKey(importConfig))
+    //    {
+    //        if (logsDbContext == null) { throw new Exception($"{nameof(logsDbContext)} is not initialized"); }
+    //        if (importsDbContext == null) { throw new Exception($"{nameof(importsDbContext)} is not initialized"); }
+    //        if (string.IsNullOrWhiteSpace(importConfig.ApiKey)) { throw new ArgumentException($"{nameof(importConfig.ApiKey)} is required."); }
 
-            dataImportServices.Add(importConfig,
-                    new DataImportService(logsDbContext, importsDbContext, importConfig.ApiKey!,
-                        ApiService.DailyLimit));
-        }
+    //        dataImportServices.Add(importConfig,
+    //                new DataImportService(logsDbContext, importsDbContext, importConfig.ApiKey!,
+    //                    ApiService.DailyLimit));
+    //    }
 
-        return dataImportServices[importConfig];
-    }
+    //    return dataImportServices[importConfig];
+    //}
 
-    public DataImportCycle CreateDataImportCycle(ImportConfiguration importConfiguration) =>
-        new(GetOrCreateDataImportService(importConfiguration), logger);
+    //public DataImportCycle CreateDataImportCycle(ImportConfiguration importConfiguration) =>
+    //    new(GetOrCreateDataImportService(importConfiguration), logger);
 
     /// <summary>
     /// Create an <see cref="ILoggerProvider"/> instance.

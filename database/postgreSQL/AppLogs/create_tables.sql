@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.action_items
   utc_started TIMESTAMP NULL,
   utc_completed TIMESTAMP NULL,
   details TEXT NULL,
+  cycle TEXT NULL,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (global_id)
 );

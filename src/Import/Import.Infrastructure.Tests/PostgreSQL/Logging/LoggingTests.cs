@@ -58,24 +58,6 @@ public class LoggingTests : IClassFixture<DbFixture>
     }
 
     [Fact]
-    public async Task PurgeActionItems_DeletesAll()
-    {
-        await CreateActionItemsAsync(DateTime.Now.AddYears(-1));
-
-        var sut = fixture.LogsDbContext;
-
-        var count = await sut.CountActionItemsAsync();
-
-        Assert.NotEqual(0, count);
-
-        await sut.PurgeActionItemsAsync();
-
-        count = await sut.CountActionItemsAsync();
-
-        Assert.Equal(0, count);
-    }
-
-    [Fact]
     public async Task TruncateLogs_RespectsDate()
     {
         await CreateLogsAsync(DateTime.Now.AddYears(-1), null, 1, 3);
@@ -114,30 +96,6 @@ public class LoggingTests : IClassFixture<DbFixture>
                 await db.SaveLogAsync(new LogItem(Guid.NewGuid(),
                     LogLevel.Debug,
                     default, Guid.NewGuid().ToString(), null, "TEST", runner, null));
-            }
-
-            runner = runner.AddDays(1);
-        }
-    }
-
-    private async Task CreateActionItemsAsync(DateTime startDate, DateTime? endDate = null,
-        int minPerDay = 0, int maxPerDay = 5)
-    {
-        endDate ??= DateTime.UtcNow.AddDays(-1);
-
-        DateTime runner = startDate;
-
-        var db = fixture.LogsDbContext;
-
-        while (runner < endDate)
-        {
-            int num = Random.Next(minPerDay, maxPerDay + 1);
-
-            for (int i = 0; i < num; i++)
-            {
-                await db.SaveActionItemAsync(new Domain.ActionItem(Guid.NewGuid(),
-                    1, "Import", "Test", Abstractions.ImportActionStatus.NotStarted,
-                    runner, null, null, "Full", null, null));
             }
 
             runner = runner.AddDays(1);

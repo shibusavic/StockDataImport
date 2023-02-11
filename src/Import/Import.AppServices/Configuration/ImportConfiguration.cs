@@ -38,9 +38,6 @@ public class ImportConfiguration : IEquatable<ImportConfiguration?>
     [YamlMember(Alias = Constants.ConfigurationKeys.ReasonsToIgnore)]
     public string[]? ReasonsToIgnore { get; set; }
 
-    [YamlMember(Alias = Constants.ConfigurationKeys.Fixes)]
-    public string[]? Fixes { get; set; }
-
     [YamlMember(Alias = Constants.ConfigurationKeys.DatabasePurge)]
     public string[]? Purges { get; set; }
 

@@ -8,7 +8,7 @@ namespace Import.AppServices.UnitTests;
 public class ActionServiceTests
 {
     [Fact]
-    public async Task GetActionItemsFromConfigurationAsync_Purges()
+    public void GetActionItemsFromConfigurationAsync_Purges()
     {
         var text = $@"
 {Constants.ConfigurationKeys.DatabasePurge}: 
@@ -19,12 +19,11 @@ public class ActionServiceTests
 
         var config = ImportConfiguration.Create(text);
 
-        var logsDbMock = new Mock<ILogsDbContext>();
         var importsDbMock = new Mock<IImportsDbContext>();
 
-        var sut = new ActionService(logsDbMock.Object, importsDbMock.Object);
+        var sut = new ActionService(importsDbMock.Object);
 
-        var actionItems = await sut.GetActionItemsAsync(config);
+        var actionItems = sut.GetSortedActionItems(config);
 
         Assert.NotNull(actionItems);
         Assert.NotEmpty(actionItems);
