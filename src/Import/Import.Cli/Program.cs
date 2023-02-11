@@ -406,10 +406,18 @@ void ConfigureServices()
 
     Communicate($"Reading {configFileInfo.FullName}.", prefixWithTimestamp: true);
     importConfiguration = ImportConfiguration.Create(File.ReadAllText(configFileInfo.FullName));
-    apiKey ??= importConfiguration.ApiKey; // This is the final check for the key.
-    importConfiguration.ApiKey = apiKey;
+    apiKey ??= importConfiguration.Options.ApiKey; // This is the final check for the key.
 
-    if (importConfiguration.ApiKey == null) { throw new Exception("Could not determine API key."); }
+    if (importConfiguration.Options == null)
+    {
+        importConfiguration.Options = new ConfigurationOptions() { ApiKey = apiKey };
+    }
+    else
+    {
+        importConfiguration.Options.ApiKey = apiKey;
+    }
+
+    if (importConfiguration.Options.ApiKey == null) { throw new Exception("Could not determine API key."); }
 
     Communicate("Creating data import service.", prefixWithTimestamp: true);
     dataImportService = serviceFactory.CreateDataImportService(apiKey!);

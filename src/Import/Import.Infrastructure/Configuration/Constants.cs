@@ -12,6 +12,7 @@ public static class Constants
         public const string ReasonsToIgnore = "Reasons to Ignore";
         public const string DataRetention = "Data Retention";
         public const string OnEmptyDb = "On Empty Database";
+        public const string Options = "Options";
         public const string Sunday = "Sunday";
         public const string Monday = "Monday";
         public const string Tuesday = "Tuesday";
@@ -19,6 +20,11 @@ public static class Constants
         public const string Thursday = "Thursday";
         public const string Friday = "Friday";
         public const string Saturday = "Saturday";
+    }
+
+    public static class ConfigurationOptionKey
+    {
+        
     }
 
     public static class ActionNames

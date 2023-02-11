@@ -22,10 +22,11 @@ public class ImportConfigurationTests
         var config = ImportConfiguration.Create(text);
         Assert.NotNull(config);
         Assert.NotNull(config.Exception);
+        Assert.NotNull(config.Options);
 
-        Assert.Null(config.ApiKey);
+        Assert.Null(config.Options.ApiKey);
         Assert.Null(config.Purges);
-        Assert.Null(config.DataRetention);
+        Assert.Null(config.Options.DataRetention);
         Assert.Null(config.Sunday);
         Assert.Null(config.Monday);
         Assert.Null(config.Tuesday);
@@ -43,12 +44,13 @@ public class ImportConfigurationTests
         string expected = "123.456";
 
         var text = $@"
-{Constants.ConfigurationKeys.ApiKey}: {expected}
+{Constants.ConfigurationKeys.Options}:
+  {Constants.ConfigurationKeys.ApiKey}: {expected}
 ...
 ";
 
         var config = ImportConfiguration.Create(text);
-        Assert.Equal(expected, config.ApiKey);
+        Assert.Equal(expected, config.Options.ApiKey);
     }
 
     [Fact]
@@ -70,19 +72,20 @@ public class ImportConfigurationTests
     public void LogRetention_Valid_NotNull()
     {
         var text = $@"
-{Constants.ConfigurationKeys.DataRetention}:
-  Critical: 1 year
-  Debug: 2 weeks
-  Error: 1 year
-  Information: 3 months
-  Trace: 1 week
-  Warning: 6 months
+{Constants.ConfigurationKeys.Options}:
+  {Constants.ConfigurationKeys.DataRetention}:
+    Critical: 1 year
+    Debug: 2 weeks
+    Error: 1 year
+    Information: 3 months
+    Trace: 1 week
+    Warning: 6 months
 ...
 ";
 
         var config = ImportConfiguration.Create(text);
-        Assert.NotNull(config.DataRetention);
-        Assert.Equal("1 year", config.DataRetention["Critical"]);
+        Assert.NotNull(config.Options.DataRetention);
+        Assert.Equal("1 year", config.Options.DataRetention["Critical"]);
     }
 
     [Fact]
@@ -396,21 +399,28 @@ Exchange Codes:
 
         var config = new ImportConfiguration()
         {
-            ApiKey = "TEST",
+            Options = new ConfigurationOptions()
+            {
+                ApiKey = "TEST",
+                DataRetention = new Dictionary<string, string>()
+                {
+                    { "Critical", "1 year" },
+                    { "Debug", "2 weeks" },
+                    { "Error", "1 year" },
+                    { "Information", "3 months" },
+                    { "Trace", "1 week" },
+                    { "Warning", "6 months" }
+                },
+                ReasonsToIgnore = new string[] {
+                   "No Fundamentals"
+                },
+            },
+
             Purges = new string[] {
                 Constants.PurgeName.Logs,
                 Constants.PurgeName.Imports
             },
-            DataRetention = new Dictionary<string, string>()
-            {
-                { "Critical", "1 year" },
-                { "Debug", "2 weeks" },
-                { "Error", "1 year" },
-                { "Information", "3 months" },
-                { "Trace", "1 week" },
-                { "Warning", "6 months" }
-            },
-            Exchanges = new Dictionary<string, Dictionary<string, string[]>>()
+            Exchanges = new Dictionary<string, IDictionary<string, string[]>>()
             {
                 { "US", new Dictionary<string, string[]>()
                     {
@@ -418,9 +428,6 @@ Exchange Codes:
                         { "Symbol Type", new string[] { "Common Stock", "ETF" } }
                     }
                }
-            },
-            ReasonsToIgnore = new string[] {
-                "No Fundamentals"
             },
             OnEmptyDatabase = new ImportActions[] {
                 new ImportActions()

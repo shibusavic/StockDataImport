@@ -29,7 +29,7 @@ internal static class SymbolMetaDataRepository
 
     public static void AddOrUpdate(SymbolMetaData symbolMetaData)
     {
-        lock (metaData) // Without this lock, this can crash because the underlying collection can change.
+        lock (metaData) // Without this lock, this code can crash because the underlying collection can change.
         {
             if (metaData.ContainsKey(symbolMetaData.Code))
             {

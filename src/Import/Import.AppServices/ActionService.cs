@@ -32,9 +32,9 @@ public class ActionService
             }
         }
 
-        if (config.DataRetention?.Any() ?? false)
+        if (config.Options.DataRetention?.Any() ?? false)
         {
-            items.AddRange(GetDataRentionActions(config.DataRetention, cycle));
+            items.AddRange(GetDataRentionActions(config.Options.DataRetention, cycle));
         }
 
         if (config.Exchanges != null)

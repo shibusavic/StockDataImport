@@ -1,5 +1,15 @@
-﻿API Key: TEST
-Max Token Usage: 990
+﻿Options:
+  API Key: TEST
+  Reasons to Ignore:
+  - No Fundamentals
+  Data Retention:
+    Critical: 1 year
+    Debug: 2 weeks
+    Error: 1 year
+    Information: 3 months
+    Trace: 1 week
+    Warning: 6 months
+
 Exchange Codes:
   US:
     Exchanges:
@@ -9,17 +19,11 @@ Exchange Codes:
     Symbol Type:
     - Common Stock
     - ETF
+
 Purge Data:
 - Logs
-- Actions
 - Imports
-Data Retention:
-  Critical: 1 year
-  Debug: 2 weeks
-  Error: 1 year
-  Information: 3 months
-  Trace: 1 week
-  Warning: 6 months
+
 On Empty Database:
 - Priority: 1
   Scope: Full
@@ -33,6 +37,7 @@ On Empty Database:
   Scope: Full
   Data Types:
   - Fundamentals
+
 Any Day:
 - Priority: 1
   Scope: Bulk
@@ -46,10 +51,13 @@ Any Day:
   Scope: Full
   Data Types:
   - Fundamentals
+
 Sunday:
 - Skip: true
+
 Monday:
 - Skip: true
+
 Tuesday:
 - Priority: 1
   Scope: Bulk
@@ -63,6 +71,7 @@ Tuesday:
   Scope: Full
   Data Types:
   - Fundamentals
+
 Wednesday:
 - Priority: 1
   Scope: Bulk
@@ -76,6 +85,7 @@ Wednesday:
   Scope: Full
   Data Types:
   - Fundamentals
+
 Thursday:
 - Priority: 1
   Scope: Bulk
@@ -89,6 +99,7 @@ Thursday:
   Scope: Full
   Data Types:
   - Fundamentals
+
 Friday:
 - Priority: 1
   Skip: false
@@ -103,6 +114,7 @@ Friday:
   Scope: Full
   Data Types:
   - Fundamentals
+
 Saturday:
 - Priority: 1
   Scope: Full

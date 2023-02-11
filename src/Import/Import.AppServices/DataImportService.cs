@@ -478,8 +478,8 @@ public sealed class DataImportService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        bool ignoreMissingFundamentals = importConfiguration.ReasonsToIgnore != null &&
-            importConfiguration.ReasonsToIgnore.Contains(ImportConfiguration.ReasonToIgnoreValues.MissingFundamentals,
+        bool ignoreMissingFundamentals = importConfiguration.Options.ReasonsToIgnore != null &&
+            importConfiguration.Options.ReasonsToIgnore.Contains(ImportConfiguration.ReasonToIgnoreValues.MissingFundamentals,
                 StringComparer.InvariantCultureIgnoreCase);
 
         var fundamentals = DataClient.GetFundamentalsForSymbolAsync(symbol, cancellationToken: cancellationToken)
