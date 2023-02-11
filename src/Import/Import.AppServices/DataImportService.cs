@@ -111,6 +111,8 @@ public sealed class DataImportService
             throw new ArgumentException($"{nameof(importConfiguration.Exchanges)} cannot be null when importing data.");
         }
 
+        string mode = action.Mode;
+
         string scope = action.TargetScope ??
             throw new ArgumentException($"{nameof(action.TargetScope)} cannot be null when importing data.");
 
@@ -120,7 +122,7 @@ public sealed class DataImportService
         string dataType = action.TargetDataType ??
             throw new ArgumentException($"{nameof(action.TargetDataType)} cannot be null when importing data.");
 
-        DomainEventPublisher.RaiseMessageEvent(this, $"Importing\t{scope} {exchangeCode} {dataType} {action.TargetName}".Trim(),
+        DomainEventPublisher.RaiseMessageEvent(this, $"Importing\t{mode} {scope} {exchangeCode} {dataType} {action.TargetName}".Trim(),
             nameof(ImportDataAsync),
             Microsoft.Extensions.Logging.LogLevel.Information);
 
@@ -130,18 +132,25 @@ public sealed class DataImportService
                 .GetAwaiter().GetResult()
                 .ToArray();
 
-            HashSet<Symbol> symbolSet = new(symbols.Where(s =>
+            Symbol[] symbolsToSave = symbols.Where(s =>
                 importConfiguration.Exchanges.ContainsKey(exchangeCode) &&
                 importConfiguration.Exchanges[exchangeCode]["Symbol Type"].Contains(s.Type) &&
                 importConfiguration.Exchanges[exchangeCode]["Exchanges"].Contains(s.Exchange) &&
-                !SymbolsToIgnore.IsOnList(s.Code ?? "", s.Exchange ?? Constants.UnknownValue)));
+                !SymbolsToIgnore.IsOnList(s.Code ?? "", s.Exchange ?? Constants.UnknownValue)).ToArray();
 
-            Task t = ImportsDb.SaveSymbolsAsync(symbolSet, exchangeCode, cancellationToken);
+            Task t = ImportsDb.SaveSymbolsAsync(symbolsToSave, exchangeCode, cancellationToken);
 
-            foreach (var s in symbolSet)
+            // TODO: There's still some work to be done here maybe.
+            /*
+             * We could look at our repo and only AddOrUpdate(...) for new items.
+             * 
+             */
+
+            foreach (var s in symbolsToSave)
             {
                 SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData($"{s.Code!}.{exchangeCode}", s.Code!, s.Exchange, s.Type));
             }
+
             return t;
 
         }
@@ -252,7 +261,7 @@ public sealed class DataImportService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (action.TargetDataType == DataTypes.Exchanges) // both Exchange and DateType are "Exchanges"
+        if (action.TargetDataType == DataTypes.Exchanges) // both Exchange and DataType are "Exchanges"
         {
             int estimatedCost = ApiService.GetCost(ApiService.ExchangesUri);
             if (estimatedCost > ApiService.Available)
@@ -278,13 +287,13 @@ public sealed class DataImportService
 
         var exchange = action.TargetName;
 
-        //ImportsDb.GetSymbolsForExchangeAsync(action.TargetName, cancellationToken);
-
-        //var symbolsForExchange = allSymbols.Where(s => s.Exchange == exchange).Except(allSymbols.Where(s =>
-        //    SymbolsToIgnore.IsOnList(s.Code ?? "", s.Exchange ?? Constants.UnknownValue))).ToArray();
-
         if (action.TargetDataType == DataTypes.Splits)
         {
+            if (action.Mode == Modes.Economy)
+            {
+                symbolsForExchange = symbolsForExchange!.Where(s => s.HasSplits).ToArray();
+            }
+
             int estimatedCost = ApiService.GetCost(ApiService.SplitsUri, symbolsForExchange!.Length);
             if (estimatedCost > ApiService.Available)
             {
@@ -299,6 +308,11 @@ public sealed class DataImportService
 
         if (action.TargetDataType == DataTypes.Dividends)
         {
+            if (action.Mode == Modes.Economy)
+            {
+                symbolsForExchange = symbolsForExchange!.Where(s => s.HasDividends).ToArray();
+            }
+
             int estimatedCost = ApiService.GetCost(ApiService.DividendUri, symbolsForExchange!.Length);
             if (estimatedCost > ApiService.Available)
             {
@@ -327,22 +341,20 @@ public sealed class DataImportService
 
         if (action.TargetDataType == DataTypes.Options)
         {
-            var symbolsWithOptions = SymbolMetaDataRepository.Find(s => s.LastUpdatedOptions is not null).ToArray();
-
-            if (symbolsWithOptions.Any())
+            if (action.Mode == Modes.Economy)
             {
-                int estimatedCost = ApiService.GetCost(ApiService.OptionsUri, symbolsForExchange!.Length);
-                if (estimatedCost > ApiService.Available)
-                {
-                    ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
-                        $"options for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
-                }
-                else
-                {
-                    var symbols = ImportsDb.GetSymbolsWithOptionsAsync(cancellationToken)
-                        .GetAwaiter().GetResult().ToArray();
-                    return ImportOptionsAsync(symbolsWithOptions, cancellationToken);
-                }
+                symbolsForExchange = symbolsForExchange!.Where(s => s.HasOptions).ToArray();
+            }
+
+            int estimatedCost = ApiService.GetCost(ApiService.OptionsUri, symbolsForExchange!.Length);
+            if (estimatedCost > ApiService.Available)
+            {
+                ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                    $"options for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
+            }
+            else
+            {
+                return ImportOptionsAsync(symbolsForExchange, cancellationToken);
             }
         }
 

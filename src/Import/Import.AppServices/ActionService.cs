@@ -57,10 +57,11 @@ public class ActionService
 
                         if (config.AnyDay?.Any() ?? false)
                         {
-                            items.AddRange(ParseActionItems(nameof(config.AnyDay), config.AnyDay!,exchangeCode, exchanges, cycle));
+                            items.AddRange(ParseActionItems(nameof(config.AnyDay), config.AnyDay!, exchangeCode, exchanges, cycle));
                         }
 
-                        var dayOfWeek = DateTime.UtcNow.DayOfWeek;
+                        // Using Now instead of UtcNow - want the day of week analysis to be local to the machine.
+                        var dayOfWeek = DateTime.Now.DayOfWeek;
 
                         if ((config.Sunday?.Any() ?? false) && dayOfWeek == DayOfWeek.Sunday)
                         {
@@ -101,8 +102,6 @@ public class ActionService
             }
         }
 
-
-
         return SortActionItems(items);
     }
 
@@ -128,7 +127,7 @@ public class ActionService
                         DataTypes.Exchanges, exchangeCode, cycle);
                 }
 
-                if (action.IsValidForImport() && (exchanges?.Any() ?? false))
+                if (action.IsValidForImport && (exchanges?.Any() ?? false))
                 {
                     foreach (var exchange in exchanges)
                     {
@@ -219,6 +218,7 @@ public class ActionService
             }
         }
 
+        // When we have "full" imports scheduled, get rid of the other types of imports with the same target.
         var fullImports = results.Where(r => r.ActionName == ActionNames.Import &&
             r.TargetScope == DataTypeScopes.Full);
 
@@ -230,7 +230,8 @@ public class ActionService
 
             if (removalCount > 0)
             {
-                DomainEventPublisher.RaiseMessageEvent(null, $"Removed some Bulk or BulkFull actions ({fullImport.TargetDataType}) because equivalent Full actions were discovered.", nameof(SortActionItems));
+                DomainEventPublisher.RaiseMessageEvent(null, $"Removed {removalCount} Bulk or BulkFull actions ({fullImport.TargetDataType ?? "Unknown target data type"}) because equivalent Full actions were discovered.",
+                    nameof(SortActionItems));
             }
         }
 

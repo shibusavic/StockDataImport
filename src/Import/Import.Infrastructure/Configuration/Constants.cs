@@ -8,11 +8,15 @@ public static class Constants
         public const string ApiKey = "API Key";
         public const string CancelOnException = "Cancel On Exception";
         public const string DatabasePurge = "Purge Data";
-        public const string Exchanges = "Exchange Codes";
-        public const string ReasonsToIgnore = "Reasons to Ignore";
         public const string DataRetention = "Data Retention";
+        public const string Exchanges = "Exchange Codes";
+        public const string Mode = "Mode";
         public const string OnEmptyDb = "On Empty Database";
         public const string Options = "Options";
+        public const string Priority = "Priority";
+        public const string ReasonsToIgnore = "Reasons to Ignore";
+        public const string Scope = "Scope";
+        public const string Skip = "Skip";
         public const string Sunday = "Sunday";
         public const string Monday = "Monday";
         public const string Tuesday = "Tuesday";
@@ -22,9 +26,10 @@ public static class Constants
         public const string Saturday = "Saturday";
     }
 
-    public static class ConfigurationOptionKey
+    public static class Modes
     {
-        
+        public const string Discovery = "Discover";
+        public const string Economy = "Economy";
     }
 
     public static class ActionNames

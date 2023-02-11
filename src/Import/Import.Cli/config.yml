@@ -9,7 +9,6 @@
     Information: 3 months
     Trace: 1 week
     Warning: 6 months
-
 Exchange Codes:
   US:
     Exchanges:
@@ -19,13 +18,12 @@ Exchange Codes:
     Symbol Type:
     - Common Stock
     - ETF
-
 Purge Data:
 - Logs
 - Imports
-
 On Empty Database:
 - Priority: 1
+  Mode: Discover
   Scope: Full
   Data Types:
   - Symbols
@@ -34,12 +32,13 @@ On Empty Database:
   - Dividends
   - Splits
 - Priority: 2
+  Mode: Economy
   Scope: Full
   Data Types:
   - Fundamentals
-
 Any Day:
 - Priority: 1
+  Mode: Economy
   Scope: Bulk
   Data Types:
   - Symbols
@@ -48,18 +47,19 @@ Any Day:
   - Dividends
   - Splits
 - Priority: 2
+  Mode: Economy
   Scope: Full
   Data Types:
   - Fundamentals
-
 Sunday:
 - Skip: true
-
+  Mode: Economy
 Monday:
 - Skip: true
-
+  Mode: Economy
 Tuesday:
 - Priority: 1
+  Mode: Economy
   Scope: Bulk
   Data Types:
   - Symbols
@@ -68,12 +68,13 @@ Tuesday:
   - Dividends
   - Splits
 - Priority: 2
+  Mode: Economy
   Scope: Full
   Data Types:
   - Fundamentals
-
 Wednesday:
 - Priority: 1
+  Mode: Economy
   Scope: Bulk
   Data Types:
   - Symbols
@@ -82,12 +83,13 @@ Wednesday:
   - Dividends
   - Splits
 - Priority: 2
+  Mode: Economy
   Scope: Full
   Data Types:
   - Fundamentals
-
 Thursday:
 - Priority: 1
+  Mode: Economy
   Scope: Bulk
   Data Types:
   - Symbols
@@ -96,13 +98,14 @@ Thursday:
   - Dividends
   - Splits
 - Priority: 2
+  Mode: Economy
   Scope: Full
   Data Types:
   - Fundamentals
-
 Friday:
-- Priority: 1
-  Skip: false
+- Skip: false
+  Priority: 1
+  Mode: Economy
   Scope: Bulk
   Data Types:
   - Symbols
@@ -111,12 +114,13 @@ Friday:
   - Dividends
   - Splits
 - Priority: 2
+  Mode: Economy
   Scope: Full
   Data Types:
   - Fundamentals
-
 Saturday:
 - Priority: 1
+  Mode: Economy
   Scope: Full
   Data Types:
   - Symbols
@@ -125,6 +129,7 @@ Saturday:
   - Dividends
   - Splits
 - Priority: 2
+  Mode: Economy
   Scope: Full
   Data Types:
   - Fundamentals

@@ -1,5 +1,4 @@
 ﻿using EodHistoricalData.Sdk;
-using EodHistoricalData.Sdk.Models;
 using Shibusa.Extensions;
 
 namespace Import.Infrastructure
@@ -45,6 +44,12 @@ namespace Import.Infrastructure
 
         public DateTime? LastUpdatedFinancials { get; internal set; }
 
+        public bool HasSplits { get; internal set; }
+
+        public bool HasDividends { get; internal set; }
+
+        public bool HasOptions { get; internal set; }
+
         public bool RequiresFundamentalUpdate => Type != null 
             && (UseCompanyFundamentals ? LastUpdatedFinancials.GetValueOrDefault() < DateTime.Now.AddDays(-90)
                     : UseEtfFundamentals && LastUpdatedEntity.GetValueOrDefault() < DateTime.Now.AddDays(-7));
@@ -64,6 +69,9 @@ namespace Import.Infrastructure
             LastUpdatedFinancials = LastUpdatedFinancials == null || allowReplacementWithNull ? metaDataItem.LastUpdatedFinancials
                 : metaDataItem.LastUpdatedFinancials == null ? LastUpdatedFinancials : metaDataItem.LastUpdatedFinancials;
             LastUpdated = DateTime.UtcNow;
+            HasSplits = metaDataItem.HasSplits;
+            HasDividends = metaDataItem.HasDividends;
+            HasOptions = metaDataItem.HasOptions;
         }
 
         public override string ToString() => Code;

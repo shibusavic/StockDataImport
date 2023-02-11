@@ -1,11 +1,19 @@
 using Import.AppServices.Configuration;
 using Import.Infrastructure.Configuration;
+using Xunit.Abstractions;
 using YamlDotNet.Serialization;
 
 namespace Import.AppServices.UnitTests;
 
 public class ImportConfigurationTests
 {
+    private readonly ITestOutputHelper testOutputHelper;
+
+    public ImportConfigurationTests(ITestOutputHelper testOutputHelper)
+    {
+        this.testOutputHelper = testOutputHelper;
+    }
+
     [Fact]
     public void EmptyString_Null()
     {
@@ -434,7 +442,8 @@ Exchange Codes:
                 {
                     Scope = Constants.DataTypeScopes.Full,
                     Priority = 1,
-                    DataTypes = new[] { "Symbols", "Prices", "Options", "Dividends", "Splits" }
+                    DataTypes = new[] { "Symbols", "Prices", "Options", "Dividends", "Splits" },
+                    Mode = Constants.Modes.Discovery
                 },
                 new ImportActions()
                 {
@@ -541,6 +550,8 @@ Exchange Codes:
         var yaml = serializer.Serialize(config);
 
         Assert.NotNull(yaml);
+
+        testOutputHelper.WriteLine(yaml);
 
         var deserializer = new DeserializerBuilder().Build();
 

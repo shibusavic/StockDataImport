@@ -10,7 +10,8 @@ public class ActionItem : IEquatable<ActionItem?>
         string? targetScope,
         string? targetDataType,
         string? exchangeCode,
-        ImportCycle? cycle)
+        ImportCycle? cycle,
+        string mode = Modes.Economy)
     {
         GlobalId = Guid.NewGuid();
         ActionName = actionName;
@@ -20,11 +21,14 @@ public class ActionItem : IEquatable<ActionItem?>
         Status = ImportActionStatus.NotStarted;
         ExchangeCode = exchangeCode;
         Cycle = cycle;
+        Mode = string.IsNullOrWhiteSpace(mode) ? Modes.Economy : mode;
     }
 
     public Guid GlobalId { get; }
 
     public ImportCycle? Cycle { get; internal set; }
+
+    public string Mode { get; }
 
     public string? ExchangeCode { get; }
 

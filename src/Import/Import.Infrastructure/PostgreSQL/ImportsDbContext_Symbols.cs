@@ -40,10 +40,6 @@ internal partial class ImportsDbContext
 @"SELECT S.code, S.symbol, S.exchange, S.type FROM public.symbols S
 WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = S.symbol AND exchange = S.exchange)";
 
-        const string optionsSql =
-@"SELECT O.symbol, O.utc_timestamp AS LastUpdated FROM public.options O
-WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = O.symbol AND exchange = O.exchange)";
-
         const string companyIncomeStatementSql = @"SELECT C.symbol, C.exchange, Max(I.date)
 FROM public.company_income_statements I
 JOIN public.companies C ON I.company_id = C.global_id
@@ -68,6 +64,15 @@ FROM public.price_actions
 GROUP BY symbol, exchange) O
 ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
 
+        const string splitsSql =
+@"SELECT COUNT(*) FROM public.splits WHERE symbol = @Symbol";
+        
+        const string dividendsSql =
+@"SELECT COUNT(*) FROM public.dividends WHERE symbol = @Symbol";
+
+        const string optionsSql =
+@"SELECT COUNT(*) FROM public.options WHERE symbol = @Symbol";
+
         SymbolMetaData[] metaData = Array.Empty<SymbolMetaData>();
 
         using var connection = await GetOpenConnectionAsync(cancellationToken);
@@ -78,7 +83,6 @@ ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
 
             if (metaData.Length > 0)
             {
-                var optionsData = (await connection.QueryAsync<(string? Symbol, DateTime? LastUpdated)>(optionsSql)).ToArray();
                 var companyData = (await connection.QueryAsync<(string? Symbol, string? Exchange, DateTime? LastUpdated)>(companiesSql)).ToArray();
                 var etfData = (await connection.QueryAsync<(string? Symbol, string? Exchange, DateTime? LastUpdated)>(etfsSql)).ToArray();
                 var incomeData = (await connection.QueryAsync<(string? Symbol, string? Exchange, DateTime? LastDate)>(companyIncomeStatementSql)).ToArray();
@@ -86,6 +90,14 @@ ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
 
                 for (int i = 0; i < metaData.Length; i++)
                 {
+                    var splitsCount = await connection.QuerySingleAsync<int>(splitsSql, new { metaData[i].Symbol });
+                    var dividendsCount = await connection.QuerySingleAsync<int>(dividendsSql, new { metaData[i].Symbol });
+                    var optionsCount = await connection.QuerySingleAsync<int>(optionsSql, new { metaData[i].Symbol });
+
+                    metaData[i].HasSplits = splitsCount > 0;
+                    metaData[i].HasDividends = dividendsCount > 0;
+                    metaData[i].HasOptions = optionsCount > 0;
+
                     if (metaData[i].UseCompanyFundamentals)
                     {
                         metaData[i].LastUpdatedEntity = companyData.FirstOrDefault(o => o.Symbol == metaData[i].Symbol
