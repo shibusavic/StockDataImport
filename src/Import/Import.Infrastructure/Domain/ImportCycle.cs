@@ -82,7 +82,7 @@ namespace Import.Infrastructure.Domain
                     }
 
                     if (action.ActionName == ActionNames.Import &&
-                        action.TargetScope is DataTypeScopes.Bulk or DataTypeScopes.BulkFull)
+                        action.TargetScope is DataTypeScopes.Bulk or DataTypeScopes.TryBulkThenFull)
                     {
                         if (actions.Any(a => a.ActionName == ActionNames.Import && a.TargetScope == DataTypeScopes.Full))
                         {

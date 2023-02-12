@@ -121,6 +121,11 @@ try
             {
                 DomainEventPublisher.RaiseMessageEvent(null, $"{importActions.Length} import actions found.", sourceName);
 
+#if DEBUG
+                var startCount = SymbolMetaDataRepository.Count();
+                var startLastUpdate = SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
+#endif
+
                 await Parallel.ForEachAsync(importActions,
                     new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
                     {
@@ -146,6 +151,16 @@ try
                             action.Error(exc);
                         }
                     });
+
+#if DEBUG
+                var endCount = SymbolMetaDataRepository.Count();
+                var endLastUpdate = SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
+                var unchanged = SymbolMetaDataRepository.Find(s => s.LastUpdated < startLastUpdate).ToArray();
+
+                Communicate($"start count: {startCount}");
+                Communicate($"end count: {endCount}");
+                Communicate($"number unchanged: {unchanged.Length}");
+#endif
             }
             /*
 

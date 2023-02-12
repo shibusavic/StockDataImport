@@ -153,7 +153,6 @@ public sealed class DataImportService
             }
 
             return t;
-
         }
         else if (scope == DataTypeScopes.Full)
         {
@@ -477,6 +476,8 @@ public sealed class DataImportService
                 splits.ForEach(s => domainSplits.Add(new Infrastructure.Domain.Split(symbol.Code, symbol.Exchange ?? Constants.UnknownValue, s)));
 
                 await ImportsDb.SaveSplitsAsync(domainSplits, cancellationToken);
+
+                SymbolMetaDataRepository.Get(symbol.Code)?.Update();
             }
         }
     }
@@ -497,11 +498,19 @@ public sealed class DataImportService
 
             if (existing?.Exchange != null)
             {
+                existing.Update();
                 domainSplits.Add(new Infrastructure.Domain.Split(bs, existing.Exchange));
             }
         }
 
-        await ImportsDb.SaveSplitsAsync(domainSplits, cancellationToken);
+        var t = ImportsDb.SaveSplitsAsync(domainSplits, cancellationToken);
+
+        foreach (var ds in domainSplits.Select(d => (d.Symbol, d.Exchange)).Distinct())
+        {
+            SymbolMetaDataRepository.Get(ds.Symbol, ds.Exchange)?.Update();
+        }
+
+        await t;
     }
 
     private async Task ImportDividendsAsync(SymbolMetaData[] symbols, CancellationToken cancellationToken)
@@ -514,8 +523,13 @@ public sealed class DataImportService
             {
                 var divs = await DataClient.GetDividendsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
 
-                await ImportsDb.SaveDividendsAsync(symbol.Code, symbol.Exchange ?? Constants.UnknownValue,
-                    divs!, cancellationToken);
+                if (divs.Any())
+                {
+                    await ImportsDb.SaveDividendsAsync(symbol.Code, symbol.Exchange ?? Constants.UnknownValue,
+                        divs!, cancellationToken);
+
+                    SymbolMetaDataRepository.Get(symbol.Code)?.Update();
+                }
             }
         }
     }
@@ -532,11 +546,11 @@ public sealed class DataImportService
 
         foreach (var bd in bulkDividends)
         {
-            var existing = SymbolMetaDataRepository.Find(s => s.Code == $"{bd.Code}.{bd.Exchange}").FirstOrDefault();
+            var existing = SymbolMetaDataRepository.Get($"{bd.Code}.{bd.Exchange}"); // e.g., Exchange = "US"
 
             if (existing?.Exchange != null)
             {
-                dividends.Add((bd, existing.Exchange));
+                dividends.Add((bd, existing.Exchange)); // e.g., existing.Exchange = "NYSE"
             }
         }
 
@@ -546,7 +560,19 @@ public sealed class DataImportService
         {
             var divsForExchange = dividends.Where(d => d.Exchange == exchange).Select(d => d.BulkDividend);
 
-            await ImportsDb.SaveBulkDividendsAsync(divsForExchange, exchange, cancellationToken);
+            if (divsForExchange?.Any() ?? false)
+            {
+                var t = ImportsDb.SaveBulkDividendsAsync(divsForExchange, exchange, cancellationToken);
+
+                var metaToUpdate = divsForExchange.Select(d => (d.Code, d.Exchange)).Distinct();
+
+                foreach (var d in metaToUpdate)
+                {
+                    SymbolMetaDataRepository.Get($"{d.Code}.{d.Exchange}")?.Update();
+                }
+
+                await t;
+            }
         }
     }
 
@@ -566,6 +592,7 @@ public sealed class DataImportService
                 // to add some self-throttling to the bombarding of the API.
                 var prices = await DataClient.GetPricesForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
                 await ImportsDb.SavePriceActionsAsync(symbol.Code, symbol.Exchange ?? Constants.UnknownValue, prices, cancellationToken);
+                SymbolMetaDataRepository.Get(symbol.Code)?.Update();
             }
         });
     }
@@ -598,7 +625,17 @@ public sealed class DataImportService
             {
                 var pricesForExchange = priceActions.Where(p => p.Exchange == exchange)
                     .Select(s => s.PriceAction);
-                await ImportsDb.SaveBulkPriceActionsAsync(pricesForExchange, exchange, cancellationToken);
+
+                var t = ImportsDb.SaveBulkPriceActionsAsync(pricesForExchange, exchange, cancellationToken);
+
+                var metaUpdates = pricesForExchange.Select(p => (p.Code, p.ExchangeShortName)).Distinct();
+
+                foreach (var u in metaUpdates)
+                {
+                    SymbolMetaDataRepository.Get($"{u.Code}.{u.ExchangeShortName}")?.Update();
+                }
+
+                await t;
             }
         }
     }
@@ -614,6 +651,8 @@ public sealed class DataImportService
                 var options = await DataClient.GetOptionsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
 
                 await ImportsDb.SaveOptionsAsync(options, cancellationToken);
+
+                SymbolMetaDataRepository.Get(symbol.Code)?.Update();
             }
         }
     }
@@ -657,6 +696,7 @@ public sealed class DataImportService
 
             if (saveFundamentals)
             {
+                SymbolMetaDataRepository.Get(symbol, exchange)?.Update();
                 return ImportsDb.SaveEtfAsync(etfCollection, cancellationToken);
             }
         }
@@ -675,6 +715,7 @@ public sealed class DataImportService
 
             if (saveFundamentals)
             {
+                SymbolMetaDataRepository.Get(symbol, exchange)?.Update();
                 return ImportsDb.SaveCompanyAsync(collection, cancellationToken);
             }
         }

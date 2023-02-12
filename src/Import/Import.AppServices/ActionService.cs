@@ -241,11 +241,11 @@ public class ActionService
         {
             int removalCount = results.RemoveAll(r => r.ActionName == ActionNames.Import &&
                 r.TargetDataType == fullImport.TargetDataType &&
-                r.TargetScope is DataTypeScopes.Bulk or DataTypeScopes.BulkFull);
+                r.TargetScope is DataTypeScopes.Bulk or DataTypeScopes.TryBulkThenFull);
 
             if (removalCount > 0)
             {
-                DomainEventPublisher.RaiseMessageEvent(null, $"Removed {removalCount} Bulk or BulkFull actions ({fullImport.TargetDataType ?? "Unknown target data type"}) because equivalent Full actions were discovered.",
+                DomainEventPublisher.RaiseMessageEvent(null, $"Removed {removalCount} Bulk or TryBulkThenFull actions ({fullImport.TargetDataType ?? "Unknown target data type"}) because equivalent Full actions were discovered.",
                     nameof(SortActionItems));
             }
         }

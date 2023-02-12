@@ -55,7 +55,7 @@ public static class Constants
     {
         public const string Bulk = "Bulk";
         public const string Full = "Full";
-        public const string BulkFull = "BulkFull";
+        public const string TryBulkThenFull = "TryBulkThenFull";
     }
 
     public static class PurgeName

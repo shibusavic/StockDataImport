@@ -1,13 +1,10 @@
-﻿using Import.Infrastructure;
-using Import.Infrastructure.Domain;
-using Microsoft.VisualBasic;
-using System;
+﻿using Import.Infrastructure.Domain;
 using System.Collections.ObjectModel;
 using static Import.Infrastructure.Configuration.Constants;
 
 namespace Import.Infrastructure;
 
-internal static class SymbolMetaDataRepository
+public static class SymbolMetaDataRepository
 {
     static readonly SymbolMetaDataCollection metaData = new();
 
@@ -58,6 +55,13 @@ internal static class SymbolMetaDataRepository
             ? Find(s => s.Exchange == action.TargetName)
             : Enumerable.Empty<SymbolMetaData>();
     }
+
+    public static SymbolMetaData? Get(string code) =>
+        Find(s => s.Code.Equals(code, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+
+    public static SymbolMetaData? Get(string symbol, string? exchange) =>
+        Find(s => s.Symbol.Equals(symbol, StringComparison.InvariantCultureIgnoreCase) &&
+            (s.Exchange?.Equals(exchange, StringComparison.InvariantCultureIgnoreCase) ?? false)).FirstOrDefault();
 }
 
 /// <summary>

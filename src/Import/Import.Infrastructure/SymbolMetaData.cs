@@ -50,25 +50,34 @@ namespace Import.Infrastructure
 
         public bool HasOptions { get; internal set; }
 
-        public bool RequiresFundamentalUpdate => Type != null 
+        public bool RequiresFundamentalUpdate => Type != null
             && (UseCompanyFundamentals ? LastUpdatedFinancials.GetValueOrDefault() < DateTime.Now.AddDays(-90)
                     : UseEtfFundamentals && LastUpdatedEntity.GetValueOrDefault() < DateTime.Now.AddDays(-7));
 
+        internal void Update() => LastUpdated = DateTime.UtcNow;
+
         internal void Update(SymbolMetaData metaDataItem, bool allowReplacementWithNull = false)
         {
+            Update();
+
             Sector = Sector == null || allowReplacementWithNull ? metaDataItem.Sector
                 : metaDataItem.Sector ?? Sector;
+
             Industry = Industry == null || allowReplacementWithNull ? metaDataItem.Sector
                 : metaDataItem.Industry ?? Industry;
+
             LastTrade = LastTrade.Start == null || allowReplacementWithNull ? metaDataItem.LastTrade
                 : metaDataItem.LastTrade.Start == null ? LastTrade : metaDataItem.LastTrade;
+
             LastUpdatedOptions = LastUpdatedOptions == null || allowReplacementWithNull ? metaDataItem.LastUpdatedOptions
                 : metaDataItem.LastUpdatedOptions == null ? LastUpdatedOptions : metaDataItem.LastUpdatedOptions;
+
             LastUpdatedEntity = LastUpdatedEntity == null || allowReplacementWithNull ? metaDataItem.LastUpdatedEntity
                 : metaDataItem.LastUpdatedEntity == null ? LastUpdatedEntity : metaDataItem.LastUpdatedEntity;
+
             LastUpdatedFinancials = LastUpdatedFinancials == null || allowReplacementWithNull ? metaDataItem.LastUpdatedFinancials
                 : metaDataItem.LastUpdatedFinancials == null ? LastUpdatedFinancials : metaDataItem.LastUpdatedFinancials;
-            LastUpdated = DateTime.UtcNow;
+
             HasSplits = metaDataItem.HasSplits;
             HasDividends = metaDataItem.HasDividends;
             HasOptions = metaDataItem.HasOptions;

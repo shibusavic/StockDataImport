@@ -15,5 +15,8 @@ Any Day:
 - Priority: 1
   Scope: Bulk
   Data Types:
+  - Symbols
   - Prices
+  - Splits
+  - Dividends
  
