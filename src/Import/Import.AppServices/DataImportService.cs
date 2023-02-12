@@ -630,9 +630,9 @@ public sealed class DataImportService
 
                 var metaUpdates = pricesForExchange.Select(p => (p.Code, p.ExchangeShortName)).Distinct();
 
-                foreach (var u in metaUpdates)
+                foreach (var (Code, ExchangeShortName) in metaUpdates)
                 {
-                    SymbolMetaDataRepository.Get($"{u.Code}.{u.ExchangeShortName}")?.Update();
+                    SymbolMetaDataRepository.Get($"{Code}.{ExchangeShortName}")?.Update();
                 }
 
                 await t;
@@ -650,9 +650,12 @@ public sealed class DataImportService
             {
                 var options = await DataClient.GetOptionsForSymbolAsync(symbol.Code, cancellationToken: cancellationToken);
 
-                await ImportsDb.SaveOptionsAsync(options, cancellationToken);
+                if (options.Data?.Any() ?? false)
+                {
+                    await ImportsDb.SaveOptionsAsync(options, cancellationToken);
 
-                SymbolMetaDataRepository.Get(symbol.Code)?.Update();
+                    SymbolMetaDataRepository.Get(symbol.Code)?.Update();
+                }
             }
         }
     }

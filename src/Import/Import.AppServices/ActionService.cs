@@ -114,9 +114,11 @@ public class ActionService
         {
             foreach (var action in actions)
             {
+                var mode = action.Mode ?? Modes.Economy;
+
                 if (action.Skip.GetValueOrDefault())
                 {
-                    yield return new ActionItem(ActionNames.Skip, parent, null, null, null, null);
+                    yield return new ActionItem(ActionNames.Skip, parent, null, null, null, null, mode);
                     continue;
                 }
 
@@ -124,7 +126,7 @@ public class ActionService
                 {
                     yield return new ActionItem(ActionNames.Import,
                         DataTypes.Exchanges, DataTypeScopes.Full.ToString(),
-                        DataTypes.Exchanges, exchangeCode, cycle);
+                        DataTypes.Exchanges, exchangeCode, cycle, mode);
                 }
 
                 if (action.IsValidForImport)
@@ -139,7 +141,7 @@ public class ActionService
                                 {
                                     if (dataType == DataTypes.Exchanges) continue;
                                     yield return new ActionItem(ActionNames.Import, exchange, action.Scope, dataType,
-                                        exchangeCode, cycle);
+                                        exchangeCode, cycle, mode);
                                 }
                             }
                         }
@@ -153,7 +155,7 @@ public class ActionService
                                 or DataTypes.Fundamentals) { continue; }
 
                             yield return new ActionItem(ActionNames.Import, exchangeCode, action.Scope, dataType,
-                                exchangeCode, cycle);
+                                exchangeCode, cycle, mode);
                         }
                     }
                 }

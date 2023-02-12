@@ -47,13 +47,14 @@ internal partial class ImportsDbContext
         }
 
         List<Task> taskList = new()
-        {
-            Task.Run(() => SaveOptionsDataAsync(options,cancellationToken), cancellationToken),
-            Task.Run(() => SaveOptionsDataAsync(optionData.ToArray(),cancellationToken), cancellationToken),
-            Task.Run(() => SaveOptionsDataAsync(optionContracts.ToArray(),cancellationToken), cancellationToken),
-        };
+            {
+                Task.Run(() => SaveOptionsDataAsync(options,cancellationToken), cancellationToken),
+                Task.Run(() => SaveOptionsDataAsync(optionData.ToArray(),cancellationToken), cancellationToken),
+                Task.Run(() => SaveOptionsDataAsync(optionContracts.ToArray(),cancellationToken), cancellationToken),
+            };
 
         Task.WaitAll(taskList.ToArray(), cancellationToken);
+
         await Task.CompletedTask;
     }
 
