@@ -1,6 +1,7 @@
 ﻿using EodHistoricalData.Sdk;
 using EodHistoricalData.Sdk.Events;
 using EodHistoricalData.Sdk.Models;
+using EodHistoricalData.Sdk.Models.Bulk;
 using EodHistoricalData.Sdk.Models.Fundamentals.CommonStock;
 using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 using Import.AppServices.Configuration;
@@ -122,7 +123,7 @@ public sealed class DataImportService
         string dataType = action.TargetDataType ??
             throw new ArgumentException($"{nameof(action.TargetDataType)} cannot be null when importing data.");
 
-        DomainEventPublisher.RaiseMessageEvent(this, $"Importing\t{mode} {scope} {exchangeCode} {dataType} {action.TargetName}".Trim(),
+        DomainEventPublisher.RaiseMessageEvent(this, $"Importing {mode} {scope} {exchangeCode} {dataType} {action.TargetName}".Trim(),
             nameof(ImportDataAsync),
             Microsoft.Extensions.Logging.LogLevel.Information);
 
@@ -160,11 +161,10 @@ public sealed class DataImportService
         }
         else if (scope == DataTypeScopes.Bulk)
         {
-            return ImportBulkAsync(exchangeCode, dataType, cancellationToken);
+            return ImportBulkAsync(action, importConfiguration, cancellationToken);
         }
 
         return Task.CompletedTask;
-
     }
 
     public Task SaveSymbolsToIgnoreAsync(CancellationToken cancellationToken = default)
@@ -214,7 +214,7 @@ public sealed class DataImportService
             if (symbolCount == 0 && action.ActionName == ActionNames.Import &&
                 action.TargetDataType != DataTypes.Exchanges)
             {
-                action.EstimatedCost = null;
+                action.EstimatedCost = action.TargetScope == DataTypeScopes.Bulk ? 100 : null;
             }
             else
             {
@@ -227,7 +227,7 @@ public sealed class DataImportService
                     DataTypes.Prices => symbolCount,
                     DataTypes.Splits => symbolCount,
                     DataTypes.Symbols => 1,
-                    _ => 0
+                    _ => 1
                 };
 
                 int cost = baseCost * factor;
@@ -261,6 +261,11 @@ public sealed class DataImportService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (action.TargetScope != DataTypeScopes.Full)
+        {
+            throw new ArgumentException($"Action with scope {action.TargetScope ?? "Unknown"} sent to {nameof(ImportFullAsync)}");
+        }
+
         if (action.TargetDataType == DataTypes.Exchanges) // both Exchange and DataType are "Exchanges"
         {
             int estimatedCost = ApiService.GetCost(ApiService.ExchangesUri);
@@ -278,12 +283,7 @@ public sealed class DataImportService
             return Task.CompletedTask;
         }
 
-        var symbolsForExchange = SymbolMetaDataRepository.Find(action).ToArray();
-
-        if (!symbolsForExchange?.Any() ?? false)
-        {
-            return Task.CompletedTask;
-        }
+        SymbolMetaData[] symbolsForExchange = SymbolMetaDataRepository.Find(action).ToArray();
 
         var exchange = action.TargetName;
 
@@ -398,6 +398,70 @@ public sealed class DataImportService
         return Task.CompletedTask;
     }
 
+    private Task ImportBulkAsync(
+        ActionItem action,
+        ImportConfiguration importConfiguration,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (action.TargetScope != DataTypeScopes.Bulk)
+        {
+            throw new ArgumentException($"Action with scope {action.TargetScope ?? "Unknown"} sent to {nameof(ImportBulkAsync)}");
+        }
+
+        var symbolsForExchange = SymbolMetaDataRepository.Find(action).ToArray();
+
+        var exchange = action.TargetName;
+
+        if (action.ExchangeCode == null) throw new ArgumentException($"Exchange Code cannot be null on bulk import actions");
+
+        if (action.TargetDataType == DataTypes.Splits)
+        {
+            int estimatedCost = ApiService.GetCost(ApiService.BulkEodUri, 1);
+
+            if (estimatedCost > ApiService.Available)
+            {
+                ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                    $"bulk splits for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportBulkAsync));
+            }
+            else
+            {
+                return ImportBulkSplitsAsync(action.ExchangeCode, null, cancellationToken);
+            }
+        }
+
+        if (action.TargetDataType == DataTypes.Dividends)
+        {
+            int estimatedCost = ApiService.GetCost(ApiService.DividendUri, 1);
+            if (estimatedCost > ApiService.Available)
+            {
+                ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                    $"bulk dividends for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportBulkAsync));
+            }
+            else
+            {
+                return ImportBulkDividendsAsync(action.ExchangeCode, null, cancellationToken);
+            }
+        }
+
+        if (action.TargetDataType == DataTypes.Prices)
+        {
+            int estimatedCost = ApiService.GetCost(ApiService.EodUri, 1);
+            if (estimatedCost > ApiService.Available)
+            {
+                ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                    $"prices for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
+            }
+            else
+            {
+                return ImportBulkPriceActionsAsync(action.ExchangeCode, null, cancellationToken);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
     private async Task ImportSplitsAsync(SymbolMetaData[] symbols, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -417,6 +481,29 @@ public sealed class DataImportService
         }
     }
 
+    private async Task ImportBulkSplitsAsync(string exchangeCode, DateOnly? date = null, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var bulkSplits = (await DataClient.GetBulkSplitsForExchangeAsync(exchangeCode, date, cancellationToken)).ToArray();
+
+        List<Infrastructure.Domain.Split> domainSplits = new();
+
+        foreach (var bs in bulkSplits)
+        {
+            string code = $"{bs.Code}.{bs.Exchange}";
+
+            var existing = SymbolMetaDataRepository.Find(s => s.Code == code).FirstOrDefault();
+
+            if (existing?.Exchange != null)
+            {
+                domainSplits.Add(new Infrastructure.Domain.Split(bs, existing.Exchange));
+            }
+        }
+
+        await ImportsDb.SaveSplitsAsync(domainSplits, cancellationToken);
+    }
+
     private async Task ImportDividendsAsync(SymbolMetaData[] symbols, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -430,6 +517,36 @@ public sealed class DataImportService
                 await ImportsDb.SaveDividendsAsync(symbol.Code, symbol.Exchange ?? Constants.UnknownValue,
                     divs!, cancellationToken);
             }
+        }
+    }
+
+    private async Task ImportBulkDividendsAsync(string exchangeCode,
+        DateOnly? date = null,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var bulkDividends = (await DataClient.GetBulkDividendsForExchangeAsync(exchangeCode, date, cancellationToken)).ToArray();
+
+        List<(BulkDividend BulkDividend, string Exchange)> dividends = new();
+
+        foreach (var bd in bulkDividends)
+        {
+            var existing = SymbolMetaDataRepository.Find(s => s.Code == $"{bd.Code}.{bd.Exchange}").FirstOrDefault();
+
+            if (existing?.Exchange != null)
+            {
+                dividends.Add((bd, existing.Exchange));
+            }
+        }
+
+        var exchanges = dividends.Select(d => d.Exchange).Distinct();
+
+        foreach (var exchange in exchanges)
+        {
+            var divsForExchange = dividends.Where(d => d.Exchange == exchange).Select(d => d.BulkDividend);
+
+            await ImportsDb.SaveBulkDividendsAsync(divsForExchange, exchange, cancellationToken);
         }
     }
 
@@ -453,6 +570,39 @@ public sealed class DataImportService
         });
     }
 
+    private async Task ImportBulkPriceActionsAsync(string exchangeCode,
+        DateOnly? date = null,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var bulkPrices = (await DataClient.GetBulkHistoricalDataForExchangeAsync(exchangeCode, null, date, cancellationToken)).ToArray();
+
+        List<(BulkPriceAction PriceAction, string Exchange)> priceActions = new();
+
+        foreach (var bp in bulkPrices)
+        {
+            var existing = SymbolMetaDataRepository.Find(s => s.Code == $"{bp.Code}.{bp.ExchangeShortName}").FirstOrDefault();
+
+            if (existing?.Exchange != null)
+            {
+                priceActions.Add((bp, existing.Exchange));
+            }
+        }
+
+        if (priceActions.Any())
+        {
+            var exchanges = priceActions.Select(p => p.Exchange).Distinct();
+
+            foreach (var exchange in exchanges)
+            {
+                var pricesForExchange = priceActions.Where(p => p.Exchange == exchange)
+                    .Select(s => s.PriceAction);
+                await ImportsDb.SaveBulkPriceActionsAsync(pricesForExchange, exchange, cancellationToken);
+            }
+        }
+    }
+
     private async Task ImportOptionsAsync(SymbolMetaData[] symbols, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -466,21 +616,6 @@ public sealed class DataImportService
                 await ImportsDb.SaveOptionsAsync(options, cancellationToken);
             }
         }
-    }
-
-    private Task ImportBulkAsync(string exchange, string dataType, CancellationToken cancellationToken = default)
-    {
-        // TODO: This function is lacking; needs some love. Bulk import has been neglected because its unreliable - not all tickers are included in the results.
-        cancellationToken.ThrowIfCancellationRequested();
-
-        if (exchange == dataType && dataType == DataTypes.Exchanges)
-        {
-            var modelExchanges = DataClient.GetExchangeListAsync(cancellationToken).GetAwaiter().GetResult();
-
-            return ImportsDb.SaveExchangesAsync(modelExchanges, cancellationToken);
-        }
-
-        return Task.CompletedTask;
     }
 
     private Task ImportFundamentalsAsync(string symbol,

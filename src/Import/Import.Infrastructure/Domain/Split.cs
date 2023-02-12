@@ -2,8 +2,37 @@
 
 namespace Import.Infrastructure.Domain
 {
+    /// <summary>
+    /// Represents a stock split.
+    /// </summary>
     public class Split
     {
+        /// <summary>
+        /// Creates a new instance of <see cref="Split"/> from a
+        /// <see cref="EodHistoricalData.Sdk.Models.Bulk.BulkSplit"/> value.
+        /// </summary>
+        /// <param name="bulkSplit">The bulk split.</param>
+        /// <param name="exchange">The exchange.</param>
+        public Split(EodHistoricalData.Sdk.Models.Bulk.BulkSplit bulkSplit, string exchange)
+        {
+            Symbol = bulkSplit.Code ?? throw new ArgumentException($"{nameof(bulkSplit)} has no code.");
+
+            string code = $"{Symbol}.{bulkSplit.Exchange}";
+
+            var cachedSymbol = SymbolMetaDataRepository.Find(s => s.Code == code).FirstOrDefault();
+
+            Exchange = exchange;
+
+            DateOfSplit = new DateOnly(bulkSplit.Date.GetValueOrDefault().Year,
+                bulkSplit.Date.GetValueOrDefault().Month,
+                bulkSplit.Date.GetValueOrDefault().Day);
+
+            (double BeforeSplit, double AfterSplit) = ParseSplit(bulkSplit.Split);
+            SharesBeforeSplit = BeforeSplit;
+            SharesAfterSplit = AfterSplit;
+            Ratio = $"{SharesBeforeSplit:#,##0.000}:{SharesAfterSplit:#,##0.000}";
+        }
+
         /// <summary>
         /// Creates a new instance of <see cref="Split"/> from the
         /// <see cref="EodHistoricalData.Sdk.Models.Split"/> value.
@@ -38,7 +67,7 @@ namespace Import.Infrastructure.Domain
             Ratio = $"{SharesBeforeSplit:#,##0.000}:{SharesAfterSplit:#,##0.000}";
         }
 
-        public Split(string symbol,string exchange, DateOnly dateOfSplit, double beforeSplit, double afterSplit)
+        public Split(string symbol, string exchange, DateOnly dateOfSplit, double beforeSplit, double afterSplit)
         {
             Symbol = string.IsNullOrWhiteSpace(symbol) ? throw new ArgumentNullException(nameof(symbol)) : symbol.Trim();
             Exchange = string.IsNullOrWhiteSpace(exchange) ? throw new ArgumentNullException(nameof(exchange)) : exchange.Trim();
@@ -46,10 +75,10 @@ namespace Import.Infrastructure.Domain
             DateOfSplit = dateOfSplit;
             if (beforeSplit <= 0) { throw new ArgumentException($"{nameof(beforeSplit)} must be a positive number."); }
             if (afterSplit <= 0) { throw new ArgumentException($"{nameof(afterSplit)} must be a positive number."); }
-            
+
             SharesBeforeSplit = beforeSplit;
             SharesAfterSplit = afterSplit;
-            
+
             Ratio = $"{SharesBeforeSplit:#,##0.000}:{SharesAfterSplit:#,##0.000}";
         }
 

@@ -1,4 +1,5 @@
 ﻿using EodHistoricalData.Sdk.Models;
+using EodHistoricalData.Sdk.Models.Bulk;
 using EodHistoricalData.Sdk.Models.Calendar;
 using EodHistoricalData.Sdk.Models.Fundamentals.Etf;
 
@@ -30,7 +31,11 @@ internal partial interface IImportsDbContext : IDbContext
 
     Task SavePriceActionsAsync(string symbol, string exchange, IEnumerable<PriceAction> priceActions, CancellationToken cancellationToken = default);
 
-    Task SaveDividendsAsync(string symbol, string exchange, IEnumerable<Dividend> dividends, CancellationToken cancellationToken = default);
+    Task SaveBulkPriceActionsAsync(IEnumerable<BulkPriceAction> priceActions, string exchange, CancellationToken cancellationToken = default);
+
+    Task SaveDividendsAsync(string symbol, string exchange, IEnumerable<Dividend> dividendModels, CancellationToken cancellationToken = default);
+
+    Task SaveBulkDividendsAsync(IEnumerable<BulkDividend> dividendModels, string exchange, CancellationToken cancellationToken = default);
 
     Task SaveExchangesAsync(IEnumerable<Exchange> exchanges, CancellationToken cancellationToken = default);
 

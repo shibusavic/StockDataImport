@@ -127,18 +127,33 @@ public class ActionService
                         DataTypes.Exchanges, exchangeCode, cycle);
                 }
 
-                if (action.IsValidForImport && (exchanges?.Any() ?? false))
+                if (action.IsValidForImport)
                 {
-                    foreach (var exchange in exchanges)
+                    if ((exchanges?.Any() ?? false) && action.Scope == DataTypeScopes.Full)
                     {
-                        if (!string.IsNullOrWhiteSpace(exchange))
+                        foreach (var exchange in exchanges)
                         {
-                            foreach (var dataType in action.DataTypes!)
+                            if (!string.IsNullOrWhiteSpace(exchange))
                             {
-                                if (dataType == DataTypes.Exchanges) continue;
-                                yield return new ActionItem(ActionNames.Import, exchange, action.Scope, dataType,
-                                    exchangeCode, cycle);
+                                foreach (var dataType in action.DataTypes!)
+                                {
+                                    if (dataType == DataTypes.Exchanges) continue;
+                                    yield return new ActionItem(ActionNames.Import, exchange, action.Scope, dataType,
+                                        exchangeCode, cycle);
+                                }
                             }
+                        }
+                    }
+
+                    if (action.Scope is DataTypeScopes.Bulk && exchangeCode is not null)
+                    {
+                        foreach (var dataType in action.DataTypes!)
+                        {
+                            if (dataType is DataTypes.Exchanges or DataTypes.Symbols
+                                or DataTypes.Fundamentals) { continue; }
+
+                            yield return new ActionItem(ActionNames.Import, exchangeCode, action.Scope, dataType,
+                                exchangeCode, cycle);
                         }
                     }
                 }

@@ -159,6 +159,7 @@ namespace Import.Infrastructure.Domain
         }
 
         private readonly HashSet<string> usedTimestamps = new();
+        
         private readonly object tsObj = new();
 
         private void EventPublisher_RaiseApiResponseEventHandler(object? sender, ApiResponseEventArgs e)
@@ -206,7 +207,7 @@ namespace Import.Infrastructure.Domain
             {
                 lock (logObj)
                 {
-                    logStream.WriteLine(e.ToString());
+                    logStream.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\t{e}");
 
                     if (e.Exception != null)
                     {

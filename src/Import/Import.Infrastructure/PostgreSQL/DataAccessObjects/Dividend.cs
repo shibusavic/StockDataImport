@@ -6,6 +6,28 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 [Table(name: "dividends", Schema = "public")]
 internal class Dividend
 {
+    public Dividend(EodHistoricalData.Sdk.Models.Bulk.BulkDividend bulkDividend, string exchange)
+    {
+        Symbol = bulkDividend.Code ?? throw new ArgumentException($"Bulk dividend does not have a code.");
+        Exchange = exchange;
+        Date = bulkDividend.Date?.ToDateTime(TimeOnly.MinValue) ?? throw new ArgumentException($"Bulk dividend for {Symbol} does not have a date.");
+
+        if (decimal.TryParse(bulkDividend.Dividend, out decimal d))
+        {
+            Value = d;
+        }
+        if (decimal.TryParse(bulkDividend.UnadjustedValue, out decimal uv))
+        {
+            UnadjustedValue = uv;
+        }
+        Currency = bulkDividend.Currency;
+        DeclarationDate = bulkDividend.DeclarationDate?.ToDateTime(TimeOnly.MinValue);
+        RecordDate = bulkDividend.RecordDate?.ToDateTime(TimeOnly.MinValue);
+        PaymentDate = bulkDividend.PaymentDate?.ToDateTime(TimeOnly.MinValue);
+        Period = bulkDividend.Period;
+        UtcTimestamp = DateTime.UtcNow;
+    }
+
     public Dividend(string symbol, string exchange, EodHistoricalData.Sdk.Models.Dividend dividend)
     {
         Symbol = symbol;

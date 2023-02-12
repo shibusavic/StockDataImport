@@ -7,6 +7,20 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 [Table(name: "price_actions", Schema = "public")]
 internal class PriceAction
 {
+    public PriceAction(EodHistoricalData.Sdk.Models.Bulk.BulkPriceAction priceAction, string exchange)
+    {
+        Symbol = priceAction.Code ?? throw new ArgumentException($"Bulk price action does not have a code.");
+        Start = priceAction.Date?.ToDateTime(TimeOnly.MinValue) ?? throw new ArgumentException($"Bulk price action for {Symbol} does not have a date.");
+        Open = priceAction.Open ?? throw new ArgumentException($"Bulk price action for {Symbol} does not have an open.");
+        High = priceAction.High ?? throw new ArgumentException($"Bulk price action for {Symbol} does not have a high.");
+        Low = priceAction.Low ?? throw new ArgumentException($"Bulk price action for {Symbol} does not have a low.");
+        Close = priceAction.Close ?? throw new ArgumentException($"Bulk price action for {Symbol} does not have a close.");
+        Exchange = exchange;
+        Finish = Start.EndOfDay();
+        Volume = Convert.ToInt64(priceAction.Volume);
+        UtcTimestamp = DateTime.UtcNow;
+    }
+
     public PriceAction(string symbol, string exchange, EodHistoricalData.Sdk.Models.PriceAction priceAction)
     {
         Symbol = symbol;

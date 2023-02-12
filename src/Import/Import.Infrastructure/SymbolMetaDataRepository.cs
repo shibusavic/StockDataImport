@@ -19,13 +19,9 @@ internal static class SymbolMetaDataRepository
     {
         metaData.Clear();
         metaData.AddRange(symbolMetaData);
-
-        Count = metaData.Count;
     }
 
     public static SymbolMetaData[] GetAll() => metaData.ToArray();
-
-    public static int Count { get; private set; }
 
     public static void AddOrUpdate(SymbolMetaData symbolMetaData)
     {
@@ -38,7 +34,6 @@ internal static class SymbolMetaDataRepository
             else
             {
                 metaData.Add(symbolMetaData);
-                Count++;
             }
         }
     }
@@ -51,6 +46,9 @@ internal static class SymbolMetaDataRepository
 
     public static string? GetFirstExchangeForSymbol(string symbol) =>
         metaData.FirstOrDefault(d => d.Symbol.Equals(symbol, StringComparison.InvariantCultureIgnoreCase))?.Exchange;
+
+    public static int Count(Predicate<SymbolMetaData>? predicate = null) =>
+        predicate == null ? metaData.Count : metaData.Count(d => predicate(d));
 
     public static IEnumerable<SymbolMetaData> Find(Predicate<SymbolMetaData> predicate) => metaData.Where(d => predicate(d));
 

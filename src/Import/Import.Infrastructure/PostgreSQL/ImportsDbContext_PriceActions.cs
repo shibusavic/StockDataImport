@@ -31,4 +31,23 @@ internal partial class ImportsDbContext
 
         return ExecuteAsync(sql, daoPriceActions, null, cancellationToken);
     }
+
+    public Task SaveBulkPriceActionsAsync(IEnumerable<EodHistoricalData.Sdk.Models.Bulk.BulkPriceAction> priceActionModels,
+        string exchange,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var priceActions = priceActionModels.ToArray();
+
+        if (!priceActions.Any()) { return Task.CompletedTask; }
+
+        string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(PriceAction));
+
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(PriceAction)}"); }
+
+        var dao = priceActions.Select(p => new PriceAction(p, exchange));
+
+        return ExecuteAsync(sql, dao, cancellationToken: cancellationToken);
+    }
 }

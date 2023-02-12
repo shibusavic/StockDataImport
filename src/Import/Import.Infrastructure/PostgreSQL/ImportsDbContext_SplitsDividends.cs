@@ -1,4 +1,6 @@
-﻿using Import.Infrastructure.PostgreSQL.DataAccessObjects;
+﻿using EodHistoricalData.Sdk.Models.Bulk;
+using Import.Infrastructure.PostgreSQL.DataAccessObjects;
+using System.Threading;
 
 namespace Import.Infrastructure.PostgreSQL;
 
@@ -7,12 +9,15 @@ internal partial class ImportsDbContext
     /// <summary>
     /// Save provided splits.
     /// </summary>
-    /// <param name="splits">The collection of <see cref="Domain.Split"/> instances.</param>
+    /// <param name="domainSplits">The collection of <see cref="Domain.Split"/> instances.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asyncronous operation.</returns>
-    public Task SaveSplitsAsync(IEnumerable<Domain.Split> splits, CancellationToken cancellationToken = default)
+    public Task SaveSplitsAsync(IEnumerable<Domain.Split> domainSplits,
+        CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        var splits = domainSplits.ToArray();
 
         if (!splits.Any()) { return Task.CompletedTask; }
 
@@ -22,7 +27,7 @@ internal partial class ImportsDbContext
 
         var daoSplits = splits.Select(s => new Split(s));
 
-        return ExecuteAsync(sql, daoSplits, null, cancellationToken);
+        return ExecuteAsync(sql, daoSplits, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -33,9 +38,13 @@ internal partial class ImportsDbContext
     /// <param name="dividends">A collection of <see cref="EodHistoricalData.Sdk.Models.Dividend"/> values.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asyncronous operation.</returns>
-    public Task SaveDividendsAsync(string symbol, string exchange, IEnumerable<EodHistoricalData.Sdk.Models.Dividend> dividends, CancellationToken cancellationToken = default)
+    public Task SaveDividendsAsync(string symbol, string exchange,
+        IEnumerable<EodHistoricalData.Sdk.Models.Dividend> dividendModels,
+        CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        var dividends = dividendModels.ToArray();
 
         if (!dividends.Any()) { return Task.CompletedTask; }
 
@@ -45,6 +54,25 @@ internal partial class ImportsDbContext
 
         var daoDividends = dividends.Select(d => new Dividend(symbol, exchange, d));
 
-        return ExecuteAsync(sql, daoDividends, null, cancellationToken);
+        return ExecuteAsync(sql, daoDividends, cancellationToken: cancellationToken);
+    }
+
+    public Task SaveBulkDividendsAsync(IEnumerable<BulkDividend> dividendModels,
+        string exchange,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var dividends = dividendModels.ToArray();
+
+        if (!dividends.Any()) { return Task.CompletedTask; }
+
+        string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(Dividend));
+
+        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(Dividend)}"); }
+
+        var daoDividends = dividends.Select(d => new Dividend(d, exchange));
+
+        return ExecuteAsync(sql, daoDividends, cancellationToken: cancellationToken);
     }
 }

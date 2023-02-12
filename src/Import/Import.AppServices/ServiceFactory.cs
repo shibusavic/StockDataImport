@@ -49,7 +49,7 @@ public sealed class ServiceFactory
 
         return Task.Factory.StartNew(() =>
         {
-            DomainEventPublisher.RaiseMessageEvent(this, "Loading symbol meta data.", nameof(LoadStaticDataAsync));
+            DomainEventPublisher.RaiseMessageEvent(this, "Loading existing meta data.", nameof(LoadStaticDataAsync));
 
             SymbolMetaDataRepository.SetItems(importsDbContext.GetSymbolMetaDataAsync().GetAwaiter().GetResult());
 

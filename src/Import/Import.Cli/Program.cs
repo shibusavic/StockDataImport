@@ -12,6 +12,7 @@ using Shibusa.Extensions;
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using static Import.Infrastructure.Configuration.Constants;
@@ -43,15 +44,6 @@ HandleArguments(args);
 var cts = new CancellationTokenSource();
 var cancellationToken = cts.Token;
 
-if (!showHelp)
-{
-    ApiEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
-    ApiEventPublisher.RaiseApiLimitReachedEventHandler += EventPublisher_RaiseApiLimitReachedEventHandler;
-
-    DomainEventPublisher.DatabaseErrorHander += EventPublisher_DatabaseErrorHander;
-    DomainEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
-}
-
 try
 {
     if (showHelp)
@@ -60,10 +52,16 @@ try
     }
     else
     {
+        ApiEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
+        ApiEventPublisher.RaiseApiLimitReachedEventHandler += EventPublisher_RaiseApiLimitReachedEventHandler;
+
+        DomainEventPublisher.DatabaseErrorHander += EventPublisher_DatabaseErrorHander;
+        DomainEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
+
         Configure();
 
         string welcomeMsg = dryRun ? "Dry Run (api credit cost estimation)" : "Configuration complete.";
-        Communicate(welcomeMsg, false, true);
+        DomainEventPublisher.RaiseMessageEvent(null, welcomeMsg, sourceName);
 
         using var cycle = dataImportService!.GetImportCycle(importConfiguration, new DirectoryInfo("cycles"));
 
@@ -78,14 +76,14 @@ try
         }
         else
         {
-            Communicate($"Cycle created: {cycle.Id}", false, true);
+            DomainEventPublisher.RaiseMessageEvent(null, $"Cycle created: {cycle.Id}", sourceName, LogLevel.Information);
 
             var purgeActions = cycle.Actions.Where(a => a.ActionName.Equals(ActionNames.Purge) &&
                 a.Status == Import.Infrastructure.Abstractions.ImportActionStatus.NotStarted).ToArray();
 
             if (purgeActions.Any())
             {
-                DomainEventPublisher.RaiseMessageEvent(null, $"{purgeActions.Length} purge actions found.", "Program");
+                DomainEventPublisher.RaiseMessageEvent(null, $"{purgeActions.Length} purge actions found.", sourceName);
 
                 await Parallel.ForEachAsync(purgeActions,
                     new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
@@ -95,15 +93,15 @@ try
                         action.Start();
 
                         Task t = dataImportService.PurgeDataAsync(action.TargetName, cycle, ct);
-                        DomainEventPublisher.RaiseMessageEvent(null, $"Purging {action.TargetName}", "Program");
+                        DomainEventPublisher.RaiseMessageEvent(null, $"Purging {action.TargetName}", sourceName);
                         await t;
-                        DomainEventPublisher.RaiseMessageEvent(null, $"Purging of {action.TargetName} complete.", "Program");
+                        DomainEventPublisher.RaiseMessageEvent(null, $"Purging of {action.TargetName} complete.", sourceName);
 
                         if (action.TargetName.Equals(PurgeName.Imports))
                         {
                             // Meta data may have changed as a result of the purge.
                             t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
-                            DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", "Program");
+                            DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", sourceName);
                             await t;
                         }
 
@@ -121,7 +119,7 @@ try
 
             if (importActions.Any())
             {
-                DomainEventPublisher.RaiseMessageEvent(null, $"{importActions.Length} import actions found.", "Program");
+                DomainEventPublisher.RaiseMessageEvent(null, $"{importActions.Length} import actions found.", sourceName);
 
                 await Parallel.ForEachAsync(importActions,
                     new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
@@ -137,7 +135,7 @@ try
                             {
                                 // Meta data may have changed as a result of the purge.
                                 t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
-                                DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", "Program");
+                                DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", sourceName);
                                 await t;
                             }
 
@@ -164,16 +162,18 @@ try
             foreach (var action in cycle.Actions.OrderBy(a => a.UtcCompleted))
             {
                 string text = $"{action} {action.Status.GetDescription()} {action.Details}";
-                DomainEventPublisher.RaiseMessageEvent(null, text, "Program");
+                DomainEventPublisher.RaiseMessageEvent(null, text, sourceName);
                 if (action.Exception != null)
                 {
-                    DomainEventPublisher.RaiseMessageEvent(null, action.Exception.ToString(), "Program");
+                    DomainEventPublisher.RaiseMessageEvent(null, action.Exception.ToString(), sourceName);
                 }
             }
 
-            Communicate("Saving symbols to ignore", false, true);
+            DomainEventPublisher.RaiseMessageEvent(null, "Saving symbols to ignore", sourceName);
             await dataImportService.SaveSymbolsToIgnoreAsync(cancellationToken);
         }
+
+        cycle.Dispose();
     }
 
     exitCode = 0;
@@ -182,6 +182,7 @@ catch (Exception exc)
 {
     exitCode = 1;
     logger?.LogError(exc, "{MESSAGE}", exc.Message);
+    DomainEventPublisher.RaiseMessageEvent(null, exc.ToString(), sourceName, LogLevel.Error);
     Communicate(exc.ToString(), true);
 }
 finally
@@ -191,7 +192,7 @@ finally
         if (!dryRun)
         {
             WriteApiUsage();
-            CommunicateAndLog($"Import completed in {timer.Elapsed.ConvertToText()}.");
+            DomainEventPublisher.RaiseMessageEvent(null, $"Import completed in {timer.Elapsed.ConvertToText()}.", sourceName, LogLevel.Information);
         }
     }
 
@@ -211,7 +212,6 @@ finally
 
     Environment.Exit(exitCode);
 }
-
 
 void ShowCost(ImportCycle cycle)
 {
@@ -241,6 +241,7 @@ void ShowCost(ImportCycle cycle)
 void EventPublisher_RaiseApiLimitReachedEventHandler(object? sender, ApiLimitReachedEventArgs e)
 {
     cts.Cancel();
+    DomainEventPublisher.RaiseMessageEvent(null, $"{e.ApiLimitReachedException.Message}", sourceName, LogLevel.Error);
     CommunicateAndLog($"{e.ApiLimitReachedException.Message}");
 }
 
@@ -401,7 +402,6 @@ void ConfigureServices()
     Communicate("Configuring service factory.", prefixWithTimestamp: true);
     serviceFactory = new ServiceFactory(configuration, logger);
 
-    Communicate("Loading in-memory data.", prefixWithTimestamp: true);
     var metaDataTask = serviceFactory.LoadStaticDataAsync();
 
     Communicate($"Reading {configFileInfo.FullName}.", prefixWithTimestamp: true);
@@ -422,7 +422,7 @@ void ConfigureServices()
     Communicate("Creating data import service.", prefixWithTimestamp: true);
     dataImportService = serviceFactory.CreateDataImportService(apiKey!);
 
-    Communicate("Finishing load of in-memory data.", prefixWithTimestamp: true);
+    Communicate("Finishing load of existing meta data.", prefixWithTimestamp: true);
     metaDataTask.GetAwaiter().GetResult();
 }
 
@@ -440,7 +440,6 @@ void Communicate(string? message, bool force = false, bool prefixWithTimestamp =
                 ? $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\t{message}"
                 : message;
             Console.WriteLine(line);
-
         }
     }
 }
