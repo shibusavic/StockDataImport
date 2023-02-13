@@ -10,7 +10,7 @@ internal class CalendarIpo
     public CalendarIpo(EodHistoricalData.Sdk.Models.Calendar.Ipo ipo)
     {
         Symbol = ipo.Code?.Split('.').FirstOrDefault() ?? throw new ArgumentException($"Unable to extract symbol from code: {ipo.Code}");
-        Exchange = ipo.Exchange ?? Constants.UnknownValue;
+        Exchange = ipo.Exchange?.ToUpper() ?? Constants.UnknownValue;
         Name = ipo.Name;
         Currency = ipo.Currency;
         StartDate = ipo.StartDate?.ToDateTime(TimeOnly.MinValue);

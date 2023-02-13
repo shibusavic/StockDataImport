@@ -7,7 +7,7 @@ namespace EodHistoricalData.Sdk.Tests;
 public class CalendarTests : BaseTest
 {
     [Fact]
-    public async Task GetEarningsForSymbolsAsync_BadApiKey_ThrowsUnauthorizedAccessException()
+    public async Task GetEarningsAsync_BadApiKey_ThrowsUnauthorizedAccessException()
     {
         var dataClient = new DataClient(Guid.NewGuid().ToString()[..5]);
 
@@ -21,25 +21,16 @@ public class CalendarTests : BaseTest
             }
         };
 
-        Assert.Equal(new EarningsCollection(), await dataClient.GetEarningsForSymbolsAsync("AAPL", DateOnly.MinValue));
+        Assert.Equal(new EarningsCollection(), await dataClient.GetEarningsAsync());
         Assert.Single(excs);
     }
 
     [Fact] //[Fact(Skip = "Expensive")]
-    public async Task GetEarningsForSymbolsAsync_BadSymbol_Empty()
+    public async Task GetEarningsAsync_Valid_NotEmpty()
     {
         var dataClient = new DataClient(apiKey);
+        var earnings = await dataClient.GetEarningsAsync();
 
-        Assert.Equal(new EarningsCollection(), await dataClient.GetEarningsForSymbolsAsync(Guid.NewGuid().ToString()[..4], DateOnly.MinValue));
-    }
-
-    [Fact] //[Fact(Skip = "Expensive")]
-    public async Task GetEarningsForSymbolsAsync_Valid_NotEmpty()
-    {
-        var dataClient = new DataClient(apiKey);
-        var earnings = await dataClient.GetEarningsForSymbolsAsync("MSFT", DateOnly.MinValue);
-
-        Assert.Equal("MSFT", earnings.Symbols);
         Assert.Equal("Earnings", earnings.Type);
         Assert.NotNull(earnings.Earnings);
         Assert.NotEmpty(earnings.Earnings);

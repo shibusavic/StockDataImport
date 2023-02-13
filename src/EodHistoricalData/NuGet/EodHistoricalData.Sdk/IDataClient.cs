@@ -20,9 +20,7 @@ namespace EodHistoricalData.Sdk
 
         Task<IEnumerable<Dividend>> GetDividendsForSymbolAsync(string symbol, DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default);
 
-        Task<EarningsCollection> GetEarningsForSymbolsAsync(IEnumerable<string> symbols, DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default);
-
-        Task<EarningsCollection> GetEarningsForSymbolsAsync(string symbols, DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default);
+        Task<EarningsCollection> GetEarningsAsync(DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default);
 
         Task<IEnumerable<Exchange>> GetExchangeListAsync(CancellationToken cancellationToken = default);
 

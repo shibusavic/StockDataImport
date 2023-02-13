@@ -7,33 +7,25 @@ public sealed partial class DataClient
 {
     private const string CalendarSourceName = "Calendar";
 
-    internal async Task<string?> GetEarningsForSymbolsStringAsync(string symbols,
+    internal async Task<string?> GetEarningsStringAsync(
         DateOnly? from = null, DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        return await GetStringResponseAsync(BuildEarningsUri(symbols, from, to), CalendarSourceName, cancellationToken);
+        return await GetStringResponseAsync(BuildEarningsUri(from, to), CalendarSourceName, cancellationToken);
     }
 
-    public async Task<EarningsCollection> GetEarningsForSymbolsAsync(string symbols,
-        DateOnly? from = null, DateOnly? to = null,
+    public async Task<EarningsCollection> GetEarningsAsync(DateOnly? from = null, DateOnly? to = null,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string? json = await GetEarningsForSymbolsStringAsync(symbols, from, to, cancellationToken);
+        string? json = await GetEarningsStringAsync(from, to, cancellationToken);
 
         return string.IsNullOrWhiteSpace(json) ? new EarningsCollection()
             : JsonSerializer.Deserialize<EarningsCollection>(json, SerializerOptions);
     }
-
-    public async Task<EarningsCollection> GetEarningsForSymbolsAsync(IEnumerable<string> symbols,
-        DateOnly? from = null, DateOnly? to = null,
-        CancellationToken cancellationToken = default) =>
-        await GetEarningsForSymbolsAsync(string.Join(',', symbols.Where(s => !string.IsNullOrWhiteSpace(s))),
-            from, to, cancellationToken);
-
 
     public async Task<TrendCollection> GetTrendsForSymbolsAsync(string symbols,
         CancellationToken cancellationToken = default)
@@ -104,9 +96,8 @@ public sealed partial class DataClient
             : JsonSerializer.Deserialize<IpoCollection>(json, SerializerOptions);
     }
 
-    // The API returns an empty array if the 'from' value is null in this instance.
-    private string BuildEarningsUri(string symbols, DateOnly? from = null, DateOnly? to = null) =>
-        $"{ApiService.CalendarUri}earnings?{GetTokenAndFormat()}&symbols={symbols}&{BuildFromAndTo(from ?? DateOnlyMinValue, to)}";
+    private string BuildEarningsUri(DateOnly? from = null, DateOnly? to = null) =>
+        $"{ApiService.CalendarUri}earnings?{GetTokenAndFormat()}&{BuildFromAndTo(from, to)}";
 
     private string BuildIposUri(DateOnly? from = null, DateOnly? to = null)
     {

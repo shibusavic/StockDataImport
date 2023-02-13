@@ -49,7 +49,7 @@ internal partial interface IImportsDbContext : IDbContext
 
     Task SaveIposAsync(IpoCollection ipoCollection, string[] exchanges, CancellationToken cancellationToken = default);
 
-    Task SaveEarnings(EarningsCollection earnings, CancellationToken cancellationToken = default);
+    Task SaveEarningsAsync(EarningsCollection earnings, string[] exchanges, CancellationToken cancellationToken = default);
 
     Task SaveTrends(TrendCollection trends, CancellationToken cancellationToken = default);
 

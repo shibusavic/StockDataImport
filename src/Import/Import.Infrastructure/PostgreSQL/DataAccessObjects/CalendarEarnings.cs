@@ -7,11 +7,11 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 [Table(name: "calendar_earnings", Schema = "public")]
 internal class CalendarEarnings
 {
-    public CalendarEarnings(EodHistoricalData.Sdk.Models.Calendar.Earnings earnings)
+    public CalendarEarnings(EodHistoricalData.Sdk.Models.Calendar.Earnings earnings, string exchange)
     {
         Symbol = earnings.Code?.Split('.')[0] ??
             throw new ArgumentException($"{nameof(earnings)} has no {nameof(Symbol)}");
-        Exchange = earnings.Code?.Split('.')[1] ?? Constants.UnknownValue;
+        Exchange = exchange;
         ReportDate = earnings.ReportDate?.ToDateTime(TimeOnly.MinValue);
         EndingDate = earnings.Date?.ToDateTime(TimeOnly.MinValue) ??
             throw new ArgumentException($"{nameof(earnings)} has no {nameof(EndingDate)}");

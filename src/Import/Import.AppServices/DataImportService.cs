@@ -414,12 +414,30 @@ public sealed class DataImportService
             }
         }
 
-        if (action.TargetDataType == DataTypes.Earnings) { }
+        if (action.TargetDataType == DataTypes.Earnings)
+        {
+            int estimatedCost = ApiService.GetCost(ApiService.CalendarUri, 1);
+            if (estimatedCost > ApiService.Available)
+            {
+                ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                    $"Earnings for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
+            }
+            else
+            {
+                var subExchanges = importConfiguration.GetSubExchanges(action.TargetName);
+
+                if (subExchanges.Any())
+                {
+                    return ImportEarningsAsync(subExchanges, cancellationToken);
+                }
+            }
+        }
 
         if (action.TargetDataType == DataTypes.Trends) { }
 
         return Task.CompletedTask;
     }
+
 
     private Task ImportBulkAsync(
         ActionItem action,
@@ -765,6 +783,27 @@ public sealed class DataImportService
             foreach (var ipo in ipos.Ipos.Where(i => i.Code != null))
             {
                 SymbolMetaDataRepository.Get(ipo.Code!)?.Update();
+            }
+
+            await t;
+        }
+    }
+
+    private async Task ImportEarningsAsync(string[] exchanges, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (exchanges.Length == 0) { throw new ArgumentException($"{nameof(exchanges)} must have at least 1 exchange"); }
+
+        var earnings = await DataClient.GetEarningsAsync(cancellationToken: cancellationToken);
+
+        if (earnings.Earnings?.Any() ?? false)
+        {
+            var t = ImportsDb.SaveEarningsAsync(earnings, exchanges, cancellationToken);
+
+            foreach (var e in earnings.Earnings.Where(i => i.Code != null))
+            {
+                SymbolMetaDataRepository.Get(e.Code!)?.Update();
             }
 
             await t;

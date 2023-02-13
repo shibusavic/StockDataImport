@@ -26,7 +26,7 @@ internal partial class ImportsDbContext
         return Task.CompletedTask;
     }
 
-    public Task SaveEarnings(EodHistoricalData.Sdk.Models.Calendar.EarningsCollection earnings,
+    public Task SaveEarningsAsync(EodHistoricalData.Sdk.Models.Calendar.EarningsCollection earnings,
         string[] exchanges,
         CancellationToken cancellationToken = default)
     {
@@ -38,9 +38,24 @@ internal partial class ImportsDbContext
 
         if (earnings.Earnings != null)
         {
-            var daoEarnings = earnings.Earnings.Select(e => new CalendarEarnings(e));
+            List<CalendarEarnings> daos = new();
 
-            return ExecuteAsync(sql, daoEarnings, null, cancellationToken);
+            foreach (var e in earnings.Earnings)
+            {
+                if (e.Code == null) { continue; }
+
+                var existing = SymbolMetaDataRepository.Get(e.Code);
+
+                if (existing?.Exchange != null && exchanges.Contains(existing.Exchange))
+                {
+                    daos.Add(new CalendarEarnings(e, existing.Exchange));
+                }
+            }
+
+            if (daos.Any())
+            {
+                return ExecuteAsync(sql, daos, null, cancellationToken);
+            }
         }
 
         return Task.CompletedTask;

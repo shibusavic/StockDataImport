@@ -25,7 +25,7 @@ public class CalendarTests : TestBase
 
         Assert.Equal(0, count);
 
-        await sut.SaveIpos(ipos);
+        await sut.SaveIposAsync(ipos, new[] { "NYSE", "NASDAQ" });
 
         count = await sut.CountIposAsync();
 
@@ -47,7 +47,9 @@ public class CalendarTests : TestBase
 
         Assert.Equal(0, count);
 
-        await sut.SaveEarnings(earnings);
+        SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData("AAPL.US", "AAPL", "NASDAQ", "Common Stock"));
+
+        await sut.SaveEarningsAsync(earnings, new[] { "NYSE", "NASDAQ" });
 
         count = await sut.CountEarningsAsync();
 
