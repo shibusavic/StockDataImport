@@ -7,7 +7,7 @@ namespace EodHistoricalData.Sdk;
 
 public static class Constants
 {
-    public const string UnknownValue = "Unknown";
+    public const string UnknownValue = "UNKNOWN";
 
     public static class Period
     {

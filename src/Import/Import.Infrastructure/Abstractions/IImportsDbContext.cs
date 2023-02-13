@@ -47,7 +47,7 @@ internal partial interface IImportsDbContext : IDbContext
 
     Task SaveEtfAsync(EtfFundamentalsCollection etf, CancellationToken cancellationToken = default);
 
-    Task SaveIpos(IpoCollection ipoCollection, CancellationToken cancellationToken = default);
+    Task SaveIposAsync(IpoCollection ipoCollection, string[] exchanges, CancellationToken cancellationToken = default);
 
     Task SaveEarnings(EarningsCollection earnings, CancellationToken cancellationToken = default);
 

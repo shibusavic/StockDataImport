@@ -1,4 +1,5 @@
-﻿using Import.AppServices.Configuration;
+﻿using EodHistoricalData.Sdk;
+using Import.AppServices.Configuration;
 using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Domain;
 using Import.Infrastructure.Events;
@@ -131,19 +132,40 @@ public class ActionService
 
                 if (action.IsValidForImport)
                 {
-                    if ((exchanges?.Any() ?? false) && action.Scope == DataTypeScopes.Full)
+                    if ((exchanges?.Any() ?? false) && action.Scope is DataTypeScopes.Full)
                     {
-                        foreach (var exchange in exchanges)
+                        foreach (var dataType in action.DataTypes!)
                         {
-                            if (!string.IsNullOrWhiteSpace(exchange))
+                            switch (dataType)
                             {
-                                foreach (var dataType in action.DataTypes!)
-                                {
-                                    if (dataType == DataTypes.Exchanges) continue;
-                                    yield return new ActionItem(ActionNames.Import, exchange, action.Scope, dataType,
-                                        exchangeCode, cycle, mode);
-                                }
-                            }
+                                case DataTypes.Splits:
+                                case DataTypes.Prices:
+                                case DataTypes.Dividends:
+                                case DataTypes.Fundamentals:
+                                case DataTypes.Options:
+                                    foreach (var exchange in exchanges)
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(exchange))
+                                        {
+                                            yield return new ActionItem(ActionNames.Import, exchange, action.Scope, dataType,
+                                                exchangeCode, cycle, mode);
+                                        }
+                                    }
+                                    break;
+                                case DataTypes.Earnings:
+                                case DataTypes.Trends:
+                                case DataTypes.Ipos:
+                                    if (exchangeCode is not null)
+                                    {
+                                        yield return new ActionItem(ActionNames.Import, exchangeCode,
+                                            action.Scope, dataType, exchangeCode, cycle, mode);
+                                    }
+                                    break;
+                                case DataTypes.Symbols:
+                                case DataTypes.Exchanges:
+                                default:
+                                    break;
+                            };
                         }
                     }
 

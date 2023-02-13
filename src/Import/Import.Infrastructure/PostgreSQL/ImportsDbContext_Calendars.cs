@@ -4,7 +4,8 @@ namespace Import.Infrastructure.PostgreSQL;
 
 internal partial class ImportsDbContext
 {
-    public Task SaveIpos(EodHistoricalData.Sdk.Models.Calendar.IpoCollection ipoCollection,
+    public Task SaveIposAsync(EodHistoricalData.Sdk.Models.Calendar.IpoCollection ipoCollection,
+        string[] exchanges,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -15,8 +16,9 @@ internal partial class ImportsDbContext
 
         if (ipoCollection.Ipos != null)
         {
-            var daoIpos = ipoCollection.Ipos.Select(x => new CalendarIpo(x,
-                SymbolMetaDataRepository.GetFirstExchangeForSymbol(x.Symbol ?? ""))).ToArray();
+            // "Exchange" is mixed case in this instance, hence the "ToUpper()"
+            var daoIpos = ipoCollection.Ipos.Where(i => exchanges.Contains(i.Exchange?.ToUpper()))
+                .Select(x => new CalendarIpo(x));
 
             return ExecuteAsync(sql, daoIpos, null, cancellationToken);
         }
@@ -25,6 +27,7 @@ internal partial class ImportsDbContext
     }
 
     public Task SaveEarnings(EodHistoricalData.Sdk.Models.Calendar.EarningsCollection earnings,
+        string[] exchanges,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

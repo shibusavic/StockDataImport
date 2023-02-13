@@ -43,12 +43,15 @@ public static class Constants
     public static class DataTypes // target_name
     {
         public const string Dividends = "Dividends";
+        public const string Earnings = "Earnings";
         public const string Exchanges = "Exchanges";
         public const string Fundamentals = "Fundamentals";
+        public const string Ipos = "IPOs";
         public const string Options = "Options";
         public const string Prices = "Prices";
         public const string Splits = "Splits";
         public const string Symbols = "Symbols";
+        public const string Trends = "Trends";
     }
 
     public static class DataTypeScopes // target_scope

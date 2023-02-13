@@ -7,10 +7,10 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 [Table(name: "calendar_ipos", Schema = "public")]
 internal class CalendarIpo
 {
-    public CalendarIpo(EodHistoricalData.Sdk.Models.Calendar.Ipo ipo, string? exchange)
+    public CalendarIpo(EodHistoricalData.Sdk.Models.Calendar.Ipo ipo)
     {
         Symbol = ipo.Code?.Split('.').FirstOrDefault() ?? throw new ArgumentException($"Unable to extract symbol from code: {ipo.Code}");
-        Exchange = exchange ?? Constants.UnknownValue;
+        Exchange = ipo.Exchange ?? Constants.UnknownValue;
         Name = ipo.Name;
         Currency = ipo.Currency;
         StartDate = ipo.StartDate?.ToDateTime(TimeOnly.MinValue);

@@ -33,6 +33,12 @@ public class ImportConfiguration
     [YamlMember(Alias = Constants.ConfigurationKeys.Exchanges)]
     public IDictionary<string, IDictionary<string, string[]>>? Exchanges { get; set; }
 
+    public string[] GetSubExchanges(string exchangeCode) =>
+        (Exchanges?.Any() ?? false) && Exchanges.ContainsKey(exchangeCode) &&
+            Exchanges[exchangeCode].ContainsKey("Exchanges")
+        ? Exchanges[exchangeCode]["Exchanges"]
+        : Array.Empty<string>();
+
     [YamlMember(Alias = Constants.ConfigurationKeys.DatabasePurge)]
     public string[]? Purges { get; set; }
 

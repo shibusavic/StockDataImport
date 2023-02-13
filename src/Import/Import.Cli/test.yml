@@ -5,7 +5,7 @@
 Exchange Codes:
   US:
     Exchanges:
-    - NYSE
+    - NASDAQ
     Symbol Type:
     - Common Stock
     - ETF
@@ -15,5 +15,5 @@ Any Day:
   Mode: Discover
   Scope: Full
   Data Types:
-  - Options
+  - IPOs
  

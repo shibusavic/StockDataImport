@@ -213,19 +213,17 @@ public sealed class DataImportService
             if (symbolCount == 0 && action.ActionName == ActionNames.Import &&
                 action.TargetDataType != DataTypes.Exchanges)
             {
-                action.EstimatedCost = action.TargetScope == DataTypeScopes.Bulk ? 100 : null;
+                action.EstimatedCost = action.TargetScope == DataTypeScopes.Bulk ? 100 : baseCost;
             }
             else
             {
                 int factor = action.TargetDataType! switch
                 {
                     DataTypes.Dividends => symbolCount,
-                    DataTypes.Exchanges => 1,
                     DataTypes.Fundamentals => SymbolMetaDataRepository.RequiresFundamentalsCount(action.TargetName),
                     DataTypes.Options => symbolCount,
                     DataTypes.Prices => symbolCount,
                     DataTypes.Splits => symbolCount,
-                    DataTypes.Symbols => 1,
                     _ => 1
                 };
 
@@ -249,6 +247,9 @@ public sealed class DataImportService
             DataTypes.Exchanges => ApiService.ExchangesUri,
             DataTypes.Fundamentals => ApiService.FundamentalsUri,
             DataTypes.Symbols => ApiService.ExchangeSymbolListUri,
+            DataTypes.Ipos => ApiService.CalendarUri,
+            DataTypes.Trends => ApiService.CalendarUri,
+            DataTypes.Earnings => ApiService.CalendarUri,
             _ => null
         };
     }
@@ -393,6 +394,29 @@ public sealed class DataImportService
                     $"fundamentals for {exchange}", ApiService.Usage, ApiService.Usage), nameof(ImportFullAsync));
             }
         }
+
+        if (action.TargetDataType == DataTypes.Ipos)
+        {
+            int estimatedCost = ApiService.GetCost(ApiService.CalendarUri, 1);
+            if (estimatedCost > ApiService.Available)
+            {
+                ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                    $"IPOs for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
+            }
+            else
+            {
+                var subExchanges = importConfiguration.GetSubExchanges(action.TargetName);
+
+                if (subExchanges.Any())
+                {
+                    return ImportIposAsync(subExchanges, cancellationToken);
+                }
+            }
+        }
+
+        if (action.TargetDataType == DataTypes.Earnings) { }
+
+        if (action.TargetDataType == DataTypes.Trends) { }
 
         return Task.CompletedTask;
     }
@@ -724,5 +748,26 @@ public sealed class DataImportService
         }
 
         return Task.CompletedTask;
+    }
+
+    private async Task ImportIposAsync(string[] exchanges, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (exchanges.Length == 0) { throw new ArgumentException($"{nameof(exchanges)} must have at least 1 exchange"); }
+
+        var ipos = await DataClient.GetIposAsync(cancellationToken: cancellationToken);
+
+        if (ipos.Ipos?.Any() ?? false)
+        {
+            var t = ImportsDb.SaveIposAsync(ipos, exchanges, cancellationToken);
+
+            foreach (var ipo in ipos.Ipos.Where(i => i.Code != null))
+            {
+                SymbolMetaDataRepository.Get(ipo.Code!)?.Update();
+            }
+
+            await t;
+        }
     }
 }
