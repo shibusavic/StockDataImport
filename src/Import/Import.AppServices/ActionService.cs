@@ -1,5 +1,4 @@
-﻿using EodHistoricalData.Sdk;
-using Import.AppServices.Configuration;
+﻿using Import.AppServices.Configuration;
 using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Domain;
 using Import.Infrastructure.Events;

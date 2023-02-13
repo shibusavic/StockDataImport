@@ -61,7 +61,8 @@ internal partial class ImportsDbContext
         return Task.CompletedTask;
     }
 
-    public Task SaveTrends(EodHistoricalData.Sdk.Models.Calendar.TrendCollection trends,
+    public Task SaveTrendsAsync(IEnumerable<EodHistoricalData.Sdk.Models.Calendar.Trend> trends,
+        string[] exchanges,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -70,10 +71,26 @@ internal partial class ImportsDbContext
 
         if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(CalendarTrend)}"); }
 
-        if (trends.Trends != null)
+        if (trends != null)
         {
-            var daoTrend = trends.Trends.Select(t => new CalendarTrend(t));
-            return ExecuteAsync(sql, daoTrend, null, cancellationToken);
+            List<CalendarTrend> daos = new();
+
+            foreach (var trend in trends)
+            {
+                if (trend.Code == null) { continue; }
+
+                var existing = SymbolMetaDataRepository.Get(trend.Code);
+
+                if (existing?.Exchange != null && exchanges.Contains(existing.Exchange))
+                {
+                    daos.Add(new CalendarTrend(trend, existing.Exchange));
+                }
+            }
+
+            if (daos.Any())
+            {
+                return ExecuteAsync(sql, daos, null, cancellationToken);
+            }
         }
 
         return Task.CompletedTask;

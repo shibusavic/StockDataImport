@@ -33,6 +33,9 @@ public class ImportConfiguration
     [YamlMember(Alias = Constants.ConfigurationKeys.Exchanges)]
     public IDictionary<string, IDictionary<string, string[]>>? Exchanges { get; set; }
 
+    public string[] GetExchanges() =>
+        (Exchanges?.Any() ?? false) ? Exchanges.Select(e => e.Key).ToArray() : Array.Empty<string>();
+
     public string[] GetSubExchanges(string exchangeCode) =>
         (Exchanges?.Any() ?? false) && Exchanges.ContainsKey(exchangeCode) &&
             Exchanges[exchangeCode].ContainsKey("Exchanges")

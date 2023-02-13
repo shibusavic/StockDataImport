@@ -79,7 +79,9 @@ public class CalendarTests : TestBase
             Trends = dao.Trends.First()
         };
 
-        await sut.SaveTrends(trends);
+        SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData("AAPL.US", "AAPL", "NASDAQ", "Common Stock"));
+
+        await sut.SaveTrendsAsync(trends.Trends, new[] { "NYSE", "NASDAQ" });
 
         count = await sut.CountTrendsAsync();
 

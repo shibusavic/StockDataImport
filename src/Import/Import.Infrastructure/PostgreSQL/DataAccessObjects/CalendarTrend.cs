@@ -6,9 +6,10 @@ namespace Import.Infrastructure.PostgreSQL.DataAccessObjects;
 [Table(name: "calendar_trends", Schema = "public")]
 internal class CalendarTrend
 {
-    public CalendarTrend(EodHistoricalData.Sdk.Models.Calendar.Trend trend)
+    public CalendarTrend(EodHistoricalData.Sdk.Models.Calendar.Trend trend, string exchange)
     {
         Symbol = trend.Code ?? throw new ArgumentException($"{nameof(trend)} has no {nameof(Symbol)}");
+        Exchange = exchange;
         Date = trend.Date?.ToDateTime(TimeOnly.MinValue) ??
             throw new ArgumentException($"{nameof(trend)} has no {nameof(Date)}");
         Period = trend.Period;
@@ -38,6 +39,7 @@ internal class CalendarTrend
 
     public CalendarTrend(
         string symbol,
+        string exchange,
         DateTime date,
         string? period,
         double? growth,
@@ -64,6 +66,7 @@ internal class CalendarTrend
         DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
+        Exchange = exchange;
         Date = date;
         Period = period;
         Growth = growth;
@@ -94,75 +97,78 @@ internal class CalendarTrend
     [ColumnWithKey("symbol", Order = 1, TypeName = "text", IsPartOfKey = true)]
     public string Symbol { get; }
 
-    [ColumnWithKey("date", Order = 2, TypeName = "date", IsPartOfKey = true)]
+    [ColumnWithKey("exchange", Order = 2, TypeName = "text", IsPartOfKey = true)]
+    public string Exchange { get; }
+
+    [ColumnWithKey("date", Order = 3, TypeName = "date", IsPartOfKey = true)]
     public DateTime Date { get; }
 
-    [ColumnWithKey("period", Order = 3, TypeName = "text", IsPartOfKey = false)]
+    [ColumnWithKey("period", Order = 4, TypeName = "text", IsPartOfKey = false)]
     public string? Period { get; }
 
-    [ColumnWithKey("growth", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
+    [ColumnWithKey("growth", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
     public double? Growth { get; }
 
-    [ColumnWithKey("earnings_estimate_avg", Order = 5, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("earnings_estimate_avg", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EarningsEstimateAvg { get; }
 
-    [ColumnWithKey("earnings_estimate_low", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("earnings_estimate_low", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EarningsEstimateLow { get; }
 
-    [ColumnWithKey("earnings_estimate_high", Order = 7, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("earnings_estimate_high", Order = 8, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EarningsEstimateHigh { get; }
 
-    [ColumnWithKey("earnings_estimate_number_analysts", Order = 8, TypeName = "integer", IsPartOfKey = false)]
+    [ColumnWithKey("earnings_estimate_number_analysts", Order = 9, TypeName = "integer", IsPartOfKey = false)]
     public int? EarningsEstimateNumberAnalysts { get; }
 
-    [ColumnWithKey("earnings_estimate_growth", Order = 9, TypeName = "double precision", IsPartOfKey = false)]
+    [ColumnWithKey("earnings_estimate_growth", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
     public double? EarningsEstimateGrowth { get; }
 
-    [ColumnWithKey("revenue_estimate_avg", Order = 10, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("revenue_estimate_avg", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? RevenueEstimateAvg { get; }
 
-    [ColumnWithKey("revenue_estimate_low", Order = 11, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("revenue_estimate_low", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? RevenueEstimateLow { get; }
 
-    [ColumnWithKey("revenue_estimate_high", Order = 12, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("revenue_estimate_high", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? RevenueEstimateHigh { get; }
 
-    [ColumnWithKey("revenue_estimate_year_ago_eps", Order = 13, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("revenue_estimate_year_ago_eps", Order = 14, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? RevenueEstimateYearAgoEps { get; }
 
-    [ColumnWithKey("revenue_estimate_number_analysts", Order = 14, TypeName = "integer", IsPartOfKey = false)]
+    [ColumnWithKey("revenue_estimate_number_analysts", Order = 15, TypeName = "integer", IsPartOfKey = false)]
     public int? RevenueEstimateNumberAnalysts { get; }
 
-    [ColumnWithKey("revenue_estimate_growth", Order = 15, TypeName = "double precision", IsPartOfKey = false)]
+    [ColumnWithKey("revenue_estimate_growth", Order = 16, TypeName = "double precision", IsPartOfKey = false)]
     public double? RevenueEstimateGrowth { get; }
 
-    [ColumnWithKey("eps_trend_current", Order = 16, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("eps_trend_current", Order = 17, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsTrendCurrent { get; }
 
-    [ColumnWithKey("eps_trend_7days_ago", Order = 17, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("eps_trend_7days_ago", Order = 18, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsTrend7DaysAgo { get; }
 
-    [ColumnWithKey("eps_trend_30days_ago", Order = 18, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("eps_trend_30days_ago", Order = 19, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsTrend30DaysAgo { get; }
 
-    [ColumnWithKey("eps_trend_60days_ago", Order = 19, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("eps_trend_60days_ago", Order = 20, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsTrend60DaysAgo { get; }
 
-    [ColumnWithKey("eps_trend_90days_ago", Order = 20, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("eps_trend_90days_ago", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsTrend90DaysAgo { get; }
 
-    [ColumnWithKey("eps_revisions_up_last7_days", Order = 21, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("eps_revisions_up_last7_days", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsRevisionsUpLast7Days { get; }
 
-    [ColumnWithKey("eps_revisions_up_last30_days", Order = 22, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("eps_revisions_up_last30_days", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsRevisionsUpLast30Days { get; }
 
-    [ColumnWithKey("eps_revisions_down_last30_days", Order = 23, TypeName = "numeric", IsPartOfKey = false)]
+    [ColumnWithKey("eps_revisions_down_last30_days", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsRevisionsDownLast30Days { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 24, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("created_timestamp", Order = 25, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime CreatedTimestamp { get; }
 
-    [ColumnWithKey("utc_timestamp", Order = 25, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 26, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

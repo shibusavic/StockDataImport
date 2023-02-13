@@ -189,10 +189,19 @@ public sealed class DataImportService
         return result;
     }
 
-    public static void CalculateCost(ImportCycle cycle)
+    public static void CalculateCost(ImportCycle cycle, ImportConfiguration importConfiguration)
     {
-        // Calculate cost.
         int availableCredits = ApiService.Available;
+
+        var exchanges = importConfiguration.GetExchanges();
+
+        List<string> subExchanges = new();
+
+        foreach (var exchange in exchanges)
+        {
+            subExchanges.AddRange(importConfiguration.GetSubExchanges(exchange));
+        }
+
 
         foreach (var action in cycle.Actions)
         {
@@ -210,29 +219,27 @@ public sealed class DataImportService
                 s.Exchange != null &&
                 s.Exchange.Equals(action.TargetName, StringComparison.InvariantCultureIgnoreCase)).Count();
 
-            if (symbolCount == 0 && action.ActionName == ActionNames.Import &&
-                action.TargetDataType != DataTypes.Exchanges)
+            int factor = action.TargetDataType! switch
             {
-                action.EstimatedCost = action.TargetScope == DataTypeScopes.Bulk ? 100 : baseCost;
-            }
-            else
-            {
-                int factor = action.TargetDataType! switch
-                {
-                    DataTypes.Dividends => symbolCount,
-                    DataTypes.Fundamentals => SymbolMetaDataRepository.RequiresFundamentalsCount(action.TargetName),
-                    DataTypes.Options => symbolCount,
-                    DataTypes.Prices => symbolCount,
-                    DataTypes.Splits => symbolCount,
-                    _ => 1
-                };
+                DataTypes.Exchanges => action.TargetScope == DataTypeScopes.Bulk ? 100 : baseCost,
+                DataTypes.Dividends
+                    or DataTypes.Options
+                    or DataTypes.Prices
+                    or DataTypes.Splits => symbolCount,
+                DataTypes.Fundamentals => SymbolMetaDataRepository.RequiresFundamentalsCount(action.TargetName),
+                DataTypes.Trends => SymbolMetaDataRepository.Count(s => s.Exchange != null &&
+                    subExchanges.Contains(s.Exchange)),
+                DataTypes.Exchanges
+                    or DataTypes.Earnings
+                    or DataTypes.Ipos => 1,
+                _ => 0
+            };
 
-                int cost = baseCost * factor;
+            int cost = baseCost * factor;
 
-                action.EstimatedCost = cost;
+            action.EstimatedCost = cost;
 
-                availableCredits -= cost;
-            }
+            availableCredits -= cost;
         }
     }
 
@@ -433,11 +440,29 @@ public sealed class DataImportService
             }
         }
 
-        if (action.TargetDataType == DataTypes.Trends) { }
+        if (action.TargetDataType == DataTypes.Trends)
+        {
+            var subExchanges = importConfiguration.GetSubExchanges(action.TargetName);
+
+            if (subExchanges.Any())
+            {
+                int estimatedCost = ApiService.GetCost(ApiService.CalendarUri,
+                    SymbolMetaDataRepository.Count(s => subExchanges.Contains(s.Exchange)));
+
+                if (estimatedCost > ApiService.Available)
+                {
+                    ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                        $"Trends for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
+                }
+                else
+                {
+                    return ImportTrendsAsync(subExchanges, cancellationToken);
+                }
+            }
+        }
 
         return Task.CompletedTask;
     }
-
 
     private Task ImportBulkAsync(
         ActionItem action,
@@ -808,5 +833,34 @@ public sealed class DataImportService
 
             await t;
         }
+    }
+
+    private async Task ImportTrendsAsync(string[] exchanges, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (exchanges.Length == 0) { throw new ArgumentException($"{nameof(exchanges)} must have at least 1 exchange"); }
+
+        var symbols = SymbolMetaDataRepository.Find(s => exchanges.Contains(s.Exchange));
+
+        foreach (var chunk in symbols.Chunk(100))
+        {
+            var trends = await DataClient.GetTrendsForSymbolsAsync(
+                string.Join(',', chunk.Select(c => c.Code)), cancellationToken);
+
+            if (trends.Trends?.Any() ?? false)
+            {
+                var t = ImportsDb.SaveTrendsAsync(trends.Trends, exchanges, cancellationToken);
+
+                foreach (var e in trends.Trends.Where(i => i.Code != null))
+                {
+                    SymbolMetaDataRepository.Get(e.Code!)?.Update();
+                }
+
+                await t;
+            }
+        }
+
+
     }
 }

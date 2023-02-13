@@ -41,6 +41,12 @@ bool verbose = false;
 
 HandleArguments(args);
 
+if (dryRun)
+{
+    verbose = true;
+    Communicate("DRY RUN", true, true);
+}
+
 var cts = new CancellationTokenSource();
 var cancellationToken = cts.Token;
 
@@ -230,7 +236,7 @@ finally
 
 void ShowCost(ImportCycle cycle)
 {
-    DataImportService.CalculateCost(cycle);
+    DataImportService.CalculateCost(cycle, importConfiguration);
 
     int totalCost = 0;
     bool unknowable = false;

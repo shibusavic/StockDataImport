@@ -833,6 +833,7 @@ CREATE TABLE IF NOT EXISTS public.calendar_earnings
 CREATE TABLE IF NOT EXISTS public.calendar_trends
 (
   symbol TEXT NOT NULL,
+  exchange TEXT NOT NULL,
   "date" DATE NOT NULL,
   period TEXT NULL,
   growth DOUBLE PRECISION NULL,
@@ -857,7 +858,7 @@ CREATE TABLE IF NOT EXISTS public.calendar_trends
   eps_revisions_down_last30_days NUMERIC(22,2) NULL,
   created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (symbol, "date")
+  PRIMARY KEY (symbol, exchange, "date")
 );
 
 CREATE TABLE IF NOT EXISTS public.symbols_to_ignore
