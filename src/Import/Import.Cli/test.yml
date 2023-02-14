@@ -13,8 +13,8 @@ Exchange Codes:
 Any Day:
 - Priority: 1
   Mode: Discover
-  Scope: Full
+  Scope: Try Bulk
   Data Types:
-  - Trends
-
- 
+  - Splits
+  - Dividends
+  - Prices

@@ -162,6 +162,10 @@ public sealed class DataImportService
         {
             return ImportBulkAsync(action, importConfiguration, cancellationToken);
         }
+        else if (scope == DataTypeScopes.TryBulkThenFull)
+        {
+            return ImportBulkThenFullAsync(action, importConfiguration, cancellationToken);
+        }
 
         return Task.CompletedTask;
     }
@@ -270,7 +274,7 @@ public sealed class DataImportService
 
         if (action.TargetScope != DataTypeScopes.Full)
         {
-            throw new ArgumentException($"Action with scope {action.TargetScope ?? "Unknown"} sent to {nameof(ImportFullAsync)}");
+            throw new ArgumentException($"Action with scope {action.TargetScope ?? Constants.UnknownValue} sent to {nameof(ImportFullAsync)}");
         }
 
         if (action.TargetDataType == DataTypes.Exchanges) // both Exchange and DataType are "Exchanges"
@@ -471,9 +475,9 @@ public sealed class DataImportService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (action.TargetScope != DataTypeScopes.Bulk)
+        if (action.TargetScope != DataTypeScopes.Bulk && action.TargetScope != DataTypeScopes.TryBulkThenFull)
         {
-            throw new ArgumentException($"Action with scope {action.TargetScope ?? "Unknown"} sent to {nameof(ImportBulkAsync)}");
+            throw new ArgumentException($"Action with scope {action.TargetScope ?? Constants.UnknownValue} sent to {nameof(ImportBulkAsync)}");
         }
 
         var symbolsForExchange = SymbolMetaDataRepository.Find(action).ToArray();
@@ -517,11 +521,67 @@ public sealed class DataImportService
             if (estimatedCost > ApiService.Available)
             {
                 ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
-                    $"prices for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportFullAsync));
+                    $"bulk prices for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportBulkAsync));
             }
             else
             {
                 return ImportBulkPriceActionsAsync(action.ExchangeCode, null, cancellationToken);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task ImportBulkThenFullAsync(
+        ActionItem action,
+        ImportConfiguration importConfiguration,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (action.TargetScope != DataTypeScopes.TryBulkThenFull)
+        {
+            throw new ArgumentException($"Action with scope {action.TargetScope ?? Constants.UnknownValue} sent to {nameof(ImportBulkThenFullAsync)}");
+        }
+
+        if (action.TargetDataType is not null &&
+            action.TargetDataType is DataTypes.Splits or DataTypes.Dividends)
+        {
+            return ImportBulkAsync(action, importConfiguration, cancellationToken);
+        }
+
+        var symbolsForExchange = SymbolMetaDataRepository.Find(action).ToArray();
+
+        var exchange = action.TargetName;
+
+        if (action.ExchangeCode == null) throw new ArgumentException($"Exchange Code cannot be null on bulk import actions");
+
+        if (action.TargetDataType == DataTypes.Prices)
+        {
+            int estimatedCost = ApiService.GetCost(ApiService.EodUri, 1);
+            if (estimatedCost > ApiService.Available)
+            {
+                ApiEventPublisher.RaiseApiLimitReachedEvent(this, new ApiLimitReachedException(
+                    $"bulk prices for {exchange}", ApiService.Usage, estimatedCost + ApiService.Usage), nameof(ImportBulkThenFullAsync));
+            }
+            else
+            {
+                var beforeCount = SymbolMetaDataRepository.Count();
+                var beforeLastUpdate = SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
+
+                ImportBulkPriceActionsAsync(action.ExchangeCode, null, cancellationToken)
+                    .GetAwaiter().GetResult();
+
+                var unchanged = SymbolMetaDataRepository.Find(s => s.LastUpdated < beforeLastUpdate).ToArray();
+
+                if (unchanged.Any())
+                {
+                    DomainEventPublisher.RaiseMessageEvent(this,
+                        $"{unchanged.Length} symbols not updated in bulk import.",
+                        nameof(ImportBulkThenFullAsync), Microsoft.Extensions.Logging.LogLevel.Information);
+
+                    return ImportPricesAsync(unchanged, cancellationToken);
+                }
             }
         }
 

@@ -168,7 +168,8 @@ public class ActionService
                         }
                     }
 
-                    if (action.Scope is DataTypeScopes.Bulk && exchangeCode is not null)
+                    if (action.Scope is DataTypeScopes.Bulk or DataTypeScopes.TryBulkThenFull &&
+                        exchangeCode is not null)
                     {
                         foreach (var dataType in action.DataTypes!)
                         {

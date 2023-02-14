@@ -207,7 +207,7 @@ namespace Import.Infrastructure.Domain
             {
                 lock (logObj)
                 {
-                    logStream.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}\t{e}");
+                    logStream.WriteLine($"{e.UtcTimestamp:yyyy-MM-dd HH:mm:ss}\t{e}");
 
                     if (e.Exception != null)
                     {
