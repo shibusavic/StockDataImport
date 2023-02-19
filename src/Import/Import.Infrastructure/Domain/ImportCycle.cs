@@ -46,7 +46,11 @@ namespace Import.Infrastructure.Domain
             }
         }
 
-        public int RemoveActions(Predicate<ActionItem> predicate) => actions.RemoveAll(predicate);
+        public int RemoveActions(Predicate<ActionItem> predicate)
+        {
+            actionItemArray = null;
+            return actions.RemoveAll(predicate);
+        }
 
         public bool TryAddAction(ActionItem action, out string? reason)
         {
@@ -159,7 +163,7 @@ namespace Import.Infrastructure.Domain
         }
 
         private readonly HashSet<string> usedTimestamps = new();
-        
+
         private readonly object tsObj = new();
 
         private void EventPublisher_RaiseApiResponseEventHandler(object? sender, ApiResponseEventArgs e)

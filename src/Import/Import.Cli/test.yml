@@ -1,12 +1,10 @@
 ﻿Purge Data:
 - Logs
-- Imports
 
 Exchange Codes:
   US:
     Exchanges:
-    - NYSE
-    - NASDAQ
+    - AMEX
     Symbol Type:
     - Common Stock
     - ETF
@@ -16,10 +14,7 @@ Any Day:
   Mode: Discover
   Scope: Full
   Data Types:
-  - Symbols
   - Prices
-  - Dividends
-  - Splits
 - Priority: 2
   Mode: Economy
   Scope: Full

@@ -142,11 +142,16 @@ public class ActionService
                                 case DataTypes.Dividends:
                                 case DataTypes.Fundamentals:
                                 case DataTypes.Options:
+                                    int pr = dataType switch
+                                    {
+                                        DataTypes.Splits or DataTypes.Prices or DataTypes.Dividends => 3,
+                                        _ => 4
+                                    };
                                     foreach (var exchange in exchanges)
                                     {
                                         if (!string.IsNullOrWhiteSpace(exchange))
                                         {
-                                            yield return new ActionItem(2, ActionNames.Import, exchange, action.Scope, dataType,
+                                            yield return new ActionItem(pr, ActionNames.Import, exchange, action.Scope, dataType,
                                                 exchangeCode, cycle, mode);
                                         }
                                     }
@@ -155,13 +160,18 @@ public class ActionService
                                 case DataTypes.Trends:
                                 case DataTypes.Ipos:
                                 case DataTypes.Symbols:
+                                    pr = dataType switch
+                                    {
+                                        DataTypes.Symbols => 2,
+                                        _ => 5
+                                    };
                                     if (exchangeCode is not null)
                                     {
-                                        yield return new ActionItem(2, ActionNames.Import, exchangeCode,
+                                        yield return new ActionItem(pr, ActionNames.Import, exchangeCode,
                                             action.Scope, dataType, exchangeCode, cycle, mode);
                                     }
                                     break;
-                                case DataTypes.Exchanges:
+                                case DataTypes.Exchanges: // do nothing
                                 default:
                                     break;
                             };

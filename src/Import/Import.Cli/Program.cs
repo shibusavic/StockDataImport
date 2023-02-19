@@ -155,7 +155,7 @@ try
                         $"Running {actionsToRun.Length} priority {priorities[i]} actions.",
                         sourceName);
 
-                    await Parallel.ForEachAsync(actionsToRun,
+                    Task t = Parallel.ForEachAsync(actionsToRun,
                         new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
                         {
                             try
@@ -179,6 +179,15 @@ try
                                 action.Error(exc);
                             }
                         });
+
+                    // give it a second or two ...
+                    await Task.Delay(Convert.ToInt32(TimeSpan.FromSeconds(2).TotalMilliseconds));
+
+                    // wait for tasks to complete in 15 second intervals.
+                    while (!t.IsCompleted)
+                    {
+                        await Task.Delay(Convert.ToInt32(TimeSpan.FromSeconds(15).TotalMilliseconds));
+                    }
                 }
 
 #if DEBUG
