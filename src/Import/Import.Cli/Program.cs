@@ -145,30 +145,41 @@ try
                 var startLastUpdate = startCount == 0 ? DateTime.MinValue : SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
 #endif
 
-                await Parallel.ForEachAsync(importActions,
-                    new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
-                    {
-                        try
+                var priorities = importActions.Select(a => a.Priority).Distinct().OrderBy(a => a).ToArray();
+
+                for (int i = 0; i < priorities.Length; i++)
+                {
+                    var actionsToRun = importActions.Where(a => a.Priority == priorities[i]).ToArray();
+
+                    DomainEventPublisher.RaiseMessageEvent(null,
+                        $"Running {actionsToRun.Length} priority {priorities[i]} actions.",
+                        sourceName);
+
+                    await Parallel.ForEachAsync(actionsToRun,
+                        new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
                         {
-                            action.Start();
-
-                            await dataImportService.ImportDataAsync(action, importConfiguration, ct);
-
-                            if (action.TargetName.Equals(PurgeName.Imports))
+                            try
                             {
-                                // Meta data may have changed as a result of the purge.
-                                var t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
-                                DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", sourceName);
-                                await t;
-                            }
+                                action.Start();
 
-                            action.Complete();
-                        }
-                        catch (Exception exc)
-                        {
-                            action.Error(exc);
-                        }
-                    });
+                                await dataImportService.ImportDataAsync(action, importConfiguration, ct);
+
+                                if (action.TargetName.Equals(PurgeName.Imports))
+                                {
+                                    // Meta data may have changed as a result of the purge.
+                                    var t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
+                                    DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", sourceName);
+                                    await t;
+                                }
+
+                                action.Complete();
+                            }
+                            catch (Exception exc)
+                            {
+                                action.Error(exc);
+                            }
+                        });
+                }
 
 #if DEBUG
                 var endCount = SymbolMetaDataRepository.Count();

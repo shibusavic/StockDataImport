@@ -11,7 +11,7 @@ Exchange Codes:
     - Common Stock
     - ETF
 
-On Empty Database:
+Any Day:
 - Priority: 1
   Mode: Discover
   Scope: Full
@@ -20,3 +20,8 @@ On Empty Database:
   - Prices
   - Dividends
   - Splits
+- Priority: 2
+  Mode: Economy
+  Scope: Full
+  Data Types:
+  - Fundamentals
