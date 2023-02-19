@@ -5,7 +5,9 @@ namespace Import.Infrastructure.Domain;
 
 public class ActionItem : IEquatable<ActionItem?>
 {
-    public ActionItem(string actionName,
+    public ActionItem(
+        int priority,
+        string actionName,
         string targetName,
         string? targetScope,
         string? targetDataType,
@@ -14,6 +16,7 @@ public class ActionItem : IEquatable<ActionItem?>
         string mode = Modes.Economy)
     {
         GlobalId = Guid.NewGuid();
+        Priority = priority;
         ActionName = actionName;
         TargetName = targetName;
         TargetScope = targetScope;
@@ -25,6 +28,8 @@ public class ActionItem : IEquatable<ActionItem?>
     }
 
     public Guid GlobalId { get; }
+
+    public int Priority { get; }
 
     public ImportCycle? Cycle { get; internal set; }
 

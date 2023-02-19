@@ -28,7 +28,7 @@ public class ActionService
         {
             foreach (var name in config.Purges)
             {
-                items.Add(new ActionItem(ActionNames.Purge, name, null, null, null, cycle));
+                items.Add(new ActionItem(0, ActionNames.Purge, name, null, null, null, cycle));
             }
         }
 
@@ -118,13 +118,13 @@ public class ActionService
 
                 if (action.Skip.GetValueOrDefault())
                 {
-                    yield return new ActionItem(ActionNames.Skip, parent, null, null, null, null, mode);
+                    yield return new ActionItem(1, ActionNames.Skip, parent, null, null, null, null, mode);
                     continue;
                 }
 
                 if (action.DataTypes?.Contains(DataTypes.Exchanges) ?? false)
                 {
-                    yield return new ActionItem(ActionNames.Import,
+                    yield return new ActionItem(2, ActionNames.Import,
                         DataTypes.Exchanges, DataTypeScopes.Full.ToString(),
                         DataTypes.Exchanges, exchangeCode, cycle, mode);
                 }
@@ -146,7 +146,7 @@ public class ActionService
                                     {
                                         if (!string.IsNullOrWhiteSpace(exchange))
                                         {
-                                            yield return new ActionItem(ActionNames.Import, exchange, action.Scope, dataType,
+                                            yield return new ActionItem(2, ActionNames.Import, exchange, action.Scope, dataType,
                                                 exchangeCode, cycle, mode);
                                         }
                                     }
@@ -154,13 +154,13 @@ public class ActionService
                                 case DataTypes.Earnings:
                                 case DataTypes.Trends:
                                 case DataTypes.Ipos:
+                                case DataTypes.Symbols:
                                     if (exchangeCode is not null)
                                     {
-                                        yield return new ActionItem(ActionNames.Import, exchangeCode,
+                                        yield return new ActionItem(2, ActionNames.Import, exchangeCode,
                                             action.Scope, dataType, exchangeCode, cycle, mode);
                                     }
                                     break;
-                                case DataTypes.Symbols:
                                 case DataTypes.Exchanges:
                                 default:
                                     break;
@@ -176,7 +176,7 @@ public class ActionService
                             if (dataType is DataTypes.Exchanges or DataTypes.Symbols
                                 or DataTypes.Fundamentals) { continue; }
 
-                            yield return new ActionItem(ActionNames.Import, exchangeCode, action.Scope, dataType,
+                            yield return new ActionItem(2, ActionNames.Import, exchangeCode, action.Scope, dataType,
                                 exchangeCode, cycle, mode);
                         }
                     }
@@ -191,7 +191,7 @@ public class ActionService
         {
             if (Enum.TryParse(kvp.Key, out LogLevel logLevel))
             {
-                yield return new ActionItem(ActionNames.Truncate, logLevel.GetDescription(),
+                yield return new ActionItem(10, ActionNames.Truncate, logLevel.GetDescription(),
                     ConvertTextToDateTime(kvp.Value).ToString(), null, null, cycle);
             }
         }
@@ -281,8 +281,7 @@ public class ActionService
     {
         if (ReferenceEquals(item1, item2)) return 0;
 
-        int result = item1.ActionName.CompareTo(item2.ActionName);
-
+        int result = item1.Priority.CompareTo(item2.Priority);
         if (result == 0) { result = item1.TargetScopeValue.GetValueOrDefault().CompareTo(item2.TargetScopeValue.GetValueOrDefault()); }
         if (result == 0) { result = item1.TargetDataTypeSortValue.GetValueOrDefault().CompareTo(item2.TargetDataTypeSortValue.GetValueOrDefault()); }
 

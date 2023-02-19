@@ -4,9 +4,9 @@
 
 The primary goal is to deliver a command-line interface (CLI) for managing calls to the [EOD Historical Data](https://eodhistoricaldata.com/) API and preserving the data returned by the API in a permanent data store.
 
-A secondary goal is to achieve the first goal in the most efficient manner. There is a credit cost to every API call, so I want to be able to run the CLI at regular intervales with a varied mix of arguments to achieve data collection goals over a regular time period (e.g., one calendar week) wihtout exceeding our daily API call limit.
+A secondary goal is to achieve the first goal in the most efficient manner. There is a credit cost to every API call, so I want to be able to run the CLI at regular intervals with a varied mix of arguments to achieve data collection goals over a regular time period (e.g., one calendar week) wihtout exceeding our daily API call limit.
 
-A final goal is to construct the code in a way so as to maximize the flexibility for other developers to fork and modify the code for a purpose I didn't consider or one rejected as unnecessary for my purposes.
+A final goal is to construct the code in a way so as to maximize the flexibility for other developers to fork and modify the code for a scenario I didn't consider or one rejected as unnecessary for my purposes.
 
 ### Stretch Goals
 
@@ -34,7 +34,7 @@ No connection strings will ever be stored in this repo; _Visual Studio user secr
 
 ### Functional
 
-1. The CLI will accept a YAML file that defines what it should.
+1. The CLI will accept a YAML file that defines which actions will be execute.
 
 ### Logging
 

@@ -567,7 +567,7 @@ public sealed class DataImportService
             else
             {
                 var beforeCount = SymbolMetaDataRepository.Count();
-                var beforeLastUpdate = SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
+                var beforeLastUpdate = beforeCount == 0 ? DateTime.MinValue : SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
 
                 ImportBulkPriceActionsAsync(action.ExchangeCode, null, cancellationToken)
                     .GetAwaiter().GetResult();

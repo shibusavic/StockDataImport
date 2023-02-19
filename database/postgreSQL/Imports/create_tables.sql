@@ -870,3 +870,9 @@ CREATE TABLE IF NOT EXISTS public.symbols_to_ignore
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (symbol, exchange)
 );
+
+CREATE TABLE IF NOT EXISTS public.exchange_checks
+(
+  utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+  PRIMARY KEY (utc_timestamp)
+)

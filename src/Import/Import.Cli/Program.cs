@@ -120,8 +120,21 @@ try
                 });
             }
 
-            var importActions = cycle.Actions.Where(a => a.ActionName.Equals(ActionNames.Import) &&
-                a.Status == Import.Infrastructure.Abstractions.ImportActionStatus.NotStarted).ToArray();
+            ActionItem[] symbolActions = cycle.Actions.Where(a => a.ActionName.Equals(ActionNames.Import) &&
+                a.Status == Import.Infrastructure.Abstractions.ImportActionStatus.NotStarted &&
+                a.TargetDataType == DataTypes.Symbols).ToArray();
+
+            if (symbolActions.Any())
+            {
+                foreach (var action in symbolActions)
+                {
+                    await dataImportService.ImportDataAsync(action, importConfiguration, cancellationToken);
+                }
+            }
+
+            ActionItem[] importActions = cycle.Actions.Where(a => a.ActionName.Equals(ActionNames.Import) &&
+                a.Status == Import.Infrastructure.Abstractions.ImportActionStatus.NotStarted)
+                .Except(symbolActions).ToArray();
 
             if (importActions.Any())
             {
@@ -129,7 +142,7 @@ try
 
 #if DEBUG
                 var startCount = SymbolMetaDataRepository.Count();
-                var startLastUpdate = SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
+                var startLastUpdate = startCount == 0 ? DateTime.MinValue : SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
 #endif
 
                 await Parallel.ForEachAsync(importActions,
@@ -139,13 +152,12 @@ try
                         {
                             action.Start();
 
-                            Task t = dataImportService.ImportDataAsync(action, importConfiguration, ct);
-                            await t;
+                            await dataImportService.ImportDataAsync(action, importConfiguration, ct);
 
                             if (action.TargetName.Equals(PurgeName.Imports))
                             {
                                 // Meta data may have changed as a result of the purge.
-                                t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
+                                var t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
                                 DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", sourceName);
                                 await t;
                             }
@@ -160,7 +172,7 @@ try
 
 #if DEBUG
                 var endCount = SymbolMetaDataRepository.Count();
-                var endLastUpdate = SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
+                var endLastUpdate = endCount == 0 ? DateTime.MinValue : SymbolMetaDataRepository.GetAll().Select(s => s.LastUpdated).Max();
                 var unchanged = SymbolMetaDataRepository.Find(s => s.LastUpdated < startLastUpdate).ToArray();
 
                 Communicate($"start count: {startCount}");

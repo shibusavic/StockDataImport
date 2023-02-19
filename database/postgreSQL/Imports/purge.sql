@@ -44,3 +44,4 @@ DELETE FROM public.price_actions;
 DELETE FROM public.splits;
 DELETE FROM public.symbols;
 DELETE FROM public.symbols_to_ignore;
+DELETE FROM public.exchange_checks;
