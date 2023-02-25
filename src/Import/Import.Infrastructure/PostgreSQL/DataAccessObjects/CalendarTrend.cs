@@ -8,10 +8,11 @@ internal class CalendarTrend
 {
     public CalendarTrend(EodHistoricalData.Sdk.Models.Calendar.Trend trend, string exchange)
     {
-        Symbol = trend.Code ?? throw new ArgumentException($"{nameof(trend)} has no {nameof(Symbol)}");
-        Exchange = exchange;
+        Symbol = trend.Code?.Split('.').FirstOrDefault() 
+            ?? throw new ArgumentException($"{nameof(trend)} has no {nameof(Symbol)}");
         Date = trend.Date?.ToDateTime(TimeOnly.MinValue) ??
             throw new ArgumentException($"{nameof(trend)} has no {nameof(Date)}");
+        Exchange = exchange;
         Period = trend.Period;
         Growth = trend.Growth;
         EarningsEstimateAvg = trend.EarningsEstimateAvg;
