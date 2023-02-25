@@ -258,7 +258,7 @@ CREATE TABLE IF NOT EXISTS public.company_analyst_ratings
   strong_sell INTEGER NULL,
   created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp)
+  PRIMARY KEY (company_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_holders

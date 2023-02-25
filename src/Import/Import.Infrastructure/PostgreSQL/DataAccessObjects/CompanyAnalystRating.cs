@@ -17,7 +17,6 @@ internal class CompanyAnalystRating
         Hold = analystRatings.Hold;
         Sell = analystRatings.Sell;
         StrongSell = analystRatings.StrongSell;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -30,7 +29,6 @@ internal class CompanyAnalystRating
         int? hold,
         int? sell,
         int? strongSell,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -41,7 +39,6 @@ internal class CompanyAnalystRating
         Hold = hold;
         Sell = sell;
         StrongSell = strongSell;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -70,9 +67,6 @@ internal class CompanyAnalystRating
     [ColumnWithKey("strong_sell", Order = 8, TypeName = "integer", IsPartOfKey = false)]
     public int? StrongSell { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 9, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 9, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }
