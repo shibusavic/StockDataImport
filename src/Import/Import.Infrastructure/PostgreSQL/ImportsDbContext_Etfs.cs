@@ -114,7 +114,8 @@ internal partial class ImportsDbContext
             Task.Run(() => SaveFundamentalDataAsync(growths.ToArray(),cancellationToken), cancellationToken),
         };
 
-        if (!etf.Data.MorningStar.Equals(default))
+        if (etf.Data.MorningStar.SustainabilityRatio != null && etf.Data.MorningStar.CategoryBenchmark != null &&
+            etf.Data.MorningStar.Ratio != "0")
         {
             var morningStar = new DataAccessObjects.EtfMorningStar(etfId, etf.Data.MorningStar);
             taskList.Add(Task.Run(() => SaveFundamentalDataAsync(morningStar, cancellationToken), cancellationToken));

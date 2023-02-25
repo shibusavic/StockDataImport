@@ -7,7 +7,7 @@ namespace Import.Infrastructure.PostgreSQL;
 
 internal partial class ImportsDbContext
 {
-    public async Task SaveCompanyAsync(EodHistoricalData.Sdk.Models.Fundamentals.CommonStock.FundamentalsCollection company,
+    public async Task SaveCompanyAsync(FundamentalsCollection company,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -49,7 +49,8 @@ internal partial class ImportsDbContext
         var dividend = new DataAccessObjects.CompanyDividend(companyId, company.SplitsDividends);
         var dividendsByYear = company.SplitsDividends.NumberDividendsByYear?.Values
                 .Select(v => new DataAccessObjects.CompanyDividendsByYear(companyId, v)).ToArray();
-        var analystRatings = new DataAccessObjects.CompanyAnalystRating(companyId, company.AnalystRatings);
+        var analystRatings = company.AnalystRatings.Rating == null ? null
+            : new DataAccessObjects.CompanyAnalystRating(companyId, company.AnalystRatings);
 
         var institutionHolders = company.Holders?.Institutions?.Values
             .Select(h => new DataAccessObjects.CompanyHolder(companyId, "Institution", h));

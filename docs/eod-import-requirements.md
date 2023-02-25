@@ -63,3 +63,20 @@ No connection strings will ever be stored in this repo; _Visual Studio user secr
     1. might try to space this out evenly?
     1. maybe use Yahoo Finance API here as a guide for what to query and when to query it?
     1. maybe the `calendar` API can inform us on what to query.
+
+## API Endpoints
+
+[List of Tickers](https://eodhistoricaldata.com/financial-apis/exchanges-api-list-of-tickers-and-trading-hours/)
+[EOD Historical Data](https://eodhistoricaldata.com/financial-apis/api-for-historical-data-and-volumes/)
+[Bulk API](https://eodhistoricaldata.com/financial-apis/bulk-api-eod-splits-dividends/)
+[Historical Splits and Dividends](https://eodhistoricaldata.com/financial-apis/api-splits-dividends/)
+[Economic Events Data API](https://eodhistoricaldata.com/financial-apis/economic-events-data-api/)
+[Fundamental Data](https://eodhistoricaldata.com/financial-apis/stock-etfs-fundamental-data-feeds/)
+[Insider Transactions](https://eodhistoricaldata.com/financial-apis/insider-transactions-api/)
+[Calendar](https://eodhistoricaldata.com/financial-apis/calendar-upcoming-earnings-ipos-and-splits/)
+[Exchange Trading Hours and Holidays](https://eodhistoricaldata.com/financial-apis/exchanges-api-trading-hours-and-holidays/)
+[Technical Indicators](https://eodhistoricaldata.com/financial-apis/technical-indicators-api/)
+[Screener](https://eodhistoricaldata.com/financial-apis/stock-market-screener-api/)
+[List of Exchanges](https://eodhistoricaldata.com/financial-apis/list-supported-exchanges/)
+[Financial News](https://eodhistoricaldata.com/financial-apis/financial-news-api/)
+[Macroeconomics](https://eodhistoricaldata.com/financial-apis/macroeconomics-data-and-macro-indicators-api/)
