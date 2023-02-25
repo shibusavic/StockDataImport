@@ -206,7 +206,6 @@ public sealed class DataImportService
             subExchanges.AddRange(importConfiguration.GetSubExchanges(exchange));
         }
 
-
         foreach (var action in cycle.Actions)
         {
             if (string.IsNullOrWhiteSpace(action.TargetDataType))

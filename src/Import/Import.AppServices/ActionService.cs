@@ -145,7 +145,8 @@ public class ActionService
                                     int pr = dataType switch
                                     {
                                         DataTypes.Splits or DataTypes.Prices or DataTypes.Dividends => 3,
-                                        _ => 4
+                                        DataTypes.Fundamentals => 4,
+                                        _ => 5
                                     };
                                     foreach (var exchange in exchanges)
                                     {
@@ -163,7 +164,7 @@ public class ActionService
                                     pr = dataType switch
                                     {
                                         DataTypes.Symbols => 2,
-                                        _ => 5
+                                        _ => 6
                                     };
                                     if (exchangeCode is not null)
                                     {

@@ -15,8 +15,12 @@ Any Day:
   Scope: Full
   Data Types:
   - Prices
-- Priority: 2
-  Mode: Economy
-  Scope: Full
-  Data Types:
+  - Symbols
+  - Options
+  - Splits
+  - Dividends
   - Fundamentals
+  - Earnings
+  - Trends
+  - IPOs
+

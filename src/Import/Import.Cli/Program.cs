@@ -9,10 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shibusa.Extensions;
-using System;
 using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using static Import.Infrastructure.Configuration.Constants;
@@ -41,12 +39,6 @@ bool verbose = false;
 
 HandleArguments(args);
 
-if (dryRun)
-{
-    verbose = true;
-    Communicate("DRY RUN", true, true);
-}
-
 var cts = new CancellationTokenSource();
 var cancellationToken = cts.Token;
 
@@ -58,6 +50,12 @@ try
     }
     else
     {
+        if (dryRun)
+        {
+            verbose = true;
+            Communicate("DRY RUN", true, true);
+        }
+
         ApiEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
         ApiEventPublisher.RaiseApiLimitReachedEventHandler += EventPublisher_RaiseApiLimitReachedEventHandler;
 
@@ -78,7 +76,7 @@ try
 
         if (dryRun)
         {
-            ShowCost(cycle);
+            ShowActionBlocks(cycle);
         }
         else
         {
@@ -266,30 +264,50 @@ finally
     Environment.Exit(exitCode);
 }
 
-void ShowCost(ImportCycle cycle)
+void ShowActionBlocks(ImportCycle cycle)
 {
     DataImportService.CalculateCost(cycle, importConfiguration);
 
     int totalCost = 0;
-    bool unknowable = false;
-    foreach (var action in cycle.Actions)
+
+    foreach (var kvp in cycle.ActionBlocks)
     {
-        if (action.EstimatedCost == null && action.ActionName == ActionNames.Import)
+        Communicate($"{Environment.NewLine}Priority {kvp.Key}", true, false);
+
+        foreach (var action in kvp.Value)
         {
-            unknowable = true;
+            totalCost += action.EstimatedCost ?? 0;
+            Communicate($"{action.EstimatedCost.ToString() ?? " ",9}\t{action}", true);
         }
-        totalCost += action.EstimatedCost ?? 0;
-        Communicate($"{action.EstimatedCost.ToString() ?? " ",9}\t{action}", true);
     }
-    if (unknowable)
-    {
-        Communicate($"Unknown Total cost; necessary inputs missing - probably an empty database.");
-    }
-    else
-    {
-        Communicate($"{totalCost,9}\tTotal cost.");
-    }
+
+    Communicate($"{Environment.NewLine}{totalCost,9}\tTotal estimated cost.");
 }
+
+//void ShowCost(ImportCycle cycle)
+//{
+//    DataImportService.CalculateCost(cycle, importConfiguration);
+
+//    int totalCost = 0;
+//    bool unknowable = false;
+//    foreach (var action in cycle.Actions)
+//    {
+//        if (action.EstimatedCost == null && action.ActionName == ActionNames.Import)
+//        {
+//            unknowable = true;
+//        }
+//        totalCost += action.EstimatedCost ?? 0;
+//        Communicate($"{action.EstimatedCost.ToString() ?? " ",9}\t{action}", true);
+//    }
+//    if (unknowable)
+//    {
+//        Communicate($"Unknown Total cost; necessary inputs missing - probably an empty database.");
+//    }
+//    else
+//    {
+//        Communicate($"{totalCost,9}\tTotal cost.");
+//    }
+//}
 
 void EventPublisher_RaiseApiLimitReachedEventHandler(object? sender, ApiLimitReachedEventArgs e)
 {

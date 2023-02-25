@@ -46,6 +46,26 @@ namespace Import.Infrastructure.Domain
             }
         }
 
+        public IDictionary<int, ActionItem[]> ActionBlocks
+        {
+            get
+            {
+                var dict = new Dictionary<int, ActionItem[]>();
+                if (Actions.Any())
+                {
+                    int[] priorities = Actions.Select(a => a.Priority).Distinct().OrderBy(a => a).ToArray();
+
+                    for (int p = 0; p < priorities.Length; p++)
+                    {
+                        var block = Actions.Where(a => a.Priority == priorities[p]).ToArray();
+                        dict.Add(p, block);
+                    }
+                }
+
+                return dict;
+            }
+        }
+
         public int RemoveActions(Predicate<ActionItem> predicate)
         {
             actionItemArray = null;
