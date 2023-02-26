@@ -39,7 +39,6 @@ internal class OptionContract
         IntrinsicValue = contract.IntrinsicValue;
         TimeValue = contract.TimeValue;
         UpdatedAt = contract.UpdatedAt;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -72,7 +71,6 @@ internal class OptionContract
         decimal? intrinsicValue,
         decimal? timeValue,
         DateTime? updatedAt,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
@@ -103,7 +101,6 @@ internal class OptionContract
         IntrinsicValue = intrinsicValue;
         TimeValue = timeValue;
         UpdatedAt = updatedAt;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -192,9 +189,6 @@ internal class OptionContract
     [ColumnWithKey("updated_at", Order = 28, TypeName = "date", IsPartOfKey = false)]
     public DateTime? UpdatedAt { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 29, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 30, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 29, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

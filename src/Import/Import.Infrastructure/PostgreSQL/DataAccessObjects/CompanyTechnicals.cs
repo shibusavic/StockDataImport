@@ -19,7 +19,6 @@ internal class CompanyTechnicals
         SharesShortPriorMonth = technicals.SharesShortPriorMonth.GetValueOrDefault();
         ShortRatio = technicals.ShortRatio.GetValueOrDefault();
         ShortPercent = technicals.ShortPercent.GetValueOrDefault();
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -34,7 +33,6 @@ internal class CompanyTechnicals
         decimal? sharesShortPriorMonth,
         double? shortRatio,
         double? shortPercent,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -47,7 +45,6 @@ internal class CompanyTechnicals
         SharesShortPriorMonth = sharesShortPriorMonth;
         ShortRatio = shortRatio;
         ShortPercent = shortPercent;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -82,9 +79,6 @@ internal class CompanyTechnicals
     [ColumnWithKey("short_percent", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
     public double? ShortPercent { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

@@ -13,7 +13,6 @@ internal class CompanyEarningsAnnual
         Date = earnings.Date?.ToDateTime(TimeOnly.MinValue) ??
             throw new ArgumentException($"{nameof(earnings)} has no {nameof(Date)}");
         EpsActual = earnings.EpsActual;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -21,13 +20,11 @@ internal class CompanyEarningsAnnual
         Guid companyId,
         DateTime date,
         decimal? epsActual,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
         Date = date;
         EpsActual = epsActual;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -41,9 +38,6 @@ internal class CompanyEarningsAnnual
     [ColumnWithKey("eps_actual", Order = 3, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsActual { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

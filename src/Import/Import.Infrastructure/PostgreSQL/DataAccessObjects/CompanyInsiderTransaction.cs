@@ -22,7 +22,6 @@ internal class CompanyInsiderTransaction
         TransactionAcquiredDisposed = insiderTransaction.TransactionAcquiredDisposed;
         PostTransactionAmount = insiderTransaction.PostTransactionAmount.GetValueOrDefault();
         SecLink = insiderTransaction.SecLink;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -38,7 +37,6 @@ internal class CompanyInsiderTransaction
         string? transactionAcquiredDisposed,
         int postTransactionAmount,
         string? secLink,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -52,7 +50,6 @@ internal class CompanyInsiderTransaction
         TransactionAcquiredDisposed = transactionAcquiredDisposed;
         PostTransactionAmount = postTransactionAmount;
         SecLink = secLink;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -89,9 +86,6 @@ internal class CompanyInsiderTransaction
     [ColumnWithKey("sec_link", Order = 11, TypeName = "text", IsPartOfKey = false)]
     public string? SecLink { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 13, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

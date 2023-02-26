@@ -21,7 +21,6 @@ internal class CalendarIpo
         OfferPrice = ipo.OfferPrice ?? 0M;
         Shares = Convert.ToInt64(ipo.Shares);
         DealType = ipo.DealType ?? Constants.UnknownValue;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -38,7 +37,6 @@ internal class CalendarIpo
         decimal? offerPrice,
         int? shares,
         string? dealType,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
@@ -53,7 +51,6 @@ internal class CalendarIpo
         OfferPrice = offerPrice;
         Shares = shares;
         DealType = dealType;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -94,9 +91,6 @@ internal class CalendarIpo
     [ColumnWithKey("deal_type", Order = 12, TypeName = "text", IsPartOfKey = false)]
     public string? DealType { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 13, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 14, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 13, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

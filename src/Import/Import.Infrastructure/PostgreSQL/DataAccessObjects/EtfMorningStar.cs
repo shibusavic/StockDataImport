@@ -13,7 +13,6 @@ internal class EtfMorningStar
         EtfId = etfId;
         Ratio = Convert.ToInt32(morningStar.Ratio);
         CategoryBenchmark = morningStar.CategoryBenchmark;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
 
         // Sometimes SustainabilityRatio has the value "No rating." Why? Don't know.
@@ -28,14 +27,12 @@ internal class EtfMorningStar
         int? ratio,
         string? categoryBenchmark,
         int? sustainabilityRatio,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
         Ratio = ratio;
         CategoryBenchmark = categoryBenchmark;
         SustainabilityRatio = sustainabilityRatio;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -52,9 +49,6 @@ internal class EtfMorningStar
     [ColumnWithKey("sustainability_ratio", Order = 4, TypeName = "integer", IsPartOfKey = false)]
     public int? SustainabilityRatio { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

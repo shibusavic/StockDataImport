@@ -12,7 +12,6 @@ internal class CompanyDividendsByYear
         CompanyId = companyId;
         Year = dividendCount.Year ?? throw new ArgumentException($"{nameof(dividendCount)} has no {nameof(Year)}");
         Count = dividendCount.Count;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -20,13 +19,11 @@ internal class CompanyDividendsByYear
         Guid companyId,
         int year,
         int? count,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
         Year = year;
         Count = count;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -40,9 +37,6 @@ internal class CompanyDividendsByYear
     [ColumnWithKey("count", Order = 3, TypeName = "integer", IsPartOfKey = false)]
     public int? Count { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

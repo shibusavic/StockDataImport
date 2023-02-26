@@ -20,7 +20,6 @@ internal class CompanyHolder
         CurrentShares = institution.CurrentShares;
         Change = institution.Change;
         ChangePercentage = institution.ChangePercentage;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -34,7 +33,6 @@ internal class CompanyHolder
         int? currentShares,
         int? change,
         double? changePercentage,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -46,7 +44,6 @@ internal class CompanyHolder
         CurrentShares = currentShares;
         Change = change;
         ChangePercentage = changePercentage;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -77,9 +74,6 @@ internal class CompanyHolder
     [ColumnWithKey("change_percentage", Order = 9, TypeName = "double precision", IsPartOfKey = false)]
     public double? ChangePercentage { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

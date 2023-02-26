@@ -12,7 +12,7 @@ internal class CompanyEarningsTrend
         CompanyId = companyId;
         Date = earningsTrend.Date?.ToDateTime(TimeOnly.MinValue) ??
             throw new ArgumentException($"{nameof(earningsTrend)} has no {nameof(Date)}");
-        Period = earningsTrend.Period;
+        Period = earningsTrend.Period ?? throw new ArgumentException($"{nameof(earningsTrend)} has no {nameof(Period)}");
         Growth = earningsTrend.Growth.GetValueOrDefault();
         EarningsEstimateAvg = earningsTrend.EarningsEstimateAvg;
         EarningsEstimateLow = earningsTrend.EarningsEstimateLow;
@@ -35,14 +35,13 @@ internal class CompanyEarningsTrend
         EpsRevisionsUpLast30Days = earningsTrend.EpsRevisionsUpLast30Days;
         EpsRevisionsDownLast7Days = earningsTrend.EpsRevisionsDownLast7Days;
         EpsRevisionsDownLast30Days = earningsTrend.EpsRevisionsDownLast30Days;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
     public CompanyEarningsTrend(
         Guid companyId,
         DateTime date,
-        string? period,
+        string period,
         double? growth,
         decimal? earningsEstimateAvg,
         decimal? earningsEstimateLow,
@@ -65,7 +64,6 @@ internal class CompanyEarningsTrend
         decimal? epsRevisionsUpLast30Days,
         decimal? epsRevisionsDownLast7Days,
         decimal? epsRevisionsDownLast30Days,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -93,7 +91,6 @@ internal class CompanyEarningsTrend
         EpsRevisionsUpLast30Days = epsRevisionsUpLast30Days;
         EpsRevisionsDownLast7Days = epsRevisionsDownLast7Days;
         EpsRevisionsDownLast30Days = epsRevisionsDownLast30Days;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -104,8 +101,8 @@ internal class CompanyEarningsTrend
     [ColumnWithKey("date", Order = 2, TypeName = "date", IsPartOfKey = true)]
     public DateTime Date { get; }
 
-    [ColumnWithKey("period", Order = 3, TypeName = "text", IsPartOfKey = false)]
-    public string? Period { get; }
+    [ColumnWithKey("period", Order = 3, TypeName = "text", IsPartOfKey = true)]
+    public string Period { get; }
 
     [ColumnWithKey("growth", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
     public double? Growth { get; }
@@ -173,9 +170,6 @@ internal class CompanyEarningsTrend
     [ColumnWithKey("eps_revisions_down_last30days", Order = 25, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsRevisionsDownLast30Days { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 26, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 27, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 26, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

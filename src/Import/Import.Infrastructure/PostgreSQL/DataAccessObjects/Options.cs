@@ -14,7 +14,6 @@ internal class Options
         LastTradeDate = options.LastTradeDate?.ToDateTime(TimeOnly.MinValue) ??
             throw new ArgumentException($"{nameof(options)} has no {nameof(LastTradeDate)}");
         LastTradePrice = options.LastTradePrice;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -23,14 +22,12 @@ internal class Options
         string exchange,
         DateTime lastTradeDate,
         decimal? lastTradePrice,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
         Exchange = exchange;
         LastTradeDate = lastTradeDate;
         LastTradePrice = lastTradePrice;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -46,9 +43,6 @@ internal class Options
     [ColumnWithKey("last_trade_price", Order = 4, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? LastTradePrice { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

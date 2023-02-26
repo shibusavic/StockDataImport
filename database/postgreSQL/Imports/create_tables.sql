@@ -101,7 +101,6 @@ CREATE TABLE IF NOT EXISTS public.companies
   logo_url TEXT NULL,
   full_time_employees INTEGER NULL,
   update_at DATE NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (global_id)
 );
@@ -114,7 +113,6 @@ CREATE TABLE IF NOT EXISTS public.company_addresses
   state TEXT NULL,
   country TEXT NULL,
   postal_code TEXT NOT NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, street, postal_code)
 );
@@ -125,20 +123,18 @@ CREATE TABLE IF NOT EXISTS public.company_listings
   symbol TEXT NULL,
   exchange TEXT NULL,
   name TEXT NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp)
+  PRIMARY KEY (company_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_officers
 (
   company_id UUID NOT NULL,
-  name TEXT NULL,
+  name TEXT NOT NULL,
   title TEXT NULL,
   year_born TEXT NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp)
+  PRIMARY KEY (company_id, name)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_highlights
@@ -169,9 +165,8 @@ CREATE TABLE IF NOT EXISTS public.company_highlights
   gross_profit_ttm NUMERIC(22,2) NULL,
   diluted_eps_ttm NUMERIC(22,2) NULL,
   quarterly_earnings_growth_yoy DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp)
+  PRIMARY KEY (company_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_valuations
@@ -184,9 +179,8 @@ CREATE TABLE IF NOT EXISTS public.company_valuations
   enterprise_value NUMERIC(22,2) NULL,
   enterprise_value_revenue DOUBLE PRECISION NULL,
   enterprise_value_ebitda DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp)
+  PRIMARY KEY (company_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_shares_stats
@@ -201,9 +195,8 @@ CREATE TABLE IF NOT EXISTS public.company_shares_stats
   short_ratio DOUBLE PRECISION NULL,
   short_percent_outstanding DOUBLE PRECISION NULL,
   short_percent_float DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp)
+  PRIMARY KEY (company_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_technicals
@@ -218,9 +211,8 @@ CREATE TABLE IF NOT EXISTS public.company_technicals
   shares_short_prior_month NUMERIC (18,2) NULL,
   short_ratio DOUBLE PRECISION NULL,
   short_percent DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp)
+  PRIMARY KEY (company_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_dividends
@@ -231,9 +223,8 @@ CREATE TABLE IF NOT EXISTS public.company_dividends
   payout_ratio DOUBLE PRECISION NULL,
   dividend_date DATE NULL,
   ex_dividend_date DATE NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp)
+  PRIMARY KEY (company_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_dividends_by_year
@@ -241,7 +232,6 @@ CREATE TABLE IF NOT EXISTS public.company_dividends_by_year
   company_id UUID NOT NULL,
   year INTEGER NOT NULL,
   count INTEGER NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, year)
 );
@@ -256,7 +246,6 @@ CREATE TABLE IF NOT EXISTS public.company_analyst_ratings
   hold INTEGER NULL,
   sell INTEGER NULL,
   strong_sell INTEGER NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id)
 );
@@ -272,7 +261,6 @@ CREATE TABLE IF NOT EXISTS public.company_holders
   current_shares INTEGER NULL,
   change INTEGER NULL,
   change_percentage DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, holder_type, name, "date")
 );
@@ -290,7 +278,6 @@ CREATE TABLE IF NOT EXISTS public.company_insider_transactions
   transaction_acquired_disposed TEXT NULL,
   post_transaction_amount INTEGER NOT NULL,
   sec_link TEXT NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, date, post_transaction_amount)
 );
@@ -308,7 +295,6 @@ CREATE TABLE IF NOT EXISTS public.company_esg_scores
   governance_score DOUBLE PRECISION NULL,
   governance_score_percentile DOUBLE PRECISION NULL,
   controversy_level DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, rating_date)
 );
@@ -318,9 +304,8 @@ CREATE TABLE IF NOT EXISTS public.company_esg_activities
   company_id UUID NOT NULL,
   activity TEXT NOT NULL,
   involved BOOLEAN NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (company_id, created_timestamp, activity)
+  PRIMARY KEY (company_id, activity)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_outstanding_shares
@@ -329,7 +314,6 @@ CREATE TABLE IF NOT EXISTS public.company_outstanding_shares
   "date" DATE NOT NULL,
   shares_mln NUMERIC(14,4) NULL,
   shares BIGINT NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, "date")
 );
@@ -345,7 +329,6 @@ CREATE TABLE IF NOT EXISTS public.company_earnings_history
   eps_estimate NUMERIC(22,2) NULL,
   eps_difference NUMERIC(22,2) NULL,
   surprise_percent DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, report_date)
 );
@@ -354,7 +337,7 @@ CREATE TABLE IF NOT EXISTS public.company_earnings_trends
 (
   company_id UUID NOT NULL,
   "date" DATE NOT NULL,
-  period TEXT NULL,
+  period TEXT NOT NULL,
   growth DOUBLE PRECISION NULL,
   earnings_estimate_avg NUMERIC(22,2) NULL,
   earnings_estimate_low NUMERIC(22,2) NULL,
@@ -377,9 +360,8 @@ CREATE TABLE IF NOT EXISTS public.company_earnings_trends
   eps_revisions_up_last30days NUMERIC(22,2) NULL,
   eps_revisions_down_last7days NUMERIC(22,2) NULL,
   eps_revisions_down_last30days NUMERIC(22,2) NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY(company_id, "date")
+  PRIMARY KEY(company_id, "date", period)
 );
 
 CREATE TABLE IF NOT EXISTS public.company_earnings_annual
@@ -387,7 +369,6 @@ CREATE TABLE IF NOT EXISTS public.company_earnings_annual
   company_id UUID NOT NULL,
   "date" DATE NOT NULL,
   eps_actual NUMERIC(22,2) NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, "date")
 );
@@ -460,7 +441,6 @@ CREATE TABLE IF NOT EXISTS public.company_balance_sheets
   net_working_capital NUMERIC(22,2) NULL,
   net_invested_capital NUMERIC(22,2) NULL,
   common_stock_shares_outstanding NUMERIC(22,2) NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, type, "date")
 );
@@ -500,7 +480,6 @@ CREATE TABLE IF NOT EXISTS public.company_cash_flows
   change_in_working_capital NUMERIC(22,2) NULL,
   other_non_cash_items NUMERIC(22,2) NULL,
   free_cash_flow NUMERIC(22,2) NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, type, "date")
 );
@@ -543,7 +522,6 @@ CREATE TABLE IF NOT EXISTS public.company_income_statements
   net_income_from_continuing_ops NUMERIC(22,2) NULL,
   net_income_applicable_to_common_shares NUMERIC(22,2) NULL,
   preferred_stock_and_other_adjustments NUMERIC(22,2) NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (company_id, type, "date")
 );
@@ -580,7 +558,6 @@ CREATE TABLE IF NOT EXISTS public.etfs
   total_assets NUMERIC(22,2) NULL,
   average_mkt_cap_mln NUMERIC(14,4) NULL,
   holdings_count INTEGER NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (global_id)
 );
@@ -593,9 +570,8 @@ CREATE TABLE IF NOT EXISTS public.etf_technicals
   fifty_two_week_low NUMERIC (18,2) NULL,
   fifty_day_ma NUMERIC (18,2) NULL,
   two_hundred_day_ma NUMERIC (18,2) NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_market_capitalization
@@ -606,9 +582,8 @@ CREATE TABLE IF NOT EXISTS public.etf_market_capitalization
   medium DOUBLE PRECISION NULL,
   small DOUBLE PRECISION NULL,
   micro DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_asset_allocations
@@ -618,9 +593,8 @@ CREATE TABLE IF NOT EXISTS public.etf_asset_allocations
   long_percentage DOUBLE PRECISION NULL,
   short_percentage DOUBLE PRECISION NULL,
   net_assets_percentage DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_world_regions
@@ -629,9 +603,8 @@ CREATE TABLE IF NOT EXISTS public.etf_world_regions
   region TEXT NULL,
   equity_percentage DOUBLE PRECISION NULL,
   relative_to_category DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_sector_weights
@@ -640,9 +613,8 @@ CREATE TABLE IF NOT EXISTS public.etf_sector_weights
   sector TEXT NULL,
   equity_percentage DOUBLE PRECISION NULL,
   relative_to_category DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_fixed_incomes
@@ -651,9 +623,8 @@ CREATE TABLE IF NOT EXISTS public.etf_fixed_incomes
   category TEXT NULL,
   fund_percentage DOUBLE PRECISION NULL,
   relative_to_category DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_top_ten_holdings
@@ -667,9 +638,8 @@ CREATE TABLE IF NOT EXISTS public.etf_top_ten_holdings
   country TEXT NULL,
   region TEXT NULL,
   assets_percentage DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_holdings
@@ -683,9 +653,8 @@ CREATE TABLE IF NOT EXISTS public.etf_holdings
   country TEXT NULL,
   region TEXT NULL,
   assets_percentage DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_valuation_growths
@@ -697,9 +666,8 @@ CREATE TABLE IF NOT EXISTS public.etf_valuation_growths
   price_sales DOUBLE PRECISION NULL,
   price_cash_flow DOUBLE PRECISION NULL,
   dividend_yield_factor DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_morning_star
@@ -708,9 +676,8 @@ CREATE TABLE IF NOT EXISTS public.etf_morning_star
   ratio INTEGER NULL,
   category_benchmark TEXT NULL,
   sustainability_ratio INTEGER NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.etf_performance
@@ -725,9 +692,8 @@ CREATE TABLE IF NOT EXISTS public.etf_performance
   returns_3_y DOUBLE PRECISION NULL,
   returns_5_y DOUBLE PRECISION NULL,
   returns_10_y DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (etf_id, created_timestamp)
+  PRIMARY KEY (etf_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.options
@@ -736,7 +702,6 @@ CREATE TABLE IF NOT EXISTS public.options
   exchange TEXT NOT NULL,
   last_trade_date TIMESTAMP NOT NULL,
   last_trade_price NUMERIC(22,2) NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (symbol, exchange, last_trade_date)
 );
@@ -754,7 +719,6 @@ CREATE TABLE IF NOT EXISTS public.option_data
   call_open_interest INTEGER NULL,
   put_call_open_interest_ratio DOUBLE PRECISION NULL,
   options_count INTEGER NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (symbol, exchange, expiration_date)
 );
@@ -789,7 +753,6 @@ CREATE TABLE IF NOT EXISTS public.option_contracts
   intrinsic_value NUMERIC(22,2) NULL,
   time_value NUMERIC(22,2) NULL,
   updated_at DATE NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (symbol, exchange, expiration_date, option_type)
 );
@@ -808,9 +771,8 @@ CREATE TABLE IF NOT EXISTS public.calendar_ipos
   offer_price NUMERIC(22,2) NULL,
   shares BIGINT NULL,
   deal_type TEXT NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (symbol, exchange, created_timestamp)
+  PRIMARY KEY (symbol, exchange)
 );
 
 CREATE TABLE IF NOT EXISTS public.calendar_earnings
@@ -825,7 +787,6 @@ CREATE TABLE IF NOT EXISTS public.calendar_earnings
   estimate NUMERIC(22,2) NULL,
   difference NUMERIC(22,2) NULL,
   percent DOUBLE PRECISION NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (symbol, exchange, ending_date)
 );
@@ -835,7 +796,7 @@ CREATE TABLE IF NOT EXISTS public.calendar_trends
   symbol TEXT NOT NULL,
   exchange TEXT NOT NULL,
   "date" DATE NOT NULL,
-  period TEXT NULL,
+  period TEXT NOT NULL,
   growth DOUBLE PRECISION NULL,
   earnings_estimate_avg NUMERIC(22,2) NULL,
   earnings_estimate_low NUMERIC(22,2) NULL,
@@ -856,9 +817,8 @@ CREATE TABLE IF NOT EXISTS public.calendar_trends
   eps_revisions_up_last7_days NUMERIC(22,2) NULL,
   eps_revisions_up_last30_days NUMERIC(22,2) NULL,
   eps_revisions_down_last30_days NUMERIC(22,2) NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (symbol, exchange, "date")
+  PRIMARY KEY (symbol, exchange, "date", period)
 );
 
 CREATE TABLE IF NOT EXISTS public.symbols_to_ignore
@@ -866,7 +826,6 @@ CREATE TABLE IF NOT EXISTS public.symbols_to_ignore
   symbol TEXT NOT NULL,
   exchange TEXT NOT NULL,
   reason TEXT NULL,
-  created_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (symbol, exchange)
 );

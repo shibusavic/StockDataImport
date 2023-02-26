@@ -14,7 +14,6 @@ internal class CompanyOutstandingShares
             throw new ArgumentException($"{nameof(outstandingSharesItem)} has no {nameof(Date)}");
         SharesMln = Convert.ToDecimal(outstandingSharesItem.SharesMln);
         Shares = (int?)outstandingSharesItem.Shares;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -23,14 +22,12 @@ internal class CompanyOutstandingShares
         DateTime date,
         decimal? sharesMln,
         int? shares,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
         Date = date;
         SharesMln = sharesMln;
         Shares = shares;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -46,9 +43,6 @@ internal class CompanyOutstandingShares
     [ColumnWithKey("shares", Order = 4, TypeName = "bigint", IsPartOfKey = false)]
     public int? Shares { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

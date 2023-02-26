@@ -17,7 +17,6 @@ internal class CompanyValuation
         EnterpriseValue = valuation.EnterpriseValue.GetValueOrDefault();
         EnterpriseValueRevenue = valuation.EnterpriseValueRevenue.GetValueOrDefault();
         EnterpriseValueEbitda = valuation.EnterpriseValueEbitda.GetValueOrDefault();
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -30,7 +29,6 @@ internal class CompanyValuation
         decimal? enterpriseValue,
         double? enterpriseValueRevenue,
         double? enterpriseValueEbitda,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -41,7 +39,6 @@ internal class CompanyValuation
         EnterpriseValue = enterpriseValue;
         EnterpriseValueRevenue = enterpriseValueRevenue;
         EnterpriseValueEbitda = enterpriseValueEbitda;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -69,9 +66,6 @@ internal class CompanyValuation
     [ColumnWithKey("enterprise_value_ebitda", Order = 8, TypeName = "double precision", IsPartOfKey = false)]
     public double? EnterpriseValueEbitda { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 9, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 9, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

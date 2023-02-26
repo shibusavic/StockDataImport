@@ -13,7 +13,6 @@ internal class CompanyOfficer
         Name = officer.Name ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         Title = officer.Title;
         YearBorn = officer.YearBorn;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -22,21 +21,19 @@ internal class CompanyOfficer
         string? name,
         string? title,
         string? yearBorn,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
         Name = name;
         Title = title;
         YearBorn = yearBorn;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
     [ColumnWithKey("company_id", Order = 1, TypeName = "uuid", IsPartOfKey = true)]
     public Guid CompanyId { get; }
 
-    [ColumnWithKey("name", Order = 2, TypeName = "text", IsPartOfKey = false)]
+    [ColumnWithKey("name", Order = 2, TypeName = "text", IsPartOfKey = true)]
     public string? Name { get; }
 
     [ColumnWithKey("title", Order = 3, TypeName = "text", IsPartOfKey = false)]
@@ -45,9 +42,6 @@ internal class CompanyOfficer
     [ColumnWithKey("year_born", Order = 4, TypeName = "text", IsPartOfKey = false)]
     public string? YearBorn { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

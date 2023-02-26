@@ -44,7 +44,6 @@ internal class CompanyCashFlow
         ChangeInWorkingCapital = cashFlowItem.ChangeInWorkingCapital;
         OtherNonCashItems = cashFlowItem.OtherNonCashItems;
         FreeCashFlow = cashFlowItem.FreeCashFlow;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -83,7 +82,6 @@ internal class CompanyCashFlow
         decimal? changeInWorkingCapital,
         decimal? otherNonCashItems,
         decimal? freeCashFlow,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -119,7 +117,6 @@ internal class CompanyCashFlow
         ChangeInWorkingCapital = changeInWorkingCapital;
         OtherNonCashItems = otherNonCashItems;
         FreeCashFlow = freeCashFlow;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -223,9 +220,6 @@ internal class CompanyCashFlow
     [ColumnWithKey("free_cash_flow", Order = 33, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? FreeCashFlow { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 34, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 35, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 34, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

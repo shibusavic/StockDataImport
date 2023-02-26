@@ -21,7 +21,6 @@ internal class OptionData
         CallOpenInterest = data.CallOpenInterest;
         PutCallOpenInterestRatio = data.PutCallOpenInterestRatio;
         OptionsCount = data.OptionsCount;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -37,7 +36,6 @@ internal class OptionData
         int? callOpenInterest,
         double? putCallOpenInterestRatio,
         int? optionsCount,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
@@ -51,7 +49,6 @@ internal class OptionData
         CallOpenInterest = callOpenInterest;
         PutCallOpenInterestRatio = putCallOpenInterestRatio;
         OptionsCount = optionsCount;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -89,9 +86,6 @@ internal class OptionData
     [ColumnWithKey("options_count", Order = 11, TypeName = "integer", IsPartOfKey = false)]
     public int? OptionsCount { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 13, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

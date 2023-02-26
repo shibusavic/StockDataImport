@@ -29,10 +29,13 @@ internal abstract class BasePostgreSQLContext : DbContext
 
         foreach (var t in DaoTypes)
         {
-            var attr = (TableAttribute?)t.GetCustomAttribute(typeof(TableAttribute), true);
-            if (attr == null) continue;
+            if (t.Namespace?.Contains("PostgreSQL", StringComparison.InvariantCultureIgnoreCase) ?? false)
+            {
+                var attr = (TableAttribute?)t.GetCustomAttribute(typeof(TableAttribute), true);
+                if (attr == null) continue;
 
-            DaoTableNames[t] = (attr.Schema, attr.Name);
+                DaoTableNames[t] = (attr.Schema, attr.Name);
+            }
         }
     }
 

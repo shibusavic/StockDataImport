@@ -4,7 +4,7 @@
 Exchange Codes:
   US:
     Exchanges:
-    - AMEX
+    - NYSE
     Symbol Type:
     - Common Stock
     - ETF
@@ -14,13 +14,5 @@ Any Day:
   Mode: Discover
   Scope: Full
   Data Types:
-  - Prices
-  - Symbols
-  - Options
-  - Splits
-  - Dividends
-  - Fundamentals
-  - Earnings
   - Trends
-  - IPOs
 

@@ -20,7 +20,6 @@ internal class CompanyEarningsHistory
         EpsEstimate = earningsHistory.EpsEstimate;
         EpsDifference = earningsHistory.EpsDifference;
         SurprisePercent = earningsHistory.SurprisePercent;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -34,7 +33,6 @@ internal class CompanyEarningsHistory
         decimal? epsEstimate,
         decimal? epsDifference,
         double? surprisePercent,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -46,7 +44,6 @@ internal class CompanyEarningsHistory
         EpsEstimate = epsEstimate;
         EpsDifference = epsDifference;
         SurprisePercent = surprisePercent;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -78,9 +75,6 @@ internal class CompanyEarningsHistory
     [ColumnWithKey("surprise_percent", Order = 9, TypeName = "double precision", IsPartOfKey = false)]
     public double? SurprisePercent { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

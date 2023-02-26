@@ -39,7 +39,6 @@ internal class EtfMarketCapitalization
             Micro = micro;
         }
 
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -50,7 +49,6 @@ internal class EtfMarketCapitalization
         double? medium,
         double? small,
         double? micro,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
@@ -59,7 +57,6 @@ internal class EtfMarketCapitalization
         Medium = medium;
         Small = small;
         Micro = micro;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -82,9 +79,6 @@ internal class EtfMarketCapitalization
     [ColumnWithKey("micro", Order = 6, TypeName = "double precision", IsPartOfKey = false)]
     public double? Micro { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

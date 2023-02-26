@@ -46,7 +46,6 @@ internal class Etf
             AverageMktCapMln = null;
         }
         HoldingsCount = etf.Data.HoldingsCount;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -81,7 +80,6 @@ internal class Etf
         decimal? totalAssets,
         decimal? averageMktCapMln,
         int? holdingsCount,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         GlobalId = globalId;
@@ -114,7 +112,6 @@ internal class Etf
         TotalAssets = totalAssets;
         AverageMktCapMln = averageMktCapMln;
         HoldingsCount = holdingsCount;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -208,9 +205,6 @@ internal class Etf
     [ColumnWithKey("holdings_count", Order = 30, TypeName = "integer", IsPartOfKey = false)]
     public int? HoldingsCount { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 31, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 32, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 31, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

@@ -19,7 +19,6 @@ internal class CompanySharesStat
         ShortRatio = shareStats.ShortRatio.GetValueOrDefault();
         ShortPercentOutstanding = shareStats.ShortPercentOutstanding.GetValueOrDefault();
         ShortPercentFloat = shareStats.ShortPercentFloat.GetValueOrDefault();
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -34,7 +33,6 @@ internal class CompanySharesStat
         double? shortRatio,
         double? shortPercentOutstanding,
         double? shortPercentFloat,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -47,7 +45,6 @@ internal class CompanySharesStat
         ShortRatio = shortRatio;
         ShortPercentOutstanding = shortPercentOutstanding;
         ShortPercentFloat = shortPercentFloat;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -82,9 +79,6 @@ internal class CompanySharesStat
     [ColumnWithKey("short_percent_float", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
     public double? ShortPercentFloat { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

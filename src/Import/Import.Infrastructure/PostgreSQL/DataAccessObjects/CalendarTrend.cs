@@ -13,7 +13,7 @@ internal class CalendarTrend
         Date = trend.Date?.ToDateTime(TimeOnly.MinValue) ??
             throw new ArgumentException($"{nameof(trend)} has no {nameof(Date)}");
         Exchange = exchange;
-        Period = trend.Period;
+        Period = trend.Period ?? throw new ArgumentException($"{nameof(trend.Period)} is required") ;
         Growth = trend.Growth;
         EarningsEstimateAvg = trend.EarningsEstimateAvg;
         EarningsEstimateLow = trend.EarningsEstimateLow;
@@ -34,7 +34,6 @@ internal class CalendarTrend
         EpsRevisionsUpLast7Days = trend.EpsRevisionsUpLast7Days;
         EpsRevisionsUpLast30Days = trend.EpsRevisionsUpLast30Days;
         EpsRevisionsDownLast30Days = trend.EpsRevisionsDownLast30Days;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -42,7 +41,7 @@ internal class CalendarTrend
         string symbol,
         string exchange,
         DateTime date,
-        string? period,
+        string period,
         double? growth,
         decimal? earningsEstimateAvg,
         decimal? earningsEstimateLow,
@@ -63,7 +62,6 @@ internal class CalendarTrend
         decimal? epsRevisionsUpLast7Days,
         decimal? epsRevisionsUpLast30Days,
         decimal? epsRevisionsDownLast30Days,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
@@ -90,7 +88,6 @@ internal class CalendarTrend
         EpsRevisionsUpLast7Days = epsRevisionsUpLast7Days;
         EpsRevisionsUpLast30Days = epsRevisionsUpLast30Days;
         EpsRevisionsDownLast30Days = epsRevisionsDownLast30Days;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -104,8 +101,8 @@ internal class CalendarTrend
     [ColumnWithKey("date", Order = 3, TypeName = "date", IsPartOfKey = true)]
     public DateTime Date { get; }
 
-    [ColumnWithKey("period", Order = 4, TypeName = "text", IsPartOfKey = false)]
-    public string? Period { get; }
+    [ColumnWithKey("period", Order = 4, TypeName = "text", IsPartOfKey = true)]
+    public string Period { get; }
 
     [ColumnWithKey("growth", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
     public double? Growth { get; }
@@ -167,9 +164,6 @@ internal class CalendarTrend
     [ColumnWithKey("eps_revisions_down_last30_days", Order = 24, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? EpsRevisionsDownLast30Days { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 25, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 26, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 25, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

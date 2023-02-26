@@ -20,7 +20,6 @@ internal class CompanyEsgScore
         GovernanceScore = esgScores.GovernanceScore.GetValueOrDefault();
         GovernanceScorePercentile = esgScores.GovernanceScorePercentile.GetValueOrDefault();
         ControversyLevel = esgScores.ControversyLevel.GetValueOrDefault();
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -36,7 +35,6 @@ internal class CompanyEsgScore
         double? governanceScore,
         double? governanceScorePercentile,
         double? controversyLevel,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -50,7 +48,6 @@ internal class CompanyEsgScore
         GovernanceScore = governanceScore;
         GovernanceScorePercentile = governanceScorePercentile;
         ControversyLevel = controversyLevel;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -88,9 +85,6 @@ internal class CompanyEsgScore
     [ColumnWithKey("controversy_level", Order = 11, TypeName = "double precision", IsPartOfKey = false)]
     public double? ControversyLevel { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 13, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

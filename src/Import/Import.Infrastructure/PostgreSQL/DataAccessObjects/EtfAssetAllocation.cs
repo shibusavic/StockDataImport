@@ -15,7 +15,6 @@ internal class EtfAssetAllocation
         LongPercentage = Convert.ToDouble(assetAllocation.LongPercentage);
         ShortPercentage = Convert.ToDouble(assetAllocation.ShortPercentage);
         NetAssetsPercentage = Convert.ToDouble(assetAllocation.NetAssetsPercentage);
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -25,7 +24,6 @@ internal class EtfAssetAllocation
         double? longPercentage,
         double? shortPercentage,
         double? netAssetsPercentage,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
@@ -33,7 +31,6 @@ internal class EtfAssetAllocation
         LongPercentage = longPercentage;
         ShortPercentage = shortPercentage;
         NetAssetsPercentage = netAssetsPercentage;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -52,9 +49,6 @@ internal class EtfAssetAllocation
     [ColumnWithKey("net_assets_percentage", Order = 5, TypeName = "double precision", IsPartOfKey = false)]
     public double? NetAssetsPercentage { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

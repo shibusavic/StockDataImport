@@ -40,7 +40,6 @@ internal class Company
         LogoUrl = company.General.LogoURL;
         FullTimeEmployees = company.General.FullTimeEmployees ?? -1;
         UpdateAt = company.General.UpdatedAt.GetValueOrDefault().ToDateTime(TimeOnly.MinValue);
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -76,7 +75,6 @@ internal class Company
         string? logoUrl,
         int? fullTimeEmployees,
         DateTime? updateAt,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         GlobalId = globalId;
@@ -110,7 +108,6 @@ internal class Company
         LogoUrl = logoUrl;
         FullTimeEmployees = fullTimeEmployees;
         UpdateAt = updateAt;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -208,9 +205,6 @@ internal class Company
     [ColumnWithKey("update_at", Order = 31, TypeName = "date", IsPartOfKey = false)]
     public DateTime? UpdateAt { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 32, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 33, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 32, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

@@ -18,7 +18,6 @@ internal class EtfHolding
         Country = holding.Country;
         Region = holding.Region;
         AssetsPercentage = holding.AssetsPercentage;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -32,7 +31,6 @@ internal class EtfHolding
         string? country,
         string? region,
         double? assetsPercentage,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
@@ -44,7 +42,6 @@ internal class EtfHolding
         Country = country;
         Region = region;
         AssetsPercentage = assetsPercentage;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -76,9 +73,6 @@ internal class EtfHolding
     [ColumnWithKey("assets_percentage", Order = 9, TypeName = "double precision", IsPartOfKey = false)]
     public double? AssetsPercentage { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 10, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

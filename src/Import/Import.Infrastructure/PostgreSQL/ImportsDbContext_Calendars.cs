@@ -79,11 +79,11 @@ internal partial class ImportsDbContext
             {
                 if (trend.Code == null) { continue; }
 
-                var existing = SymbolMetaDataRepository.Get(trend.Code);
+                var symbolMetaData = SymbolMetaDataRepository.Get(trend.Code);
 
-                if (existing?.Exchange != null && exchanges.Contains(existing.Exchange))
+                if (symbolMetaData?.Exchange != null && exchanges.Contains(symbolMetaData.Exchange))
                 {
-                    daos.Add(new CalendarTrend(trend, existing.Exchange));
+                    daos.Add(new CalendarTrend(trend, symbolMetaData.Exchange));
                 }
             }
 

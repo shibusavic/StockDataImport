@@ -1,4 +1,3 @@
-using EodHistoricalData.Sdk;
 using Shibusa.Data;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -21,7 +20,6 @@ internal class CalendarEarnings
         Estimate = earnings.Estimate;
         Difference = earnings.Difference;
         Percent = earnings.Percent;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -36,7 +34,6 @@ internal class CalendarEarnings
         decimal? estimate,
         decimal? difference,
         double? percent,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
@@ -49,7 +46,6 @@ internal class CalendarEarnings
         Estimate = estimate;
         Difference = difference;
         Percent = percent;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -84,9 +80,6 @@ internal class CalendarEarnings
     [ColumnWithKey("percent", Order = 10, TypeName = "double precision", IsPartOfKey = false)]
     public double? Percent { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 12, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 11, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

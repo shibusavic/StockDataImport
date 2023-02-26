@@ -12,7 +12,6 @@ internal class CompanyEsgActivity
         CompanyId = companyId;
         Activity = esgActivity.Activity ?? throw new ArgumentException($"{nameof(esgActivity)} has no {nameof(Activity)}");
         Involved = esgActivity.Involvement;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -20,13 +19,11 @@ internal class CompanyEsgActivity
         Guid companyId,
         string activity,
         bool? involved,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
         Activity = activity;
         Involved = involved;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -39,9 +36,6 @@ internal class CompanyEsgActivity
     [ColumnWithKey("involved", Order = 3, TypeName = "boolean", IsPartOfKey = false)]
     public bool? Involved { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

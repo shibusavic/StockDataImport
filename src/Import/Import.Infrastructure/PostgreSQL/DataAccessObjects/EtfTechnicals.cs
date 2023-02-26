@@ -15,7 +15,6 @@ internal class EtfTechnicals
         FiftyTwoWeekLow = technicals.FiftyTwoWeekLow.GetValueOrDefault();
         FiftyDayMa = technicals.FiftyDayMovingAverage.GetValueOrDefault();
         TwoHundredDayMa = technicals.TwoHundredDayMovingAverage.GetValueOrDefault();
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -26,7 +25,6 @@ internal class EtfTechnicals
         decimal? fiftyTwoWeekLow,
         decimal? fiftyDayMa,
         decimal? twoHundredDayMa,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
@@ -35,7 +33,6 @@ internal class EtfTechnicals
         FiftyTwoWeekLow = fiftyTwoWeekLow;
         FiftyDayMa = fiftyDayMa;
         TwoHundredDayMa = twoHundredDayMa;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -57,9 +54,6 @@ internal class EtfTechnicals
     [ColumnWithKey("two_hundred_day_ma", Order = 6, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? TwoHundredDayMa { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

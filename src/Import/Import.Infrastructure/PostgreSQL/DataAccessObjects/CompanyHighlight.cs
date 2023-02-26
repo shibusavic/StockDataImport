@@ -35,7 +35,6 @@ internal class CompanyHighlights
         GrossProfitTtm = highlights.GrossProfitTtm.GetValueOrDefault();
         DilutedEpsTtm = highlights.DilutedEpsTtm.GetValueOrDefault();
         QuarterlyEarningsGrowthYoy = highlights.QuarterlyEarningsGrowthYoy.GetValueOrDefault();
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -66,7 +65,6 @@ internal class CompanyHighlights
         decimal? grossProfitTtm,
         decimal? dilutedEpsTtm,
         double? quarterlyEarningsGrowthYoy,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -95,7 +93,6 @@ internal class CompanyHighlights
         GrossProfitTtm = grossProfitTtm;
         DilutedEpsTtm = dilutedEpsTtm;
         QuarterlyEarningsGrowthYoy = quarterlyEarningsGrowthYoy;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -178,9 +175,6 @@ internal class CompanyHighlights
     [ColumnWithKey("quarterly_earnings_growth_yoy", Order = 26, TypeName = "double precision", IsPartOfKey = false)]
     public double? QuarterlyEarningsGrowthYoy { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 27, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 28, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 27, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

@@ -16,7 +16,6 @@ internal class CompanyAddress
         State = address.State;
         Country = address.Country;
         PostalCode = address.PostalCode ?? throw new ArgumentException($"{nameof(address)} has no {nameof(PostalCode)}");
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -27,7 +26,6 @@ internal class CompanyAddress
         string? state,
         string? country,
         string postalCode,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -36,7 +34,6 @@ internal class CompanyAddress
         State = state;
         Country = country;
         PostalCode = postalCode;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -59,9 +56,6 @@ internal class CompanyAddress
     [ColumnWithKey("postal_code", Order = 6, TypeName = "text", IsPartOfKey = true)]
     public string PostalCode { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

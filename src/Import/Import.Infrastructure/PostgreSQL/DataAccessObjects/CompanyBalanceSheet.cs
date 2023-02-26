@@ -76,7 +76,6 @@ internal class CompanyBalanceSheet
         NetWorkingCapital = balanceSheetItem.NetWorkingCapital;
         NetInvestedCapital = balanceSheetItem.NetInvestedCapital;
         CommonStockSharesOutstanding = balanceSheetItem.CommonStockSharesOutstanding;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -147,7 +146,6 @@ internal class CompanyBalanceSheet
         decimal? netWorkingCapital,
         decimal? netInvestedCapital,
         decimal? commonStockSharesOutstanding,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -216,7 +214,6 @@ internal class CompanyBalanceSheet
         NetWorkingCapital = netWorkingCapital;
         NetInvestedCapital = netInvestedCapital;
         CommonStockSharesOutstanding = commonStockSharesOutstanding;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -419,9 +416,6 @@ internal class CompanyBalanceSheet
     [ColumnWithKey("common_stock_shares_outstanding", Order = 66, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? CommonStockSharesOutstanding { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 67, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 68, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 67, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

@@ -22,14 +22,12 @@ internal class EtfWorldRegion
         string? region,
         double? equityPercentage,
         double? relativeToCategory,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         EtfId = etfId;
         Region = region;
         EquityPercentage = equityPercentage;
         RelativeToCategory = relativeToCategory;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -46,9 +44,6 @@ internal class EtfWorldRegion
     [ColumnWithKey("relative_to_category", Order = 4, TypeName = "double precision", IsPartOfKey = false)]
     public double? RelativeToCategory { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 6, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

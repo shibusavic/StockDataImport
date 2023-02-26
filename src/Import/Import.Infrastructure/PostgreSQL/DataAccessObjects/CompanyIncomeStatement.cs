@@ -46,7 +46,6 @@ internal class CompanyIncomeStatement
         NetIncomeFromContinuingOps = incomeStatementItem.NetIncomeFromContinuingOps;
         NetIncomeApplicableToCommonShares = incomeStatementItem.NetIncomeApplicableToCommonShares;
         PreferredStockAndOtherAdjustments = incomeStatementItem.PreferredStockAndOtherAdjustments;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -87,7 +86,6 @@ internal class CompanyIncomeStatement
         decimal? netIncomeFromContinuingOps,
         decimal? netIncomeApplicableToCommonShares,
         decimal? preferredStockAndOtherAdjustments,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -126,7 +124,6 @@ internal class CompanyIncomeStatement
         NetIncomeFromContinuingOps = netIncomeFromContinuingOps;
         NetIncomeApplicableToCommonShares = netIncomeApplicableToCommonShares;
         PreferredStockAndOtherAdjustments = preferredStockAndOtherAdjustments;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -238,9 +235,6 @@ internal class CompanyIncomeStatement
     [ColumnWithKey("preferred_stock_and_other_adjustments", Order = 36, TypeName = "numeric", IsPartOfKey = false)]
     public decimal? PreferredStockAndOtherAdjustments { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 37, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 38, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 37, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

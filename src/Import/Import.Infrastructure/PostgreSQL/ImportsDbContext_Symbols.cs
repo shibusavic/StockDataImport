@@ -40,21 +40,22 @@ internal partial class ImportsDbContext
 @"SELECT S.code, S.symbol, S.exchange, S.type FROM public.symbols S
 WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = S.symbol AND exchange = S.exchange)";
 
+        const string companiesSql =
+@"SELECT C.symbol, C.exchange, C.utc_timestamp AS LastUpdated FROM public.companies C
+WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = C.symbol AND exchange = C.exchange)";
+
+        const string etfsSql = @"
+SELECT E.symbol, E.exchange, E.utc_timestamp AS LastUpdated
+FROM public.etfs E 
+WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = E.symbol AND exchange = E.exchange)";
+
         const string companyIncomeStatementSql = @"SELECT C.symbol, C.exchange, Max(I.date)
 FROM public.company_income_statements I
 JOIN public.companies C ON I.company_id = C.global_id
 WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = C.symbol AND exchange = C.exchange)
 GROUP BY C.symbol, C.exchange";
 
-        const string etfsSql = @"SELECT E.symbol, E.exchange, MAX(E.created_timestamp)
-FROM public.etfs E 
-WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = E.symbol AND exchange = E.exchange)
-GROUP BY E.symbol, E.exchange";
-
-        const string companiesSql =
-@"SELECT C.symbol, C.exchange, C.utc_timestamp AS LastUpdated FROM public.companies C
-WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = C.symbol AND exchange = C.exchange)";
-
+        
         const string priceSql =
 @"SELECT P.symbol, P.exchange, P.close, O.start
 FROM public.price_actions P
@@ -65,13 +66,13 @@ GROUP BY symbol, exchange) O
 ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
 
         const string splitsSql =
-@"SELECT COUNT(*) FROM public.splits WHERE symbol = @Symbol";
+@"SELECT COUNT(*) FROM public.splits WHERE symbol = @Symbol AND exchange = @Exchange";
         
         const string dividendsSql =
-@"SELECT COUNT(*) FROM public.dividends WHERE symbol = @Symbol";
+@"SELECT COUNT(*) FROM public.dividends WHERE symbol = @Symbol AND exchange = @Exchange";
 
         const string optionsSql =
-@"SELECT COUNT(*) FROM public.options WHERE symbol = @Symbol";
+@"SELECT COUNT(*) FROM public.options WHERE symbol = @Symbol AND exchange = @Exchange";
 
         SymbolMetaData[] metaData = Array.Empty<SymbolMetaData>();
 
@@ -90,9 +91,9 @@ ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
 
                 for (int i = 0; i < metaData.Length; i++)
                 {
-                    var splitsCount = await connection.QuerySingleAsync<int>(splitsSql, new { metaData[i].Symbol });
-                    var dividendsCount = await connection.QuerySingleAsync<int>(dividendsSql, new { metaData[i].Symbol });
-                    var optionsCount = await connection.QuerySingleAsync<int>(optionsSql, new { metaData[i].Symbol });
+                    var splitsCount = await connection.QuerySingleAsync<int>(splitsSql, new { metaData[i].Symbol, metaData[i].Exchange });
+                    var dividendsCount = await connection.QuerySingleAsync<int>(dividendsSql, new { metaData[i].Symbol, metaData[i].Exchange });
+                    var optionsCount = await connection.QuerySingleAsync<int>(optionsSql, new { metaData[i].Symbol, metaData[i].Exchange });
 
                     metaData[i].HasSplits = splitsCount > 0;
                     metaData[i].HasDividends = dividendsCount > 0;

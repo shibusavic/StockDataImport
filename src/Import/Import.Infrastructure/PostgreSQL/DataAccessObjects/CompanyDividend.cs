@@ -15,7 +15,6 @@ internal class CompanyDividend
         PayoutRatio = dividend.PayoutRatio ?? 0D;
         DividendDate = dividend.DividendDate?.ToDateTime(TimeOnly.MinValue);
         ExDividendDate = dividend.ExDividendDate?.ToDateTime(TimeOnly.MinValue);
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -26,7 +25,6 @@ internal class CompanyDividend
         double? payoutRatio,
         DateTime? dividendDate,
         DateTime? exDividendDate,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         CompanyId = companyId;
@@ -35,7 +33,6 @@ internal class CompanyDividend
         PayoutRatio = payoutRatio;
         DividendDate = dividendDate;
         ExDividendDate = exDividendDate;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -58,9 +55,6 @@ internal class CompanyDividend
     [ColumnWithKey("ex_dividend_date", Order = 6, TypeName = "date", IsPartOfKey = false)]
     public DateTime? ExDividendDate { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = true)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 8, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 7, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }

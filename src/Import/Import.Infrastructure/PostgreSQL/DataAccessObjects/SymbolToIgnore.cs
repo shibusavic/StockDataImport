@@ -11,7 +11,6 @@ internal class SymbolToIgnore
         Symbol = symbol;
         Exchange = exchange ?? EodHistoricalData.Sdk.Constants.UnknownValue;
         Reason = reason;
-        CreatedTimestamp = DateTime.UtcNow;
         UtcTimestamp = DateTime.UtcNow;
     }
 
@@ -19,13 +18,11 @@ internal class SymbolToIgnore
         string symbol,
         string exchange,
         string? reason,
-        DateTime? createdTimestamp = null,
         DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
         Exchange = exchange;
         Reason = reason;
-        CreatedTimestamp = createdTimestamp ?? DateTime.UtcNow;
         UtcTimestamp = utcTimestamp ?? DateTime.UtcNow;
     }
 
@@ -39,9 +36,6 @@ internal class SymbolToIgnore
     [ColumnWithKey("reason", Order = 3, TypeName = "text", IsPartOfKey = false)]
     public string? Reason { get; }
 
-    [ColumnWithKey("created_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
-    public DateTime CreatedTimestamp { get; }
-
-    [ColumnWithKey("utc_timestamp", Order = 5, TypeName = "timestamp with time zone", IsPartOfKey = false)]
+    [ColumnWithKey("utc_timestamp", Order = 4, TypeName = "timestamp with time zone", IsPartOfKey = false)]
     public DateTime UtcTimestamp { get; }
 }
