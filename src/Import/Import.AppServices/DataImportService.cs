@@ -222,21 +222,44 @@ public sealed class DataImportService
                 s.Exchange != null &&
                 s.Exchange.Equals(action.TargetName, StringComparison.InvariantCultureIgnoreCase)).Count();
 
-            int factor = action.TargetDataType! switch
+            int factor = 0;
+
+            if (action.Mode == Modes.Economy)
             {
-                DataTypes.Exchanges => action.TargetScope == DataTypeScopes.Bulk ? 100 : baseCost,
-                DataTypes.Dividends
-                    or DataTypes.Options
-                    or DataTypes.Prices
-                    or DataTypes.Splits => symbolCount,
-                DataTypes.Fundamentals => SymbolMetaDataRepository.RequiresFundamentalsCount(action.TargetName),
-                DataTypes.Trends => SymbolMetaDataRepository.Count(s => s.Exchange != null &&
-                    subExchanges.Contains(s.Exchange)),
-                DataTypes.Exchanges
-                    or DataTypes.Earnings
-                    or DataTypes.Ipos => 1,
-                _ => 0
-            };
+                factor = action.TargetDataType! switch
+                {
+                    DataTypes.Exchanges => 1,
+                    DataTypes.Dividends => SymbolMetaDataRepository.GetAll().Count(m => m.HasDividends),
+                    DataTypes.Splits => SymbolMetaDataRepository.GetAll().Count(m => m.HasSplits),
+                    DataTypes.Prices => symbolCount,
+                    DataTypes.Options => SymbolMetaDataRepository.GetAll().Count(m => m.HasOptions),
+                    DataTypes.Fundamentals => SymbolMetaDataRepository.RequiresFundamentalsCount(action.TargetName),
+                    DataTypes.Trends => SymbolMetaDataRepository.Count(s => s.Exchange != null &&
+                        subExchanges.Contains(s.Exchange)),
+                    DataTypes.Exchanges
+                        or DataTypes.Earnings
+                        or DataTypes.Ipos => 1,
+                    _ => 0
+                };
+            }
+            else
+            {
+                factor = action.TargetDataType! switch
+                {
+                    DataTypes.Exchanges => 1,
+                    DataTypes.Dividends
+                        or DataTypes.Options
+                        or DataTypes.Prices
+                        or DataTypes.Splits => symbolCount,
+                    DataTypes.Fundamentals => symbolCount,
+                    DataTypes.Trends => SymbolMetaDataRepository.Count(s => s.Exchange != null &&
+                        subExchanges.Contains(s.Exchange)),
+                    DataTypes.Exchanges
+                        or DataTypes.Earnings
+                        or DataTypes.Ipos => 1,
+                    _ => 0
+                };
+            }
 
             int cost = baseCost * factor;
 

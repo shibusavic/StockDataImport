@@ -36,16 +36,16 @@ internal class PriceAction
     }
 
     public PriceAction(
-    string symbol,
-    string exchange,
-    DateTime start,
-    DateTime finish,
-    decimal open,
-    decimal high,
-    decimal low,
-    decimal close,
-    int volume,
-    DateTime? utcTimestamp = null)
+        string symbol,
+        string exchange,
+        DateTime start,
+        DateTime finish,
+        decimal open,
+        decimal high,
+        decimal low,
+        decimal close,
+        int volume,
+        DateTime? utcTimestamp = null)
     {
         Symbol = symbol;
         Exchange = exchange;

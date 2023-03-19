@@ -19,6 +19,6 @@ public struct Symbol
     {
         string val = $"{Code} {Exchange} {Type}";
         while (val.Contains("  ")) { val = val.Replace("  ", " ").Trim(); }
-        return string.IsNullOrWhiteSpace(val) ? "Empty" : val;
+        return string.IsNullOrWhiteSpace(val) ? "" : val;
     }
 }

@@ -243,7 +243,7 @@ finally
         if (!dryRun)
         {
             WriteApiUsage();
-            DomainEventPublisher.RaiseMessageEvent(null, $"Import completed in {timer.Elapsed.ConvertToText()}.", sourceName, LogLevel.Information);
+            DomainEventPublisher.RaiseMessageEvent(null, $"Import completed in {timer.Elapsed:d\\.hh\\:mm\\:ss}.", sourceName, LogLevel.Information);
         }
     }
 
@@ -283,31 +283,6 @@ void ShowActionBlocks(ImportCycle cycle)
 
     Communicate($"{Environment.NewLine}{totalCost,9}\tTotal estimated cost.");
 }
-
-//void ShowCost(ImportCycle cycle)
-//{
-//    DataImportService.CalculateCost(cycle, importConfiguration);
-
-//    int totalCost = 0;
-//    bool unknowable = false;
-//    foreach (var action in cycle.Actions)
-//    {
-//        if (action.EstimatedCost == null && action.ActionName == ActionNames.Import)
-//        {
-//            unknowable = true;
-//        }
-//        totalCost += action.EstimatedCost ?? 0;
-//        Communicate($"{action.EstimatedCost.ToString() ?? " ",9}\t{action}", true);
-//    }
-//    if (unknowable)
-//    {
-//        Communicate($"Unknown Total cost; necessary inputs missing - probably an empty database.");
-//    }
-//    else
-//    {
-//        Communicate($"{totalCost,9}\tTotal cost.");
-//    }
-//}
 
 void EventPublisher_RaiseApiLimitReachedEventHandler(object? sender, ApiLimitReachedEventArgs e)
 {
