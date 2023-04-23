@@ -10,10 +10,11 @@
     <Description>
       SDK for interacting with eodhistoricaldata.com APIs.
     </Description>
-    <PackageVersion>0.6.0</PackageVersion>
+    <PackageVersion>0.6.3</PackageVersion>
     <Authors>shibusavic</Authors>
     <Company>Shibusa LLC</Company>
     <RepositoryUrl>https://github.com/shibusavic/StockDataImport</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>Shibusa, LLC 2023</Copyright>
     <PackageTags>eodhistoricaldata, sdk, stocks, options, fundamentals, eod</PackageTags>
@@ -25,4 +26,9 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
     <PackageReference Include="Shibusa.Extensions" Version="8.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
 </Project>
