@@ -45,7 +45,7 @@ public class ActionService
 
                 foreach (var filter in k.Value)
                 {
-                    if (filter.Key.Equals("Exchanges", StringComparison.InvariantCultureIgnoreCase))
+                    if (filter.Key.Equals("Exchanges", StringComparison.OrdinalIgnoreCase))
                     {
                         string[] exchanges = filter.Value;
 

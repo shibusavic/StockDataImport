@@ -29,7 +29,7 @@ internal abstract class BasePostgreSQLContext : DbContext
 
         foreach (var t in DaoTypes)
         {
-            if (t.Namespace?.Contains("PostgreSQL", StringComparison.InvariantCultureIgnoreCase) ?? false)
+            if (t.Namespace?.Contains("PostgreSQL", StringComparison.OrdinalIgnoreCase) ?? false)
             {
                 var attr = (TableAttribute?)t.GetCustomAttribute(typeof(TableAttribute), true);
                 if (attr == null) continue;

@@ -19,7 +19,7 @@ internal class OptionContract
         ContractSize = contract.ContractSize;
         ContractPeriod = contract.ContractPeriod;
         Currency = contract.Currency;
-        InTheMoney = contract.InTheMoney?.Equals("true", StringComparison.InvariantCultureIgnoreCase);
+        InTheMoney = contract.InTheMoney?.Equals("true", StringComparison.OrdinalIgnoreCase);
         LastTradeDate = contract.LastTradeDateTime;
         Strike = contract.Strike;
         LastPrice = contract.LastPrice ?? 0M;

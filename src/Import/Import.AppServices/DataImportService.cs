@@ -220,7 +220,7 @@ public sealed class DataImportService
 
             int symbolCount = SymbolMetaDataRepository.Find(s =>
                 s.Exchange != null &&
-                s.Exchange.Equals(action.TargetName, StringComparison.InvariantCultureIgnoreCase)).Count();
+                s.Exchange.Equals(action.TargetName, StringComparison.OrdinalIgnoreCase)).Count();
 
             int factor = 0;
 
@@ -395,7 +395,7 @@ public sealed class DataImportService
         {
             // find the symbols due for an update to their fundamentals (i.e., every 3 months).
             var meta = SymbolMetaDataRepository.Find(m => m.RequiresFundamentalUpdate &&
-                (m.Exchange?.Equals(exchange, StringComparison.InvariantCultureIgnoreCase) ?? false)).ToArray();
+                (m.Exchange?.Equals(exchange, StringComparison.OrdinalIgnoreCase) ?? false)).ToArray();
 
             DomainEventPublisher.RaiseMessageEvent(this, $"{meta.Length} missing fundamental records.",
                 nameof(ImportFullAsync), Microsoft.Extensions.Logging.LogLevel.Information);
@@ -818,7 +818,7 @@ public sealed class DataImportService
 
         bool ignoreMissingFundamentals = importConfiguration.Options.ReasonsToIgnore != null &&
             importConfiguration.Options.ReasonsToIgnore.Contains(ImportConfiguration.ReasonToIgnoreValues.MissingFundamentals,
-                StringComparer.InvariantCultureIgnoreCase);
+                StringComparer.OrdinalIgnoreCase);
 
         var fundamentals = DataClient.GetFundamentalsForSymbolAsync(symbol, cancellationToken: cancellationToken)
             .GetAwaiter().GetResult();

@@ -41,12 +41,12 @@ internal static class SymbolsToIgnore
     }
 
     public static bool IsOnList(string symbol) =>
-        symbolsToIgnore.Any(s => s.Symbol.Equals(symbol, StringComparison.InvariantCultureIgnoreCase));
+        symbolsToIgnore.Any(s => s.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase));
 
     public static bool IsOnList(string symbol, string exchange) =>
-        symbolsToIgnore.Any(s => s.Symbol.Equals(symbol, StringComparison.InvariantCultureIgnoreCase) &&
+        symbolsToIgnore.Any(s => s.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase) &&
             s.Exchange != null &&
-            s.Exchange.Equals(exchange, StringComparison.InvariantCultureIgnoreCase));
+            s.Exchange.Equals(exchange, StringComparison.OrdinalIgnoreCase));
 
     public static bool IsOnList(Symbol symbol) => IsOnList(symbol.Code ?? "", symbol.Exchange ?? Constants.UnknownValue);
 

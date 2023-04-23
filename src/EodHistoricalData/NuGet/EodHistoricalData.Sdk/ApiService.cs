@@ -58,7 +58,7 @@ public static class ApiService
             foreach (var endpoint in EndPoints)
             {
                 if (!string.IsNullOrWhiteSpace(endpoint.Uri) &&
-                    uri.StartsWith(endpoint.Uri, StringComparison.InvariantCultureIgnoreCase))
+                    uri.StartsWith(endpoint.Uri, StringComparison.OrdinalIgnoreCase))
                 {
                     return endpoint;
                 }

@@ -42,7 +42,7 @@ public static class SymbolMetaDataRepository
     }
 
     public static string? GetFirstExchangeForSymbol(string symbol) =>
-        metaData.FirstOrDefault(d => d.Symbol.Equals(symbol, StringComparison.InvariantCultureIgnoreCase))?.Exchange;
+        metaData.FirstOrDefault(d => d.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase))?.Exchange;
 
     public static int Count(Predicate<SymbolMetaData>? predicate = null) =>
         predicate == null ? metaData.Count : metaData.Count(d => predicate(d));
@@ -57,11 +57,11 @@ public static class SymbolMetaDataRepository
     }
 
     public static SymbolMetaData? Get(string code) =>
-        Find(s => s.Code.Equals(code, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+        Find(s => s.Code.Equals(code, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 
     public static SymbolMetaData? Get(string symbol, string? exchange) =>
-        Find(s => s.Symbol.Equals(symbol, StringComparison.InvariantCultureIgnoreCase) &&
-            (s.Exchange?.Equals(exchange, StringComparison.InvariantCultureIgnoreCase) ?? false)).FirstOrDefault();
+        Find(s => s.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase) &&
+            (s.Exchange?.Equals(exchange, StringComparison.OrdinalIgnoreCase) ?? false)).FirstOrDefault();
 }
 
 /// <summary>
@@ -88,7 +88,7 @@ internal class SymbolMetaDataCollection : KeyedCollection<string, SymbolMetaData
     /// </summary>
     /// <param name="key">The key; the <see cref="SymbolMetaData.Code"/>.</param>
     /// <returns>A boolean indication of whether the key is contained in the collection.</returns>
-    public bool ContainsKey(string key) => Items.Any(i => i.Code.Equals(key, StringComparison.InvariantCultureIgnoreCase));
+    public bool ContainsKey(string key) => Items.Any(i => i.Code.Equals(key, StringComparison.OrdinalIgnoreCase));
 
     protected override string GetKeyForItem(SymbolMetaData item)
     {
