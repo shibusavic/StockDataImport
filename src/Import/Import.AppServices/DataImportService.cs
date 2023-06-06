@@ -141,12 +141,6 @@ public sealed class DataImportService
 
             Task t = ImportsDb.SaveSymbolsAsync(symbolsToSave, exchangeCode, cancellationToken);
 
-            // TODO: There's still some work to be done here maybe.
-            /*
-             * We could look at our repo and only AddOrUpdate(...) for new items.
-             * 
-             */
-
             foreach (var s in symbolsToSave)
             {
                 SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData($"{s.Code!}.{exchangeCode}", s.Code!, s.Exchange, s.Type));

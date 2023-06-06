@@ -360,7 +360,9 @@ public class DecimalJsonConverter : JsonConverter<decimal>
 public class NullableDecimalJsonConverter : JsonConverter<decimal?>
 {
     // Sometimes the values delivered by the API are exponential values (e.g., "1.0E+18").
+#pragma warning disable SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
     private static readonly Regex NotationRegex = new(@"([\d\.]+)?E\+(\d+)");
+#pragma warning restore SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
 
     public override decimal? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

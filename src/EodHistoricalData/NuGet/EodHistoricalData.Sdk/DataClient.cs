@@ -7,7 +7,7 @@ namespace EodHistoricalData.Sdk;
 /// <summary>
 /// Represents an EodHistoricalData.com SDK.
 /// </summary>
-public sealed partial class DataClient
+public sealed partial class DataClient : IDataClient
 {
     private readonly string apiKey;
     private static readonly HttpClient httpClient;

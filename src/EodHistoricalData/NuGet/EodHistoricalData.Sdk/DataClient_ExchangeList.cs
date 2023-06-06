@@ -1,5 +1,4 @@
 ﻿using EodHistoricalData.Sdk.Models;
-using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace EodHistoricalData.Sdk;

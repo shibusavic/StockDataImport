@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace EodHistoricalData.Sdk;
 
-public sealed partial class DataClient : IDataClient
+public sealed partial class DataClient
 {
     private const string SymbolListSourceName = "Symbols";
 

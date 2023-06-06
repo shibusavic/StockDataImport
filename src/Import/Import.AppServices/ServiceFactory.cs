@@ -15,13 +15,10 @@ public sealed class ServiceFactory
     private readonly ILogger? logger;
     private readonly ILogsDbContext? logsDbContext;
     private readonly IImportsDbContext? importsDbContext;
-    //private readonly IDictionary<ImportConfiguration, DataImportService> dataImportServices;
 
     public ServiceFactory(IConfiguration configuration, ILogger? logger = null)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-
-        //dataImportServices = new Dictionary<ImportConfiguration, DataImportService>();
 
         this.logger = logger;
 
@@ -70,25 +67,6 @@ public sealed class ServiceFactory
             : importsDbContext == null
             ? throw new Exception($"{nameof(importsDbContext)} is not initialized")
             : new DataImportService(logsDbContext, importsDbContext, apiKey, maxUsage);
-
-    //internal DataImportService GetOrCreateDataImportService(ImportConfiguration importConfig)
-    //{
-    //    if (!dataImportServices.ContainsKey(importConfig))
-    //    {
-    //        if (logsDbContext == null) { throw new Exception($"{nameof(logsDbContext)} is not initialized"); }
-    //        if (importsDbContext == null) { throw new Exception($"{nameof(importsDbContext)} is not initialized"); }
-    //        if (string.IsNullOrWhiteSpace(importConfig.ApiKey)) { throw new ArgumentException($"{nameof(importConfig.ApiKey)} is required."); }
-
-    //        dataImportServices.Add(importConfig,
-    //                new DataImportService(logsDbContext, importsDbContext, importConfig.ApiKey!,
-    //                    ApiService.DailyLimit));
-    //    }
-
-    //    return dataImportServices[importConfig];
-    //}
-
-    //public DataImportCycle CreateDataImportCycle(ImportConfiguration importConfiguration) =>
-    //    new(GetOrCreateDataImportService(importConfiguration), logger);
 
     /// <summary>
     /// Create an <see cref="ILoggerProvider"/> instance.
@@ -144,6 +122,7 @@ public sealed class ServiceFactory
                 DatabaseConnection? matchingConnection = dbConnections.FirstOrDefault(d =>
                     !string.IsNullOrWhiteSpace(d.Name) && d.Name.Equals(section.Key, StringComparison.OrdinalIgnoreCase));
 
+#pragma warning disable IDE0270 // Use coalesce expression
                 if (matchingConnection == null)
                 {
                     throw new Exception("There may be a mismatch in the configuration settings between connection strings and database engines; the keys should match.");
@@ -172,6 +151,7 @@ public sealed class ServiceFactory
                      * 
                      */
                 }
+#pragma warning restore IDE0270 // Use coalesce expression
 
                 DatabaseEngine engine = section.Value?.GetEnum<DatabaseEngine>() ?? DatabaseEngine.None;
 
