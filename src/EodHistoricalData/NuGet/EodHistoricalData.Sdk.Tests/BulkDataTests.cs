@@ -36,7 +36,7 @@ public class BulkDataTests : BaseTest
     [Fact] //[Fact(Skip = "Expensive")]
     public async Task GetBulkHistoricalDataForExchangeAsync_LastDay()
     {
-        DateOnly dt = DateOnly.FromDateTime(DateTime.Now);
+        DateOnly dt = DateOnly.FromDateTime(DateTime.Now.AddDays(-1));
         while (dt.DayOfWeek is not DayOfWeek.Tuesday or DayOfWeek.Wednesday)
         {
             dt = dt.AddDays(-1);

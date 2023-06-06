@@ -1,5 +1,4 @@
 ﻿using EodHistoricalData.Sdk.Models.Calendar;
-using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace EodHistoricalData.Sdk;
