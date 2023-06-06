@@ -1,6 +1,4 @@
-﻿using EodHistoricalData.Sdk;
-using Import.AppServices.Configuration;
-using Import.Infrastructure;
+﻿using Import.Infrastructure;
 using Import.Infrastructure.Abstractions;
 using Import.Infrastructure.Configuration;
 using Import.Infrastructure.Events;
@@ -43,20 +41,18 @@ public sealed class ServiceFactory
 
     public IConfiguration Configuration { get; }
 
-    public Task LoadStaticDataAsync()
+    public async Task LoadStaticDataAsync()
     {
-        if (importsDbContext == null) return Task.CompletedTask;
-
-        return Task.Factory.StartNew(() =>
+        if (importsDbContext != null)
         {
             DomainEventPublisher.RaiseMessageEvent(this, "Loading existing meta data.", nameof(LoadStaticDataAsync));
 
-            SymbolMetaDataRepository.SetItems(importsDbContext.GetSymbolMetaDataAsync().GetAwaiter().GetResult());
+            SymbolMetaDataRepository.SetItems(await importsDbContext.GetSymbolMetaDataAsync());
 
             DomainEventPublisher.RaiseMessageEvent(this, "Loading symbols to ignore.", nameof(LoadStaticDataAsync));
 
-            SymbolsToIgnore.SetItems(importsDbContext.GetSymbolsToIgnoreAsync().GetAwaiter().GetResult());
-        });
+            SymbolsToIgnore.SetItems(await importsDbContext.GetSymbolsToIgnoreAsync());
+        }
     }
 
     public Task<IEnumerable<SymbolMetaData>> GetMetaData(CancellationToken cancellationToken = default)
