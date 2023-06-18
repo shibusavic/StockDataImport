@@ -1,14 +1,12 @@
 # StockDataImport
 
-This project is an endeavor to build the basis for a stock back-testing application.
+This project lays the foundation for a back-testing application using [eodhistoricaldata.com](https://eodhistoricaldata.com) as its primary data source.
+
+The two projects in this repo are a NuGet package for communicating with the the [eodhistoricaldata.com](https://eodhistoricaldata.com) API and the other is a console application for scripting data imports using YAML configuration files.
 
 # EodHistoricalData.com C# SDK and Import CLI Tool
 
-## NuGet SDK
-
-![Nuget](https://img.shields.io/nuget/v/EodHistoricalData.Sdk)
-
----
+## NuGet SDK ![Nuget](https://img.shields.io/nuget/v/EodHistoricalData.Sdk)
 
 ### Overview
 
@@ -16,18 +14,18 @@ This is an unofficial SDK for the [EOD Historical Data](https://eodhistoricaldat
 
 #### Note
 
-Under the `/docs` folder there exists other markdown files including requirement specs and journal entries explaining motivations and decisions.
+Under the `/docs` folder there exists other markdown files including requirement specs and journal entries describing motivations and decisions.
 
 ---
 
-### Data Feeds Supported
+### EodHistoricalData.com Data Feeds Supported
 
-1. [EOD Historical Data](https://eodhistoricaldata.com/financial-apis/api-for-historical-data-and-volumes/)
-1. [Split Data Feed](https://eodhistoricaldata.com/financial-apis/api-splits-dividends/)
-1. [Dividends Data Feed](https://eodhistoricaldata.com/financial-apis/api-splits-dividends/)
-1. [Calendar Data](https://eodhistoricaldata.com/financial-apis/calendar-upcoming-earnings-ipos-and-splits/)
-1. [Fundamental Data](https://eodhistoricaldata.com/financial-apis/category/fundamental-and-economic-financial-data-api/)
-1. [Stock Options Data](https://eodhistoricaldata.com/financial-apis/stock-options-data/)
+1. [End-of-Day Prices](https://eodhistoricaldata.com/financial-apis/api-for-historical-data-and-volumes/)
+1. [Splits](https://eodhistoricaldata.com/financial-apis/api-splits-dividends/)
+1. [Dividends](https://eodhistoricaldata.com/financial-apis/api-splits-dividends/)
+1. [Calendars](https://eodhistoricaldata.com/financial-apis/calendar-upcoming-earnings-ipos-and-splits/)
+1. [Fundamentals](https://eodhistoricaldata.com/financial-apis/category/fundamental-and-economic-financial-data-api/)
+1. [Options](https://eodhistoricaldata.com/financial-apis/stock-options-data/)
 
 The specific API uris that are supported are all identified in the `ApiService` class:
 
@@ -54,11 +52,11 @@ public const string UserUri = $"{BaseUri}user/";
 
 ### Usage
 
-The `DataClient` class is a `partial` class spread across a number of files whose names begin with `DataClient_`.
-This is the only class you will need to instantiate to access the [EOD Historical Data](https://eodhistoricaldata.com/) API; hopefully the function names speak for themselves.
+The `DataClient` class is a `partial class` spread across a number of files prefixed with `DataClient_`.
+This is the only class needed to interface with the [EOD Historical Data](https://eodhistoricaldata.com/) API; hopefully the function names speak for themselves.
 The import CLI and automated tests are good sources for usage examples.
 
-The models to which the API results are mapped are all `struct`s. the results coming from the API are immutable values that can be transformed into the domain objects (i.e., `class`es you require.
+The models to which the API results are mapped are all `struct`s. the results coming from the API are immutable values that can be transformed into the domain objects (i.e., `class`es) you require.
 
 ```
 var dataClient = new DataClient("your api key");
@@ -82,9 +80,7 @@ var bulkLastDayNyse = await dataClient.GetBulkHistoricalDataForExchangeAsync("NY
 
 ### Overview
 
-The `eod-import` project is a C# command-line tool that can be used in scripts and schedulers (e.g., `cron`) to automate the daily capture and permanent storage of data from the [EOD Historical Data](https://eodhistoricaldata.com/) API.
-
-The `/docs` folder is the place to go for more detailed guidance and explanation.
+The `eod-import` project is a C# command-line tool that can be used in scripts and schedulers (e.g., `cron`) to automate the regular capture and permanent storage of data from the [EOD Historical Data](https://eodhistoricaldata.com/) API.
 
 ### Getting Started
 
@@ -115,7 +111,7 @@ The keys (e.g., `Logs`) must tie to a corresponding connection string key, and i
 }
 ```
 
-The keys under `DatabaseEngines` line up with they keys under `ConnectionStrings`. 
+The keys under `DatabaseEngines` line up with they keys under `ConnectionStrings`. In other words, if you add a new ConnectionString, you must add a corresponding entry to the DatabaseEngines section, or it will complain.
 
 ---
 
@@ -149,15 +145,18 @@ create database eod_imports_test;
 
 You can test your setup by running the integration tests.
 
+You must set up your API key with the tests (e.g., with user secrets) for the tests to pass. Note that doing so will cause the tests to spend API credits against your account. The cost is not excessive, but it is also not zero.
+
 #### Configuration
 
 The import tool's configuration for what actions to take is controlled by [YAML files](https://yaml.org/).
 I made use of [YamlDotNetCore](https://github.com/aaubry/YamlDotNet) to parse the YAML files.
 
-A default file is provided and may work for you. It looks something like this:
+Configuration files can be robust and cover multiple import scenarios, as seen in this example:
 
 ```
 Max Token Usage: 990
+Max Parallelization: 5
 API Key: TEST
 Cancel On Exception: true
 
@@ -335,21 +334,15 @@ Saturday:
   - AMEX
   Data Types:
   - Fundamentals
-...
 ```
 
 The sections of the configuration file inform the import engine what to do in specific circumstances or on particular days of the week.
 For a more detailed explanation of each section, see the `/docs` folder.
 
 You can pass in any configuration file you want using the `-c` argument.
-Configuration files are selected in the following order:
-
-1. Command-line. Passing a config file on the command line will get it processed.
-1. The JSON configuration (e.g., appsettings.json or secrets.json). 
-1. The YAML configuration (see example above).
-
-If no API key is found, the program will end in error.
 
 ```
 eod-import -v -c myconfig.yml
 ```
+
+In my experience using this tool, the files tend to be more narrow and I use `cron` to execute different files on different days. Take a look at the `/samples` folder for examples of more focused configuration files.

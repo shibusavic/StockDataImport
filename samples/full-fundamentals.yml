@@ -1,0 +1,15 @@
+﻿Exchange Codes:
+  US:
+    Exchanges:
+    - NYSE
+    - NASDAQ
+    - NYSE ARCA
+    Symbol Type:
+    - Common Stock
+    - ETF
+Any Day:
+- Priority: 1
+  Mode: Discovery
+  Scope: Full
+  Data Types:
+  - Fundamentals
