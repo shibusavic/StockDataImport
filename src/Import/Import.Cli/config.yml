@@ -1,5 +1,6 @@
 ﻿Options:
   API Key: TEST
+  Max Parallelization: 10
   Reasons to Ignore:
   - No Fundamentals
   Data Retention:

@@ -16,5 +16,8 @@ namespace Import.AppServices.Configuration
 
         [YamlMember(Alias = Constants.ConfigurationKeys.DataRetention)]
         public IDictionary<string, string>? DataRetention { get; set; }
+
+        [YamlMember(Alias = Constants.ConfigurationKeys.MaxDegreeOfParallelism)]
+        public int? MaxDegreeOfParallelism { get; set; }
     }
 }

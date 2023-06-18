@@ -23,6 +23,8 @@ int exitCode = -1;
 const string DefaultConfigFileName = "config.yml";
 const string sourceName = "import";
 
+int maxParallel = 5;
+
 ILoggerProvider? loggerProvider = null;
 ServiceFactory serviceFactory;
 ILogger? logger = null;
@@ -62,7 +64,7 @@ try
         DomainEventPublisher.DatabaseErrorHander += EventPublisher_DatabaseErrorHander;
         DomainEventPublisher.RaiseMessageEventHandler += EventPublisher_RaiseMessageEventHandler;
 
-        Configure();
+        await ConfigureAsync();
 
         string welcomeMsg = dryRun ? "Dry Run (api credit cost estimation)" : "Configuration complete.";
         DomainEventPublisher.RaiseMessageEvent(null, welcomeMsg, sourceName);
@@ -90,7 +92,11 @@ try
                 DomainEventPublisher.RaiseMessageEvent(null, $"{purgeActions.Length} purge actions found.", sourceName);
 
                 await Parallel.ForEachAsync(purgeActions,
-                    new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
+                    new ParallelOptions()
+                    {
+                        CancellationToken = cancellationToken,
+                        MaxDegreeOfParallelism = maxParallel
+                    }, async (action, ct) =>
                 {
                     try
                     {
@@ -154,29 +160,33 @@ try
                         sourceName);
 
                     Task t = Parallel.ForEachAsync(actionsToRun,
-                        new ParallelOptions() { CancellationToken = cancellationToken }, async (action, ct) =>
+                        new ParallelOptions()
                         {
-                            try
+                            CancellationToken = cancellationToken,
+                            MaxDegreeOfParallelism = maxParallel
+                        }, async (action, ct) =>
                             {
-                                action.Start();
-
-                                await dataImportService.ImportDataAsync(action, importConfiguration, ct);
-
-                                if (action.TargetName.Equals(PurgeName.Imports))
+                                try
                                 {
-                                    // Meta data may have changed as a result of the purge.
-                                    var t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
-                                    DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", sourceName);
-                                    await t;
-                                }
+                                    action.Start();
 
-                                action.Complete();
-                            }
-                            catch (Exception exc)
-                            {
-                                action.Error(exc);
-                            }
-                        });
+                                    await dataImportService.ImportDataAsync(action, importConfiguration, ct);
+
+                                    if (action.TargetName.Equals(PurgeName.Imports))
+                                    {
+                                        // Meta data may have changed as a result of the purge.
+                                        var t = dataImportService.ResetMetaDataRepositoryAsync(cancellationToken);
+                                        DomainEventPublisher.RaiseMessageEvent(null, $"Resetting meta data.", sourceName);
+                                        await t;
+                                    }
+
+                                    action.Complete();
+                                }
+                                catch (Exception exc)
+                                {
+                                    action.Error(exc);
+                                }
+                            });
 
                     // give it a second or two ...
                     await Task.Delay(Convert.ToInt32(TimeSpan.FromSeconds(2).TotalMilliseconds));
@@ -198,17 +208,6 @@ try
                 Communicate($"number unchanged: {unchanged.Length}");
 #endif
             }
-            /*
-
-//            if (!dryRun)
-//            {
-//                await ExecuteAsync(importConfiguration, cancellationToken);
-//                //await dataImportService.LogsDb.SaveActionItemsAsync(Actions, cancellationToken);
-//            }
-//        }
-//    }
-
- */
 
             foreach (var action in cycle.Actions.OrderBy(a => a.UtcCompleted))
             {
@@ -220,8 +219,13 @@ try
                 }
             }
 
+            var metaTask = dataImportService.SaveMetaDataAsync(cancellationToken);
+
             DomainEventPublisher.RaiseMessageEvent(null, "Saving symbols to ignore", sourceName);
             await dataImportService.SaveSymbolsToIgnoreAsync(cancellationToken);
+
+            DomainEventPublisher.RaiseMessageEvent(null, "Saving meta data", sourceName);
+            await metaTask;
         }
 
         cycle.Dispose();
@@ -407,7 +411,7 @@ void HandleArguments(string[] args)
     }
 }
 
-void Configure()
+Task ConfigureAsync()
 {
     IConfigurationBuilder builder = new ConfigurationBuilder()
         .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
@@ -419,10 +423,10 @@ void Configure()
     // This is the second check for the key.
     apiKey ??= configuration["EodHistoricalDataApiKey"];
 
-    ConfigureServices();
+    return ConfigureServicesAsync();
 }
 
-void ConfigureServices()
+Task ConfigureServicesAsync()
 {
     Communicate("Configuring services.", prefixWithTimestamp: true);
 
@@ -453,6 +457,7 @@ void ConfigureServices()
     Communicate($"Reading {configFileInfo.FullName}.", prefixWithTimestamp: true);
     importConfiguration = ImportConfiguration.Create(File.ReadAllText(configFileInfo.FullName));
     apiKey ??= importConfiguration.Options.ApiKey; // This is the final check for the key.
+    maxParallel = importConfiguration.Options.MaxDegreeOfParallelism ?? maxParallel;
 
     if (importConfiguration.Options == null)
     {
@@ -468,8 +473,8 @@ void ConfigureServices()
     Communicate("Creating data import service.", prefixWithTimestamp: true);
     dataImportService = serviceFactory.CreateDataImportService(apiKey!);
 
-    Communicate("Finishing load of existing meta data.", prefixWithTimestamp: true);
-    metaDataTask.GetAwaiter().GetResult();
+    Communicate("Finishing load of meta data.", prefixWithTimestamp: true);
+    return metaDataTask;
 }
 
 void Communicate(string? message, bool force = false, bool prefixWithTimestamp = false)

@@ -1,10 +1,10 @@
-﻿Purge Data:
-- Logs
+﻿Options:
+  Max Parallelization: 2
 
 Exchange Codes:
   US:
     Exchanges:
-    - NYSE
+    - NYSE ARCA 
     Symbol Type:
     - Common Stock
     - ETF
@@ -14,5 +14,5 @@ Any Day:
   Mode: Discover
   Scope: Full
   Data Types:
-  - Trends
+  - Symbols
 
