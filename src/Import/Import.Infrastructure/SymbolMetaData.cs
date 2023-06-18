@@ -5,12 +5,13 @@ namespace Import.Infrastructure;
 
 public class SymbolMetaData : IEquatable<SymbolMetaData?>
 {
-    public SymbolMetaData(string code, string symbol, string? exchange, string? type)
+    public SymbolMetaData(string code, string symbol, string? exchange, string? type, string? name)
     {
         Code = code;
         Symbol = symbol;
         Exchange = exchange;
         Type = type;
+        Name = name;
     }
 
     public string Code { get; }
@@ -19,7 +20,9 @@ public class SymbolMetaData : IEquatable<SymbolMetaData?>
 
     public string? Exchange { get; }
 
-    public string? Type { get; set; }
+    public string? Type { get; }
+
+    public string? Name { get;}
 
     public bool UseCompanyFundamentals => Type != null &&
         (Type.Equals(SymbolType.CommonStock.GetDescription()) ||
@@ -29,6 +32,11 @@ public class SymbolMetaData : IEquatable<SymbolMetaData?>
         (Type.Equals(SymbolType.Etf.GetDescription()) ||
         Type.Equals(SymbolType.Fund.GetDescription()) ||
         Type.Equals(SymbolType.MutualFund.GetDescription()));
+
+
+    public string? Country { get; internal set; }
+
+    public string? Currency { get; internal set; }
 
     public string? Sector { get; internal set; }
 
@@ -49,6 +57,20 @@ public class SymbolMetaData : IEquatable<SymbolMetaData?>
     public bool HasDividends { get; internal set; }
 
     public bool HasOptions { get; internal set; }
+
+    public int? LengthOfChart { get; internal set; }
+
+    public decimal? LastClose { get; internal set; }
+
+    public long? LastVolume { get; internal set; }
+
+    public DateTime? LastDate { get; internal set; }
+
+    public decimal? Yield { get; internal set; }
+
+    public string? FiscalYearEnd { get; internal set; }
+
+    public DateTime? MostRecentQuarter { get; internal set; }
 
     public bool RequiresFundamentalUpdate => Type != null
         && (UseCompanyFundamentals ? LastUpdatedFinancials.GetValueOrDefault() < DateTime.Now.AddDays(-90)

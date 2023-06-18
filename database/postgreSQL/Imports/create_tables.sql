@@ -829,3 +829,32 @@ CREATE TABLE IF NOT EXISTS public.symbols_to_ignore
   utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (symbol, exchange)
 );
+
+CREATE TABLE IF NOT EXISTS public.symbol_meta
+(
+  code TEXT NOT NULL,
+  symbol TEXT NULL,
+  exchange TEXT NULL,
+  name TEXT NULL,
+  country TEXT NULL,
+  currency TEXT NULL,
+  type TEXT NULL,
+  sector TEXT NULL,
+  industry TEXT NULL,
+  length_of_chart INTEGER NULL,
+  last_close NUMERIC(12,2) NULL,
+  last_volume BIGINT NULL,
+  last_date DATE NULL,
+  has_options BOOLEAN NULL,
+  has_dividends BOOLEAN NULL,
+  has_splits BOOLEAN NULL,
+  yield NUMERIC(12,2) NULL,
+  fiscal_year_end TEXT NULL,
+  most_recent_quarter DATE NULL,
+  last_updated_entity TIMESTAMP WITH TIME ZONE NULL,
+  last_updated_financials TIMESTAMP WITH TIME ZONE NULL,
+  last_updated_options TIMESTAMP WITH TIME ZONE NULL,
+  utc_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (code)
+);
+

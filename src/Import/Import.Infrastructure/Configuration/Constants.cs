@@ -9,6 +9,7 @@ public static class Constants
         public const string CancelOnException = "Cancel On Exception";
         public const string DatabasePurge = "Purge Data";
         public const string DataRetention = "Data Retention";
+        public const string MaxDegreeOfParallelism = "Max Parallelization";
         public const string Exchanges = "Exchange Codes";
         public const string Mode = "Mode";
         public const string OnEmptyDb = "On Empty Database";

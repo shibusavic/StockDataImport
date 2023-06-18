@@ -11,6 +11,8 @@ namespace Import.Infrastructure.PostgreSQL;
 /// </summary>
 internal partial class ImportsDbContext : BasePostgreSQLContext, IImportsDbContext
 {
+    private const int MaxSizeOfDbChunks = 1000;
+
     /// <summary>
     /// Creates a new instance of the <see cref="ImportsDbContext"/>.
     /// </summary>

@@ -33,7 +33,7 @@ public class SymbolsTests : TestBase
 
         await LoadImportsNyseExchangesAndSymbolsAsync(sut);
 
-        var metaData = (await sut.GetSymbolMetaDataAsync()).ToArray();
+        var metaData = (await sut.CreateSymbolMetaDataAsync()).ToArray();
 
         Assert.NotNull(metaData);
         Assert.NotEmpty(metaData);
@@ -61,7 +61,7 @@ public class SymbolsTests : TestBase
             }
         });
 
-        metaData = (await sut.GetSymbolMetaDataAsync()).ToArray();
+        metaData = (await sut.CreateSymbolMetaDataAsync()).ToArray();
 
         Assert.Null(metaData[0].LastUpdatedEntity); // no company check in this test.
         Assert.Equal(10M, metaData[0].LastTrade.Close);
@@ -77,7 +77,7 @@ public class SymbolsTests : TestBase
 
         await LoadImportsAaplCompanyAsync(sut);
 
-        var metaData = (await sut.GetSymbolMetaDataAsync()).ToArray();
+        var metaData = (await sut.CreateSymbolMetaDataAsync()).ToArray();
 
         Assert.NotNull(metaData);
         Assert.NotEmpty(metaData);

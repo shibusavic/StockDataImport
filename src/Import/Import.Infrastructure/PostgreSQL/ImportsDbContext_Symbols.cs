@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using Import.Infrastructure.PostgreSQL.DataAccessObjects;
-using Npgsql;
 using System.Text;
 
 namespace Import.Infrastructure.PostgreSQL;
@@ -20,10 +19,7 @@ internal partial class ImportsDbContext
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(Symbol));
-
-        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(Symbol)}"); }
-
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(Symbol)) ?? throw new Exception($"Could not create UPSERT for {nameof(Symbol)}");
         if (symbols.Any())
         {
             foreach (var chunk in symbols.Chunk(1000))
@@ -36,8 +32,49 @@ internal partial class ImportsDbContext
 
     public async Task<IEnumerable<SymbolMetaData>> GetSymbolMetaDataAsync(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var connection = await GetOpenConnectionAsync(cancellationToken);
+
+        try
+        {
+            var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(SymbolMeta));
+
+            return (await connection.QueryAsync<SymbolMeta>(
+                Shibusa.Data.PostgeSQLSqlBuilder.CreateSelect(typeof(SymbolMeta))))
+                .Select(m => new SymbolMetaData(m.Code, m.Symbol ?? m.Code, m.Exchange, m.Type, m.Name)
+                {
+                    Country = m.Country,
+                    Currency = m.Currency,
+                    FiscalYearEnd = m.FiscalYearEnd,
+                    LastClose = m.LastClose,
+                    LastDate = m.LastDate,
+                    LastVolume = m.LastVolume,
+                    LengthOfChart = m.LengthOfChart,
+                    MostRecentQuarter = m.MostRecentQuarter,
+                    Yield = m.Yield,
+                    HasDividends = m.HasDividends.GetValueOrDefault(),
+                    HasOptions = m.HasOptions.GetValueOrDefault(),
+                    HasSplits = m.HasSplits.GetValueOrDefault(),
+                    Sector = m.Sector,
+                    Industry = m.Industry,
+                    LastTrade = (m.LastDate, m.LastClose),
+                    LastUpdated = m.UtcTimestamp,
+                    LastUpdatedEntity = m.LastUpdatedEntity,
+                    LastUpdatedFinancials = m.LastUpdatedFinancials,
+                    LastUpdatedOptions = m.LastUpdatedOptions
+                });
+        }
+        finally
+        {
+            await connection.CloseAsync();
+        }
+    }
+
+    public async Task<IEnumerable<SymbolMetaData>> CreateSymbolMetaDataAsync(CancellationToken cancellationToken = default)
+    {
         const string initialSql =
-@"SELECT S.code, S.symbol, S.exchange, S.type FROM public.symbols S
+@"SELECT S.code, S.symbol, S.exchange, S.type, S.name FROM public.symbols S
 WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = S.symbol AND exchange = S.exchange)";
 
         const string companiesSql =
@@ -55,7 +92,7 @@ JOIN public.companies C ON I.company_id = C.global_id
 WHERE NOT EXISTS (SELECT * FROM public.symbols_to_ignore WHERE symbol = C.symbol AND exchange = C.exchange)
 GROUP BY C.symbol, C.exchange";
 
-        
+
         const string priceSql =
 @"SELECT P.symbol, P.exchange, P.close, O.start
 FROM public.price_actions P
@@ -67,7 +104,7 @@ ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
 
         const string splitsSql =
 @"SELECT COUNT(*) FROM public.splits WHERE symbol = @Symbol AND exchange = @Exchange";
-        
+
         const string dividendsSql =
 @"SELECT COUNT(*) FROM public.dividends WHERE symbol = @Symbol AND exchange = @Exchange";
 
@@ -158,8 +195,7 @@ ON O.symbol = P.symbol AND O.exchange = P.exchange AND O.start = P.start";
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync(cancellationToken);
+        using var connection = await GetOpenConnectionAsync(cancellationToken);
 
         try
         {
@@ -228,9 +264,9 @@ WHERE code = @Code
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(SymbolToIgnore));
 
-        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(SymbolToIgnore)}"); }
-
-        return ExecuteAsync(sql, symbols.Select(s => new SymbolToIgnore(s.Symbol, s.Exchange, s.Reason)), cancellationToken: cancellationToken);
+        return sql == null
+            ? throw new Exception($"Could not create UPSERT for {nameof(SymbolToIgnore)}")
+            : ExecuteAsync(sql, symbols.Select(s => new SymbolToIgnore(s.Symbol, s.Exchange, s.Reason)), cancellationToken: cancellationToken);
     }
 
     public Task SaveSymbolToIgnore(IgnoredSymbol symbol, CancellationToken cancellationToken = default)
@@ -239,9 +275,9 @@ WHERE code = @Code
 
         var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(SymbolToIgnore));
 
-        if (sql == null) { throw new Exception($"Could not create UPSERT for {nameof(SymbolToIgnore)}"); }
-
-        return ExecuteAsync(sql, new SymbolToIgnore(symbol.Symbol, symbol.Exchange, symbol.Reason), cancellationToken: cancellationToken);
+        return sql == null
+            ? throw new Exception($"Could not create UPSERT for {nameof(SymbolToIgnore)}")
+            : ExecuteAsync(sql, new SymbolToIgnore(symbol.Symbol, symbol.Exchange, symbol.Reason), cancellationToken: cancellationToken);
     }
 
     public async Task<IEnumerable<IgnoredSymbol>> GetSymbolsToIgnoreAsync(CancellationToken cancellationToken = default)
@@ -254,4 +290,16 @@ WHERE code = @Code
             .Select(s => new IgnoredSymbol(s.Symbol, s.Exchange, s.Reason));
     }
 
+    public async Task SaveSymbolMetaDataAsync(IEnumerable<SymbolMetaData> metaData, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateUpsert(typeof(SymbolMeta))
+            ?? throw new Exception($"Could not create UPSERT for {nameof(SymbolMeta)}");
+
+        foreach (var chunk in metaData.Select(s => new SymbolMeta(s)).Chunk(MaxSizeOfDbChunks))
+        {
+            await ExecuteAsync(sql, chunk, commandTimeout:90, cancellationToken: cancellationToken);
+        }
+    }
 }

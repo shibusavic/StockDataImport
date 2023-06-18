@@ -37,7 +37,7 @@ public sealed class DataImportService
 
         // TODO: try to make this better - maybe track when this is done and only do it every 24 hours.
         // EodHistoricalData.com doesn't automatically reset the usage counter until you make the first call of the day.
-        // Since we have to make this call, we might as well preserve the results.
+        // Since we have to make a call, it might as well be this call, and we might as well preserve the results.
         var exchanges = DataClient.GetExchangeListAsync().GetAwaiter().GetResult();
         ImportsDb.SaveExchangesAsync(exchanges).GetAwaiter().GetResult();
 
@@ -54,7 +54,7 @@ public sealed class DataImportService
     public async Task ResetMetaDataRepositoryAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        SymbolMetaDataRepository.SetItems(await ImportsDb.GetSymbolMetaDataAsync(cancellationToken));
+        SymbolMetaDataRepository.SetItems(await ImportsDb.CreateSymbolMetaDataAsync(cancellationToken));
     }
 
     public Task PurgeDataAsync(string purgeName,
@@ -143,7 +143,7 @@ public sealed class DataImportService
 
             foreach (var s in symbolsToSave)
             {
-                SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData($"{s.Code!}.{exchangeCode}", s.Code!, s.Exchange, s.Type));
+                SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData($"{s.Code!}.{exchangeCode}", s.Code!, s.Exchange, s.Type, s.Name));
             }
 
             return t;
@@ -164,9 +164,14 @@ public sealed class DataImportService
         return Task.CompletedTask;
     }
 
-    public Task SaveSymbolsToIgnoreAsync(CancellationToken cancellationToken = default)
+    public Task SaveSymbolsToIgnoreAsync(CancellationToken cancellationToken = default)=>
+        ImportsDb.SaveSymbolsToIgnore(SymbolsToIgnore.GetAll(), cancellationToken);
+
+    public async Task SaveMetaDataAsync(CancellationToken cancellationToken = default)
     {
-        return ImportsDb.SaveSymbolsToIgnore(SymbolsToIgnore.GetAll(), cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        await ImportsDb.SaveSymbolMetaDataAsync(
+            await ImportsDb.CreateSymbolMetaDataAsync(cancellationToken), cancellationToken);
     }
 
     public ImportCycle GetImportCycle(ImportConfiguration importConfiguration,

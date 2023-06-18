@@ -74,11 +74,10 @@ internal abstract class BasePostgreSQLContext : DbContext
             var attr = (TableAttribute?)DaoTypes[i].GetCustomAttribute(typeof(TableAttribute), true);
             if (attr == null || attr.Schema != schema || !tableNames.Contains(attr.Name)) continue;
 
-            string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(DaoTypes[i]);
+            string? sql = Shibusa.Data.PostgeSQLSqlBuilder.CreateDelete(DaoTypes[i])
+                ?? throw new Exception($"Could not create DELETE for {DaoTypes[i].Name}");
 
-            if (sql == null) throw new Exception($"Could not create DELETE for {DaoTypes[i].Name}");
-
-            tasks.Add(Task.Run(() => ExecuteAsync(sql, null, 120, cancellationToken)));
+            tasks.Add(Task.Run(() => ExecuteAsync(sql, null, 120, cancellationToken), cancellationToken));
         }
 
         try

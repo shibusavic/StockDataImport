@@ -54,7 +54,7 @@ public sealed class ServiceFactory
 
     public Task<IEnumerable<SymbolMetaData>> GetMetaData(CancellationToken cancellationToken = default)
     {
-        return importsDbContext?.GetSymbolMetaDataAsync(cancellationToken) ?? Task.FromResult(Enumerable.Empty<SymbolMetaData>());
+        return importsDbContext?.CreateSymbolMetaDataAsync(cancellationToken) ?? Task.FromResult(Enumerable.Empty<SymbolMetaData>());
     }
 
     public ActionService CreateImportActionService() =>

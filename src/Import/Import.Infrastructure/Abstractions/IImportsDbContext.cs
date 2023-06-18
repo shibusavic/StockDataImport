@@ -55,6 +55,10 @@ internal partial interface IImportsDbContext : IDbContext
 
     Task<IEnumerable<SymbolMetaData>> GetSymbolMetaDataAsync(CancellationToken cancellationToken = default);
 
+    Task SaveSymbolMetaDataAsync(IEnumerable<SymbolMetaData> metaData,  CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<SymbolMetaData>> CreateSymbolMetaDataAsync(CancellationToken cancellationToken = default);
+
     Task<IEnumerable<IgnoredSymbol>> GetSymbolsToIgnoreAsync(CancellationToken cancellationToken = default);
 
     Task SaveSymbolsToIgnore(IEnumerable<IgnoredSymbol> symbols, CancellationToken cancellationToken = default);

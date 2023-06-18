@@ -47,7 +47,7 @@ public class CalendarTests : TestBase
 
         Assert.Equal(0, count);
 
-        SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData("AAPL.US", "AAPL", "NASDAQ", "Common Stock"));
+        SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData("AAPL.US", "AAPL", "NASDAQ", "Common Stock", "Apple"));
 
         await sut.SaveEarningsAsync(earnings, new[] { "NYSE", "NASDAQ" });
 
@@ -79,7 +79,7 @@ public class CalendarTests : TestBase
             Trends = dao.Trends.First()
         };
 
-        SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData("AAPL.US", "AAPL", "NASDAQ", "Common Stock"));
+        SymbolMetaDataRepository.AddOrUpdate(new SymbolMetaData("AAPL.US", "AAPL", "NASDAQ", "Common Stock", "Apple"));
 
         await sut.SaveTrendsAsync(trends.Trends, new[] { "NYSE", "NASDAQ" });
 
